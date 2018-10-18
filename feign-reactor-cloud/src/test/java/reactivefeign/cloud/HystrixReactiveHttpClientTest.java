@@ -159,6 +159,7 @@ public class HystrixReactiveHttpClientTest {
                                 .withCircuitBreakerRequestVolumeThreshold(VOLUME_THRESHOLD)
                                 .withExecutionTimeoutEnabled(false)
                                 .withCircuitBreakerSleepWindowInMilliseconds(SLEEP_WINDOW)
+                                .withMetricsHealthSnapshotIntervalInMilliseconds(10)
                         );
             }
         };
