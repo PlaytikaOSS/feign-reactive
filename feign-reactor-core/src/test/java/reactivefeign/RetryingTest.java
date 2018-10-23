@@ -171,7 +171,7 @@ public abstract class RetryingTest {
         .willReturn(aResponse().withStatus(503).withHeader(RETRY_AFTER, "1")));
 
     IcecreamServiceApi client = builder()
-        .retryWhen(ReactiveRetryers.retryWithBackoff(3, 5))
+        .retryWhen(ReactiveRetryers.retryWithBackoff(7, 5))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findOrder(1))
