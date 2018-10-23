@@ -2,18 +2,17 @@ package reactivefeign.cloud;
 
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import com.netflix.client.ClientException;
-import com.netflix.client.DefaultLoadBalancerRetryHandler;
-import com.netflix.client.RequestSpecificRetryHandler;
-import com.netflix.client.RetryHandler;
+import com.netflix.client.*;
+import com.netflix.client.config.CommonClientConfigKey;
+import com.netflix.client.config.DefaultClientConfigImpl;
+import com.netflix.loadbalancer.BaseLoadBalancer;
+import com.netflix.loadbalancer.ILoadBalancer;
+import com.netflix.loadbalancer.Server;
 import feign.RequestLine;
 import feign.RetryableException;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.apache.commons.configuration.BaseConfiguration;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
-import reactivefeign.cloud.CloudReactiveFeign;
 import reactivefeign.publisher.RetryPublisherHttpClient;
 import reactor.core.publisher.Mono;
 
@@ -24,6 +23,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
 import static com.netflix.config.ConfigurationManager.getConfigInstance;
+import static com.netflix.config.ConfigurationManager.install;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
 import static reactivefeign.ReactiveRetryers.retry;
@@ -43,6 +44,15 @@ public class LoadBalancingReactiveHttpClientTest {
 
     private static String serviceName = "LoadBalancingTargetTest-loadBalancingDefaultPolicyRoundRobin";
 
+    @BeforeClass
+    public static void setupServersList() throws ClientException {
+        DefaultClientConfigImpl clientConfig = new DefaultClientConfigImpl();
+        clientConfig.loadDefaultValues();
+        clientConfig.setProperty(CommonClientConfigKey.NFLoadBalancerClassName, BaseLoadBalancer.class.getName());
+        ILoadBalancer lb = ClientFactory.registerNamedLoadBalancerFromclientConfig(serviceName, clientConfig);
+        lb.addServers(asList(new Server("localhost", server1.port()), new Server("localhost", server2.port())));
+    }
+
     @Before
     public void resetServers() {
         server1.resetAll();
@@ -50,32 +60,24 @@ public class LoadBalancingReactiveHttpClientTest {
     }
 
     @Test
-    public void shouldLoadBalanceRequests() throws IOException, InterruptedException {
+    public void shouldLoadBalanceRequests() {
         String body = "success!";
         mockSuccess(server1, body);
         mockSuccess(server2, body);
-
-        String serverListKey = serviceName + ".ribbon.listOfServers";
-        getConfigInstance().setProperty(serverListKey, "localhost:" + server1.port() + "," + "localhost:" + server2.port());
 
         TestInterface client = CloudReactiveFeign.<TestInterface>builder()
                 .enableLoadBalancer()
                 .target(TestInterface.class, "http://" + serviceName);
 
-        try {
+        String result1 = client.get().block();
+        String result2 = client.get().block();
 
-            String result1 = client.get().block();
-            String result2 = client.get().block();
+        assertThat(result1)
+                .isEqualTo(result2)
+                .isEqualTo(body);
 
-            assertThat(result1)
-                    .isEqualTo(result2)
-                    .isEqualTo(body);
-
-            server1.verify(1, getRequestedFor(urlEqualTo("/")));
-            server2.verify(1, getRequestedFor(urlEqualTo("/")));
-        } finally {
-            getConfigInstance().clearProperty(serverListKey);
-        }
+        server1.verify(1, getRequestedFor(urlEqualTo("/")));
+        server2.verify(1, getRequestedFor(urlEqualTo("/")));
     }
 
     @Test
@@ -146,9 +148,6 @@ public class LoadBalancingReactiveHttpClientTest {
                             .withBody(body));
         });
 
-        String serverListKey = serviceName + ".ribbon.listOfServers";
-        getConfigInstance().setProperty(serverListKey, "localhost:" + server1.port() + "," + "localhost:" + server2.port());
-
         RetryHandler retryHandler = new RequestSpecificRetryHandler(true, true,
                 new DefaultLoadBalancerRetryHandler(0, retryOnNext, true), null);
 
@@ -157,13 +156,8 @@ public class LoadBalancingReactiveHttpClientTest {
                 .enableLoadBalancer(retryHandler)
                 .target(TestInterface.class, "http://" + serviceName);
 
-        try {
-
-            String result = client.get().block();
-            assertThat(result).isEqualTo(body);
-        } finally {
-            getConfigInstance().clearProperty(serverListKey);
-        }
+        String result = client.get().block();
+        assertThat(result).isEqualTo(body);
     }
 
     static void mockSuccess(WireMockClassRule server, String body) {
