@@ -5,7 +5,7 @@
     <parent>
         <groupId>io.github.reactivefeign</groupId>
         <artifactId>feign-reactor</artifactId>
-        <version>1.0.0</version>
+        <version>1.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>feign-reactor-webclient</artifactId>
@@ -40,7 +40,7 @@
         <dependency>
             <groupId>io.github.reactivefeign</groupId>
             <artifactId>feign-reactor-core</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.0-SNAPSHOT</version>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
