@@ -5,25 +5,25 @@ import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.netflix.client.*;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.DefaultClientConfigImpl;
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixCommandKey;
+import com.netflix.hystrix.HystrixCommandProperties;
+import com.netflix.hystrix.HystrixObservableCommand;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
 import feign.RequestLine;
 import feign.RetryableException;
-import org.apache.commons.configuration.BaseConfiguration;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import reactivefeign.publisher.RetryPublisherHttpClient;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.util.stream.Stream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
-import static com.netflix.config.ConfigurationManager.getConfigInstance;
-import static com.netflix.config.ConfigurationManager.install;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -67,6 +67,7 @@ public class LoadBalancingReactiveHttpClientTest {
 
         TestInterface client = CloudReactiveFeign.<TestInterface>builder()
                 .enableLoadBalancer()
+                .setHystrixCommandSetterFactory(getSetterFactoryWithTimeoutDisabled())
                 .target(TestInterface.class, "http://" + serviceName);
 
         String result1 = client.get().block();
@@ -81,7 +82,7 @@ public class LoadBalancingReactiveHttpClientTest {
     }
 
     @Test
-    public void shouldFailAsPolicyWoRetries() throws IOException, InterruptedException {
+    public void shouldFailAsPolicyWoRetries() {
 
         expectedException.expect(RuntimeException.class);
         expectedException.expectCause(allOf(isA(RetryPublisherHttpClient.OutOfRetriesException.class),
@@ -97,7 +98,7 @@ public class LoadBalancingReactiveHttpClientTest {
     }
 
     @Test
-    public void shouldRetryOnSameAndFail() throws IOException, InterruptedException {
+    public void shouldRetryOnSameAndFail() {
 
         expectedException.expect(RuntimeException.class);
         expectedException.expectCause(allOf(isA(RetryPublisherHttpClient.OutOfRetriesException.class),
@@ -113,7 +114,7 @@ public class LoadBalancingReactiveHttpClientTest {
     }
 
     @Test
-    public void shouldRetryOnNextAndFail() throws IOException, InterruptedException {
+    public void shouldRetryOnNextAndFail() {
 
         expectedException.expect(RuntimeException.class);
         expectedException.expectCause(isA(ClientException.class));
@@ -128,7 +129,7 @@ public class LoadBalancingReactiveHttpClientTest {
     }
 
     @Test
-    public void shouldRetryOnSameAndSuccess() throws IOException, InterruptedException {
+    public void shouldRetryOnSameAndSuccess() {
 
         loadBalancingWithRetry(2, 2, 0);
 
@@ -137,7 +138,7 @@ public class LoadBalancingReactiveHttpClientTest {
 
     }
 
-    private void loadBalancingWithRetry(int failedAttemptsNo, int retryOnSame, int retryOnNext) throws IOException, InterruptedException {
+    private void loadBalancingWithRetry(int failedAttemptsNo, int retryOnSame, int retryOnNext) {
         String body = "success!";
         Stream.of(server1, server2).forEach(server -> {
             mockSuccessAfterSeveralAttempts(server, "/",
@@ -154,10 +155,24 @@ public class LoadBalancingReactiveHttpClientTest {
         TestInterface client = CloudReactiveFeign.<TestInterface>builder()
                 .retryWhen(retry(retryOnSame))
                 .enableLoadBalancer(retryHandler)
+                .setHystrixCommandSetterFactory(getSetterFactoryWithTimeoutDisabled())
                 .target(TestInterface.class, "http://" + serviceName);
 
         String result = client.get().block();
         assertThat(result).isEqualTo(body);
+    }
+
+    private CloudReactiveFeign.SetterFactory getSetterFactoryWithTimeoutDisabled() {
+        return (target, methodMetadata) -> {
+			String groupKey = target.name();
+			HystrixCommandKey commandKey = HystrixCommandKey.Factory.asKey(methodMetadata.configKey());
+			return HystrixObservableCommand.Setter
+					.withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
+					.andCommandKey(commandKey)
+					.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
+							.withExecutionTimeoutEnabled(false)
+					);
+		};
     }
 
     static void mockSuccess(WireMockClassRule server, String body) {

@@ -47,6 +47,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static org.eclipse.jetty.http.HttpHeader.ACCEPT;
 import static org.eclipse.jetty.http.HttpHeader.CONTENT_TYPE;
+import static reactivefeign.jetty.utils.ProxyPostProcessor.postProcess;
 import static reactivefeign.utils.FeignUtils.getBodyActualType;
 
 /**
@@ -125,15 +126,22 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 			jettyRequest.getHeaders().put(CONTENT_TYPE.asString(), singletonList(content.getContentType()));
 		}
 
-		Publisher<JettyReactiveHttpResponse> responsePublisher = requestBuilder.build().response(
-				(reactiveResponse, contentChunkPublisher) -> Mono.just(new JettyReactiveHttpResponse(
-						reactiveResponse, contentChunkPublisher, returnPublisherClass, returnActualClass,
-						jsonFactory, responseReader)));
+		return Mono.<ReactiveHttpResponse>from(requestBuilder.build().response((response, content) -> Mono.just(
+				new JettyReactiveHttpResponse(response.getResponse(),
+						postProcess(content,
+								(contentChunk, throwable) -> {
+									if(throwable != null){
+										contentChunk.callback.failed(throwable);
+									} else {
+										contentChunk.callback.succeeded();
+									}
+								}),
+						returnPublisherClass, returnActualClass,
+						jsonFactory, responseReader))
 
-		return Mono.<ReactiveHttpResponse>from(responsePublisher)
-				.onErrorMap(ex -> ex instanceof java.util.concurrent.TimeoutException,
-						ReadTimeoutException::new)
-           ;
+
+		)).onErrorMap(ex -> ex instanceof java.util.concurrent.TimeoutException,
+				ReadTimeoutException::new);
 	}
 
 	protected void setUpHeaders(ReactiveHttpRequest request, HttpFields httpHeaders) {

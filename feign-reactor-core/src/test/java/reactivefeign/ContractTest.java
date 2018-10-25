@@ -18,6 +18,7 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.IcecreamServiceApiBroken;
+import reactivefeign.testcase.IcecreamServiceApiBrokenByCopy;
 
 import static org.hamcrest.Matchers.containsString;
 
@@ -49,10 +50,20 @@ abstract public class ContractTest {
   public void shouldFailIfNotReactiveContract() {
 
     expectedException.expect(IllegalArgumentException.class);
-    expectedException.expectMessage(containsString("IcecreamServiceApiBroken#findOrder(int)"));
+    expectedException.expectMessage(containsString("IcecreamServiceApiBroken#findOrderBlocking(int)"));
 
     this.<IcecreamServiceApiBroken>builder()
         .target(IcecreamServiceApiBroken.class, "http://localhost:8888");
+  }
+
+  @Test
+  public void shouldFailIfMethodOperatesWithByteArray() {
+
+    expectedException.expect(IllegalArgumentException.class);
+    expectedException.expectMessage(containsString("IcecreamServiceApiBrokenByCopy#findOrderCopy(int)"));
+
+    this.<IcecreamServiceApiBrokenByCopy>builder()
+            .target(IcecreamServiceApiBrokenByCopy.class, "http://localhost:8888");
   }
 
 }

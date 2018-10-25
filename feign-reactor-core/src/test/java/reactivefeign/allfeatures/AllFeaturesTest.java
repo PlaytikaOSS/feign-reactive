@@ -261,7 +261,7 @@ abstract public class AllFeaturesTest {
 		CountDownLatch countDownLatch = new CountDownLatch(2);
 
 		AtomicInteger sentCount = new AtomicInteger();
-		ConcurrentLinkedQueue<ByteBuffer> receivedAll = new ConcurrentLinkedQueue<>();
+		ConcurrentLinkedQueue<byte[]> receivedAll = new ConcurrentLinkedQueue<>();
 
 		CompletableFuture<ByteBuffer> firstReceived = new CompletableFuture<>();
 
@@ -274,7 +274,9 @@ abstract public class AllFeaturesTest {
 				.doOnNext(sent -> sentCount.incrementAndGet());
 
 		returned.doOnNext(received -> {
-			receivedAll.add(received);
+			byte[] dataReceived = new byte[received.limit()];
+			received.get(dataReceived);
+			receivedAll.add(dataReceived);
 			assertThat(receivedAll.size()).isEqualTo(sentCount.get());
 			firstReceived.complete(received);
 			countDownLatch.countDown();
@@ -282,13 +284,7 @@ abstract public class AllFeaturesTest {
 
 		countDownLatch.await();
 
-		assertThat(receivedAll.stream()
-				.map(buffer -> {
-					byte[] data = new byte[buffer.limit()];
-					buffer.get(data);
-					return data;
-				}).collect(Collectors.toList()))
-				.containsExactly(new byte[]{1,2,3}, new byte[]{4,5,6});
+		assertThat(receivedAll).containsExactly(new byte[]{1,2,3}, new byte[]{4,5,6});
 	}
 
 	private static ByteBuffer fromByteArray(byte[] data){

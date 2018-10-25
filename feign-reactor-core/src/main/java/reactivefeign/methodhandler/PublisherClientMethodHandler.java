@@ -74,7 +74,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
 
   @Override
   @SuppressWarnings("unchecked")
-  public Publisher<Object> invoke(final Object[] argv) {
+  public Publisher<?> invoke(final Object[] argv) {
 
     final ReactiveHttpRequest request = buildRequest(argv);
 

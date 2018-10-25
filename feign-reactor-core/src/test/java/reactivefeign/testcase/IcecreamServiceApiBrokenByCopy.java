@@ -24,22 +24,23 @@ import reactivefeign.testcase.domain.Mixin;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.nio.ByteBuffer;
 import java.util.Collection;
 
 /**
- * API of an iceream web service with one method that doesn't returns {@link Mono} or {@link Flux}
+ * API of an iceream web service with one method that returns {@link Mono} or {@link Flux} of byte array
  * and violates {@link ReactiveContract}s rules.
  *
  * @author Sergii Karpenko
  */
-public interface IcecreamServiceApiBroken {
+public interface IcecreamServiceApiBrokenByCopy {
 
   @RequestLine("GET /icecream/orders/{orderId}")
-  Mono<IceCreamOrder> findOrder(@Param("orderId") int orderId);
+  Mono<ByteBuffer> findOrder(@Param("orderId") int orderId);
 
   /**
    * Method that doesn't respects contract.
    */
   @RequestLine("GET /icecream/orders/{orderId}")
-  IceCreamOrder findOrderBlocking(@Param("orderId") int orderId);
+  Mono<byte[]> findOrderCopy(@Param("orderId") int orderId);
 }

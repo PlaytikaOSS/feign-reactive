@@ -2,15 +2,16 @@ package reactivefeign.jetty.client;
 
 import com.fasterxml.jackson.core.async_.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectReader;
+import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.reactive.client.ContentChunk;
-import org.eclipse.jetty.reactive.client.ReactiveResponse;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivejson.ReactorObjectReader;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.List;
@@ -25,14 +26,14 @@ import static org.eclipse.jetty.http.HttpHeader.CONTENT_TYPE;
 class JettyReactiveHttpResponse implements ReactiveHttpResponse{
 
 	public static final String CHARSET_DELIMITER = ";charset=";
-	private final ReactiveResponse clientResponse;
+	private final Response clientResponse;
 	private final Publisher<ContentChunk> contentChunks;
 	private final Class returnPublisherType;
-	private Class returnActualClass;
+	private Class<?> returnActualClass;
 	private final ObjectReader objectReader;
 	private final JsonFactory jsonFactory;
 
-	JettyReactiveHttpResponse(ReactiveResponse clientResponse, Publisher<ContentChunk> contentChunks,
+	JettyReactiveHttpResponse(Response clientResponse, Publisher<ContentChunk> contentChunks,
 							  Class returnPublisherType, Class returnActualClass,
 							  JsonFactory jsonFactory, ObjectReader objectReader) {
 		this.clientResponse = clientResponse;
@@ -55,30 +56,25 @@ class JettyReactiveHttpResponse implements ReactiveHttpResponse{
 	}
 
 	@Override
-	public Publisher<Object> body() {
+	public Publisher<?> body() {
 		ReactorObjectReader reactorObjectReader = new ReactorObjectReader(jsonFactory);
 
-		Flux<ByteBuffer> content = content();
+		Flux<ByteBuffer> content = directContent();
 
-		if (returnPublisherType == Mono.class) {
-			if(returnActualClass == ByteBuffer.class || returnActualClass == byte[].class){
-				return joinChunks().map(ByteBuffer::wrap);
-			} else if(returnActualClass.isAssignableFrom(String.class)){
-				Charset charset = getCharset();
-				return joinChunks().map(bytes -> charset.decode(ByteBuffer.wrap(bytes)).toString());
-			} else {
+		if(returnActualClass == ByteBuffer.class){
+			return content;
+		} else if(returnActualClass.isAssignableFrom(String.class)
+				&& returnPublisherType == Mono.class){
+			Charset charset = getCharset();
+			return content.map(byteBuffer -> charset.decode(byteBuffer).toString());
+		} else {
+			if (returnPublisherType == Mono.class) {
 				return reactorObjectReader.read(content, objectReader);
-			}
-		}
-		else if (returnPublisherType == Flux.class) {
-			if(returnActualClass == ByteBuffer.class || returnActualClass == byte[].class){
-				return (Publisher)content;
-			} else {
+			} else if(returnPublisherType == Flux.class){
 				return reactorObjectReader.readElements(content, objectReader);
+			} else {
+				throw new IllegalArgumentException("Unknown returnPublisherType: " + returnPublisherType);
 			}
-		}
-		else {
-			throw new IllegalArgumentException("Unknown returnPublisherType: " + returnPublisherType);
 		}
 	}
 
@@ -96,18 +92,8 @@ class JettyReactiveHttpResponse implements ReactiveHttpResponse{
 				.orElse(UTF_8);
 	}
 
-	private Flux<ByteBuffer> content() {
-		return Flux.from(contentChunks).map(chunk -> {
-			// See https://github.com/eclipse/jetty.project/issues/2429
-			byte[] data = new byte[chunk.buffer.capacity()];
-			chunk.buffer.get(data);
-			chunk.callback.succeeded();
-			return ByteBuffer.wrap(data);
-
-//			ByteBuffer duplicate = chunk.buffer.duplicate();
-//			chunk.callback.succeeded();
-//			return duplicate;
-		});
+	private Flux<ByteBuffer> directContent() {
+		return Flux.from(contentChunks).map(contentChunk -> contentChunk.buffer.slice());
 	}
 
 	@Override
@@ -116,21 +102,11 @@ class JettyReactiveHttpResponse implements ReactiveHttpResponse{
 	}
 
 	private Mono<byte[]> joinChunks() {
-		return content()
-				.collect(Collectors.toList())
-				.map(JettyReactiveHttpResponse::joinBuffers);
-	}
-
-	private static byte[] joinBuffers(List<ByteBuffer> buffers){
-		int totalLength = buffers.stream()
-				.map(ByteBuffer::limit)
-				.reduce(0, (length1, length2) -> (length1 + length2));
-		byte[] data = new byte[totalLength];
-		int pos = 0;
-		for(ByteBuffer byteBuffer : buffers){
-			byteBuffer.get(data, pos, byteBuffer.capacity());
-			pos += byteBuffer.capacity();
-		};
-		return data;
+		return directContent().reduce(new ByteArrayOutputStream(), (baos, byteBuffer) -> {
+			for(int i = byteBuffer.position(), limit = byteBuffer.limit(); i < limit; i++){
+				baos.write(byteBuffer.get(i));
+			}
+			return baos;
+		}).map(ByteArrayOutputStream::toByteArray);
 	}
 }

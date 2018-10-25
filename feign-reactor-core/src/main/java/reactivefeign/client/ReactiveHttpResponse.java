@@ -30,7 +30,7 @@ public interface ReactiveHttpResponse {
 
   Map<String, List<String>> headers();
 
-  Publisher<Object> body();
+  Publisher<?> body();
 
   /**
    * used by error decoders

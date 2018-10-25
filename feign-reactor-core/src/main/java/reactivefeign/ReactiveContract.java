@@ -23,6 +23,8 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 import static feign.Util.checkNotNull;
+import static reactivefeign.utils.FeignUtils.bodyActualType;
+import static reactivefeign.utils.FeignUtils.returnActualType;
 
 /**
  * Contract allowing only {@link Mono} and {@link Flux} return type.
@@ -48,6 +50,12 @@ public class ReactiveContract implements Contract {
         throw new IllegalArgumentException(String.format(
             "Method %s of contract %s doesn't returns reactor.core.publisher.Mono or reactor.core.publisher.Flux",
             metadata.configKey(), targetType.getSimpleName()));
+      }
+
+      if(returnActualType(metadata) == byte[].class || bodyActualType(metadata) == byte[].class){
+        throw new IllegalArgumentException(String.format(
+                "Method %s of contract %s will cause data to be copied, use ByteBuffer instead",
+                metadata.configKey(), targetType.getSimpleName()));
       }
     }
 

@@ -35,8 +35,8 @@ public class MonoRetryPublisherHttpClient extends RetryPublisherHttpClient<MonoP
   }
 
   @Override
-  public Publisher<Object> executeRequest(ReactiveHttpRequest request) {
-    Mono<Object> response = publisherClient.executeRequest(request);
+  public Publisher<?> executeRequest(ReactiveHttpRequest request) {
+    Mono<?> response = publisherClient.executeRequest(request);
     return response.retryWhen(retryFunction).onErrorMap(outOfRetries());
   }
 }

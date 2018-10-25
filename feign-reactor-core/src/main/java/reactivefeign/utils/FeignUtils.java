@@ -29,9 +29,17 @@ public class FeignUtils {
             methodMetadata.configKey().indexOf('('));
   }
 
-  public static Type returnPublisherType(MethodMetadata methodMetadata) {
+  public static Class returnPublisherType(MethodMetadata methodMetadata) {
     final Type returnType = methodMetadata.returnType();
-    return ((ParameterizedType) returnType).getRawType();
+    return (Class)((ParameterizedType) returnType).getRawType();
+  }
+
+  public static Type returnActualType(MethodMetadata methodMetadata) {
+    return resolveLastTypeParameter(methodMetadata.returnType(), returnPublisherType(methodMetadata));
+  }
+
+  public static Type bodyActualType(MethodMetadata methodMetadata) {
+    return getBodyActualType(methodMetadata.bodyType());
   }
 
   public static Type getBodyActualType(Type bodyType) {

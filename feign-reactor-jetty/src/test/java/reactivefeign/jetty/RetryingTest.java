@@ -28,7 +28,6 @@ public class RetryingTest extends reactivefeign.RetryingTest {
     return JettyReactiveFeign.builder();
   }
 
-  @Ignore
   @Test
   public void shouldFailAsNoMoreRetriesWithBackoff() {
   }

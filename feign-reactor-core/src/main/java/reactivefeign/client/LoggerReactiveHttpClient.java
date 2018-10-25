@@ -138,13 +138,13 @@ public class LoggerReactiveHttpClient implements ReactiveHttpClient {
     }
 
     @Override
-    public Publisher<Object> body() {
-      Publisher<Object> publisher = getResponse().body();
+    public Publisher<?> body() {
+      Publisher<?> publisher = getResponse().body();
 
       if (publisher instanceof Mono) {
-        return ((Mono<Object>) publisher).doOnNext(responseBodyLogger(start));
+        return ((Mono<?>) publisher).doOnNext(responseBodyLogger(start));
       } else {
-        return ((Flux<Object>) publisher).doOnNext(responseBodyLogger(start));
+        return ((Flux<?>) publisher).doOnNext(responseBodyLogger(start));
       }
 
     }
