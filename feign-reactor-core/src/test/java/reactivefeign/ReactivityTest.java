@@ -64,11 +64,13 @@ abstract public class ReactivityTest {
 
     AtomicInteger counter = new AtomicInteger();
 
-    for (int i = 0; i < CALLS_NUMBER; i++) {
-      client.findFirstOrder()
-              .doOnNext(order -> counter.incrementAndGet())
-              .subscribe();
-    }
+    new Thread(() -> {
+      for (int i = 0; i < CALLS_NUMBER; i++) {
+        client.findFirstOrder()
+                .doOnNext(order -> counter.incrementAndGet())
+                .subscribe();
+      }
+    }).start();
 
     waitAtMost(new Duration(timeToCompleteReactively(), TimeUnit.MILLISECONDS))
             .until(() -> counter.get() == CALLS_NUMBER);

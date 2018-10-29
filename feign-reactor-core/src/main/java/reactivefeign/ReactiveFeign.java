@@ -122,7 +122,7 @@ public class ReactiveFeign {
 
     abstract public Builder<T> options(ReactiveOptions options);
 
-    public Builder<T> clientFactory(Function<MethodMetadata, ReactiveHttpClient> clientFactory) {
+    protected Builder<T> clientFactory(Function<MethodMetadata, ReactiveHttpClient> clientFactory) {
       this.clientFactory = clientFactory;
       return this;
     }
