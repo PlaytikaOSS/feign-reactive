@@ -32,6 +32,7 @@ import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.client.ReadTimeoutException;
+import reactivefeign.jetty.jetty.ResponseListenerPublisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -124,21 +125,24 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 			requestBuilder.content(provideBody(request));
 		}
 
-		return Mono.<ReactiveHttpResponse>from(requestBuilder.build().response((response, content) -> Mono.just(
-				new JettyReactiveHttpResponse(response.getResponse(),
-						postProcess(content,
-								(contentChunk, throwable) -> {
-									if(throwable != null){
-										contentChunk.callback.failed(throwable);
-									} else {
-										contentChunk.callback.succeeded();
-									}
-								}),
-						returnPublisherClass, returnActualClass,
-						jsonFactory, responseReader))
+		ReactiveRequest reactiveRequest = requestBuilder.build();
+		return Mono.<ReactiveHttpResponse>from(
+				new ResponseListenerPublisher<>(reactiveRequest,
+						(response, content) -> Mono.just(
+								new JettyReactiveHttpResponse(response.getResponse(),
+										postProcess(content,
+												(contentChunk, throwable) -> {
+													if(throwable != null){
+														contentChunk.callback.failed(throwable);
+													} else {
+														contentChunk.callback.succeeded();
+													}
+												}),
+										returnPublisherClass, returnActualClass,
+										jsonFactory, responseReader))
 
 
-		)).onErrorMap(ex -> ex instanceof java.util.concurrent.TimeoutException,
+				)).onErrorMap(ex -> ex instanceof java.util.concurrent.TimeoutException,
 				ReadTimeoutException::new);
 	}
 
