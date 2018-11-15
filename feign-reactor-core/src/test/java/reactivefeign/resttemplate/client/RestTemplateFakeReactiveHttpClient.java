@@ -66,8 +66,7 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
 
     final Type returnType = methodMetadata.returnType();
     returnPublisherType = ((ParameterizedType) returnType).getRawType();
-    returnActualType = forType(
-        resolveLastTypeParameter(returnType, (Class<?>) returnPublisherType));
+    returnActualType = forType(resolveLastTypeParameter(returnType, (Class<?>) returnPublisherType));
   }
 
   @Override

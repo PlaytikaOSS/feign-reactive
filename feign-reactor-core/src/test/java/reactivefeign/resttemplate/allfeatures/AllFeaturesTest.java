@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package reactivefeign.jetty.allfeatures;
+package reactivefeign.resttemplate.allfeatures;
 
+import org.junit.Ignore;
+import org.junit.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import reactivefeign.ReactiveFeign;
-import reactivefeign.jetty.JettyReactiveFeign;
+import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
 
 /**
  * @author Sergii Karpenko
@@ -32,6 +34,31 @@ public class AllFeaturesTest extends reactivefeign.allfeatures.AllFeaturesTest {
 
 	@Override
 	protected ReactiveFeign.Builder<reactivefeign.allfeatures.AllFeaturesApi> builder() {
-		return JettyReactiveFeign.builder();
+		return RestTemplateFakeReactiveFeign.builder();
 	}
+
+	@Ignore
+	@Test
+	@Override
+	public void shouldMirrorStreamingBinaryBodyReactive(){}
+
+	@Ignore
+	@Test
+	@Override
+	public void shouldRunReactively(){}
+
+	@Ignore
+	@Test
+	@Override
+	public void shouldReturnFirstResultBeforeSecondSent(){}
+
+	@Ignore
+	@Test
+	@Override
+	public void shouldMirrorStringStreamBody() {}
+
+	@Ignore
+	@Test
+	@Override
+	public void shouldMirrorIntegerStreamBody() {}
 }
