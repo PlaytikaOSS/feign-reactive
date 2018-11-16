@@ -22,8 +22,8 @@ import java.util.function.Predicate;
 /**
  * Helper methods for tests.
  */
-class TestUtils {
-  static final ObjectMapper MAPPER;
+public class TestUtils {
+  public static final ObjectMapper MAPPER;
 
   static {
     MAPPER = new ObjectMapper();

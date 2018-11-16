@@ -18,10 +18,12 @@ package reactivefeign.allfeatures;
 
 import feign.*;
 import org.reactivestreams.Publisher;
+import org.springframework.web.bind.annotation.RequestHeader;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.Map;
 
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
@@ -34,19 +36,38 @@ public interface AllFeaturesApi {
 	@RequestLine("GET /mirrorParameters/{parameterInPathPlaceholder}?paramInUrl={paramInQueryPlaceholder}")
 	Mono<Map<String, String>> mirrorParameters(
             @Param("parameterInPathPlaceholder") long paramInPath,
-            @Param("paramInQueryPlaceholder") long paramInQuery,
+            @Param("paramInQueryPlaceholder") String paramInQuery,
             @QueryMap Map<String, String> paramMap);
 
 	@RequestLine("GET /mirrorParametersNew?paramInUrl={paramInUrlPlaceholder}")
 	Mono<Map<String, String>> mirrorParametersNew(
             @Param("paramInUrlPlaceholder") long paramInUrl,
-            @Param("dynamicParam") long dynamicParam,
+            @Param("dynamicParam") Long dynamicParam,
             @QueryMap Map<String, String> paramMap);
+
+	@RequestLine("GET /mirrorListParametersNew")
+	Mono<List<Integer>> mirrorListParametersNew(
+			@Param("dynamicListParam") List<Integer> dynamicListParam);
+
+	@RequestLine("GET /mirrorMapParametersNew")
+	Mono<Map<String, List<String>>> mirrorMapParametersNew(
+			@QueryMap Map<String, List<String>> paramMap);
 
 	@RequestLine("GET /mirrorHeaders")
 	@Headers({ "Method-Header: {headerValue}" })
 	Mono<Map<String, String>> mirrorHeaders(@Param("headerValue") long param,
                                             @HeaderMap Map<String, String> paramMap);
+
+	@RequestLine("GET /mirrorListHeaders")
+	@Headers({ "Method-Header: {headerValue}" })
+	Mono<List<Long>> mirrorListHeaders(
+			@Param("headerValue") List<Long> param);
+
+	@RequestLine("GET /mirrorMultiMapHeaders")
+	@Headers({ "Method-Header: {headerValue}" })
+	Mono<Map<String, List<String>>> mirrorMultiMapHeaders(
+			@HeaderMap Map<String, List<String>> headerMap);
+
 
 	@RequestLine("POST " + "/mirrorBody")
 	Mono<String> mirrorBody(String body);
@@ -88,6 +109,9 @@ public interface AllFeaturesApi {
 	@RequestLine("POST " + "/mirrorStreamingBinaryBodyReactive")
 	@Headers({ "Content-Type: "+APPLICATION_OCTET_STREAM_VALUE })
 	Flux<ByteBuffer> mirrorStreamingBinaryBodyReactive(Publisher<ByteBuffer> body);
+
+	@RequestLine("GET /urlNotSubstituted/{parameterInPathPlaceholder}")
+	Mono<String> urlNotSubstituted();
 
 	default Mono<String> mirrorDefaultBody() {
 		return mirrorBody("default");

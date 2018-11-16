@@ -7,7 +7,6 @@ import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixObservableCommand;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
 import feign.Contract;
-import feign.InvocationHandlerFactory;
 import feign.MethodMetadata;
 import feign.Target;
 import org.slf4j.Logger;
@@ -39,13 +38,9 @@ import static reactivefeign.utils.FeignUtils.returnPublisherType;
  *
  * @author Sergii Karpenko
  */
-public class CloudReactiveFeign extends ReactiveFeign {
+public class CloudReactiveFeign {
 
     private static final Logger logger = LoggerFactory.getLogger(CloudReactiveFeign.class);
-
-    private CloudReactiveFeign(ReactiveFeign.ParseHandlersByName targetToHandlersByName, InvocationHandlerFactory factory) {
-        super(targetToHandlersByName, factory);
-    }
 
     public static <T> Builder<T> builder() {
         return new Builder<>();
@@ -70,8 +65,9 @@ public class CloudReactiveFeign extends ReactiveFeign {
             super(webClient);
         }
 
-        public void disableHystrix() {
+        public Builder<T> disableHystrix() {
             this.hystrixEnabled = false;
+            return this;
         }
 
         public Builder<T> setHystrixCommandSetterFactory(SetterFactory commandSetterFactory) {
@@ -140,7 +136,7 @@ public class CloudReactiveFeign extends ReactiveFeign {
             try {
                 return new URI(url).getHost();
             } catch (URISyntaxException e) {
-                throw new IllegalArgumentException("Can't extract service name from url", e);
+                throw new IllegalArgumentException("Can't extract service name from url:"+url, e);
             }
         }
 

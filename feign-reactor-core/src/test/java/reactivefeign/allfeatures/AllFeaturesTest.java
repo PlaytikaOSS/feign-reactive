@@ -35,12 +35,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 import reactivefeign.ReactiveFeign;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -48,9 +47,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
-import static java.nio.ByteBuffer.wrap;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.waitAtMost;
 import static reactivefeign.ReactivityTest.CALLS_NUMBER;
@@ -97,7 +95,7 @@ abstract public class AllFeaturesTest {
 				put("paramKey", "paramValue");
 			}
 		};
-		Map<String, String> returned = client.mirrorParameters(555,777, paramMap).block();
+		Map<String, String> returned = client.mirrorParameters(555,"777", paramMap).block();
 
 		assertThat(returned).containsEntry("paramInPath", "555");
 		assertThat(returned).containsEntry("paramInUrl", "777");
@@ -105,18 +103,92 @@ abstract public class AllFeaturesTest {
 	}
 
 	@Test
+	public void shouldReturnEmptyPassedParameters() {
+		Map<String, String> paramMap = new HashMap<String, String>() {
+			{
+				put("paramKey", "");
+			}
+		};
+		Map<String, String> returned = client.mirrorParameters(555,"", paramMap).block();
+
+		assertThat(returned).containsEntry("paramKey", "");
+		assertThat(returned).containsEntry("paramInUrl", "");
+	}
+
+	@Test
 	public void shouldReturnAllPassedParametersNew() {
+
 		Map<String, String> paramMap = new HashMap<String, String>() {
 			{
 				put("paramKey", "paramValue");
 			}
 		};
-		Map<String, String> returned = client.mirrorParametersNew(777, 888, paramMap)
+
+		Map<String, String> returned = client.mirrorParametersNew(
+				777, 888L, paramMap)
 				.block();
 
 		assertThat(returned).containsEntry("paramInUrl", "777");
 		assertThat(returned).containsEntry("dynamicParam", "888");
 		assertThat(returned).containsAllEntriesOf(paramMap);
+	}
+
+	@Test
+	public void shouldNotReturnNullPassedParametersNew() {
+		Map<String, String> paramMap = new HashMap<String, String>() {
+			{
+				put("paramKey", "paramValue");
+				put("paramKeyNull", null);
+			}
+		};
+		Map<String, String> returned = client.mirrorParametersNew(777,null, paramMap).block();
+
+		assertThat(returned).containsEntry("paramInUrl", "777");
+		assertThat(returned).containsEntry("paramKey", "paramValue");
+		assertThat(returned).doesNotContainKeys("dynamicParam", "paramKeyNull");
+	}
+
+	@Test
+	public void shouldReturnAllPassedListParametersNew() {
+
+		List<Integer> dynamicListParam = asList(1, 2, 3);
+		List<Integer> returned = client.mirrorListParametersNew(dynamicListParam)
+				.block();
+
+		assertThat(returned).containsAll(dynamicListParam);
+	}
+
+	@Test
+	public void shouldReturnEmptyOnNullPassedListParametersNew() {
+
+		List<Integer> returned = client.mirrorListParametersNew(null)
+				.block();
+
+		assertThat(returned).isEmpty();
+	}
+
+	@Test
+	public void shouldReturnAllPassedMapParametersNew() {
+
+		Map<String, List<String>> paramMap = new HashMap<String, List<String>>() {
+			{
+				put("paramKey", asList("paramValue1", "paramValue2"));
+			}
+		};
+
+		Map<String, List<String>> returned = client.mirrorMapParametersNew(paramMap)
+				.block();
+
+		assertThat(returned).containsAllEntriesOf(paramMap);
+	}
+
+	@Test
+	public void shouldReturnEmptyOnNullPassedMapParametersNew() {
+
+		Map<String, List<String>> returned = client.mirrorMapParametersNew(null)
+				.block();
+
+		assertThat(returned).isEmpty();
 	}
 
 	@Test
@@ -132,6 +204,26 @@ abstract public class AllFeaturesTest {
 		assertThat(returned).containsEntry("Method-Header", "777");
 		assertThat(returned).containsAllEntriesOf(headersMap);
 		assertThat(returned).containsKey("Accept");
+	}
+
+	@Test
+	public void shouldReturnAllPassedListHeaders() {
+		List<Long> listHeader = asList(111L, 777L);
+		List<Long> returned = client.mirrorListHeaders(listHeader).block();
+
+		assertThat(returned).containsAll(listHeader);
+	}
+
+	@Test
+	public void shouldReturnAllPassedMuliMapHeaders() {
+		Map<String, List<String>> headersMap = new HashMap<String, List<String>>() {
+			{
+				put("headerKey1", asList("headerValue1", "headerValue2"));
+			}
+		};
+		Map<String, List<String>> returned = client.mirrorMultiMapHeaders(headersMap).block();
+
+		assertThat(returned).containsAllEntriesOf(headersMap);
 	}
 
 	@Test
@@ -285,6 +377,11 @@ abstract public class AllFeaturesTest {
 		countDownLatch.await();
 
 		assertThat(receivedAll).containsExactly(new byte[]{1,2,3}, new byte[]{4,5,6});
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void shouldFailIfNoSubstitutionForPath(){
+		client.urlNotSubstituted().block();
 	}
 
 	private static ByteBuffer fromByteArray(byte[] data){

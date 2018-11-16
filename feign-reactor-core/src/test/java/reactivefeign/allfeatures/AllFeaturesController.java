@@ -17,16 +17,18 @@
 package reactivefeign.allfeatures;
 
 import org.reactivestreams.Publisher;
-import org.springframework.http.MediaType;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.nio.ByteBuffer;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import static org.springframework.http.MediaType.APPLICATION_STREAM_JSON_VALUE;
+import static java.util.Collections.emptyList;
 import static reactor.core.publisher.Mono.just;
 
 @RestController
@@ -36,21 +38,46 @@ public class AllFeaturesController implements AllFeaturesApi {
 	@Override
 	public Mono<Map<String, String>> mirrorParameters(
 			@PathVariable("paramInPath") long paramInPath,
-			@RequestParam("paramInUrl") long paramInUrl,
+			@RequestParam("paramInUrl") String paramInUrl,
 			@RequestParam Map<String, String> paramMap) {
-		paramMap.put("paramInPath", Long.toString(paramInPath));
-		paramMap.put("paramInUrl", Long.toString(paramInUrl));
-		return just(paramMap);
+		Map<String, String> resultMap = paramMap != null
+				? new HashMap<>(paramMap) : new HashMap<>();
+		resultMap.put("paramInPath", Long.toString(paramInPath));
+		resultMap.put("paramInUrl", paramInUrl);
+		return just(resultMap);
 	}
 
 	@GetMapping(path = "/mirrorParametersNew")
 	@Override
 	public Mono<Map<String, String>> mirrorParametersNew(
 			@RequestParam("paramInUrl") long paramInUrl,
-			@RequestParam("dynamicParam") long dynamicParam,
+			@RequestParam(value = "dynamicParam", required = false) Long dynamicParam,
 			@RequestParam Map<String, String> paramMap) {
 		paramMap.put("paramInUrl", Long.toString(paramInUrl));
-		paramMap.put("dynamicParam", Long.toString(dynamicParam));
+		if(dynamicParam != null) {
+			paramMap.put("dynamicParam", Long.toString(dynamicParam));
+		}
+		return just(paramMap);
+	}
+
+	@GetMapping(path = "/mirrorListParametersNew")
+	@Override
+	public Mono<List<Integer>> mirrorListParametersNew(
+			@RequestParam(value = "dynamicListParam", required = false) List<Integer> listParams) {
+		return listParams != null ? just(listParams) : Mono.just(emptyList());
+	}
+
+	//Spring can't treat Map<String, List<String>> correctly
+	@Override
+	public Mono<Map<String, List<String>>> mirrorMapParametersNew(
+			Map<String, List<String>> paramMap) {
+		throw new UnsupportedOperationException();
+	}
+
+	@GetMapping(path = "/mirrorMapParametersNew")
+	public Mono<Map<String, List<String>>> mirrorMapParametersNew(
+			//Spring can't treat Map<String, List<String>> correctly
+			@RequestParam MultiValueMap<String, String> paramMap) {
 		return just(paramMap);
 	}
 
@@ -60,6 +87,27 @@ public class AllFeaturesController implements AllFeaturesApi {
 			@RequestHeader("Method-Header") long param,
 			@RequestHeader Map<String, String> headersMap) {
 		return just(headersMap);
+	}
+
+	@GetMapping(path = "/mirrorListHeaders")
+	@Override
+	public Mono<List<Long>> mirrorListHeaders(
+			@RequestHeader("Method-Header") List<Long> param) {
+		return just(param);
+	}
+
+	//Spring can't treat Map<String, List<String>> correctly
+	@Override
+	public Mono<Map<String, List<String>>> mirrorMultiMapHeaders(
+			Map<String, List<String>> param) {
+		throw new UnsupportedOperationException();
+	}
+
+	@GetMapping(path = "/mirrorMultiMapHeaders")
+	public Mono<MultiValueMap<String, String>> mirrorMultiMapHeaders(
+			//Spring can't treat Map<String, List<String>> correctly
+			@RequestHeader MultiValueMap<String, String> param) {
+		return just(param);
 	}
 
 	@PostMapping(path = "/mirrorBody")
@@ -90,8 +138,8 @@ public class AllFeaturesController implements AllFeaturesApi {
 
 	@PostMapping(path = "/mirrorBodyStream")
 	@Override
-	public Flux<TestObject> mirrorBodyStream(
-			@RequestBody Publisher<TestObject> bodyStream) {
+	public Flux<AllFeaturesApi.TestObject> mirrorBodyStream(
+			@RequestBody Publisher<AllFeaturesApi.TestObject> bodyStream) {
 		return Flux.from(bodyStream);
 	}
 
@@ -124,6 +172,12 @@ public class AllFeaturesController implements AllFeaturesApi {
 	@Override
 	public Flux<ByteBuffer> mirrorStreamingBinaryBodyReactive(@RequestBody Publisher<ByteBuffer> body) {
 		return Flux.from(body);
+	}
+
+	@GetMapping(path = "/urlNotSubstituted")
+	@Override
+	public Mono<String> urlNotSubstituted(){
+		throw new UnsupportedOperationException("should be never called as contain not substituted element in path");
 	}
 
 }

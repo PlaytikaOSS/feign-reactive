@@ -54,7 +54,14 @@ public interface IcecreamServiceApi {
     return findOrder(1);
   }
 
+  default Flux<String> getAvailableMixinNames() {
+    return getAvailableMixins().map(Enum::name);
+  }
+
   default Mono<IceCreamOrder> throwsException() {
     throw RUNTIME_EXCEPTION;
   }
+
+  @RequestLine("GET / / /{orderId}")
+  Mono<IceCreamOrder> corruptedUrl(@Param("orderId") int orderId);
 }
