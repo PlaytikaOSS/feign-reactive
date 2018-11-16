@@ -82,14 +82,15 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 
 		final Type returnType = methodMetadata.returnType();
 		Class returnPublisherType = (Class)((ParameterizedType) returnType).getRawType();
-		Class returnActualType = getClass(resolveLastTypeParameter(returnType, returnPublisherType));
-		Class bodyActualType = getClass(getBodyActualType(methodMetadata.bodyType()));
+		Type returnActualType = resolveLastTypeParameter(returnType, returnPublisherType);
+		Type bodyActualType = getBodyActualType(methodMetadata.bodyType());
+		ObjectWriter bodyWriter = bodyActualType != null
+				? objectMapper.writerFor(objectMapper.constructType(bodyActualType)) : null;
+		ObjectReader responseReader = objectMapper.readerFor(objectMapper.constructType(returnActualType));
 
 		return new JettyReactiveHttpClient(httpClient,
-				bodyActualType, returnPublisherType, returnActualType,
-				jsonFactory,
-				objectMapper.writerFor(bodyActualType),
-				objectMapper.readerFor(returnActualType));
+				getClass(bodyActualType), returnPublisherType, getClass(returnActualType),
+				jsonFactory, bodyWriter, responseReader);
 	}
 
 	public JettyReactiveHttpClient(HttpClient httpClient,

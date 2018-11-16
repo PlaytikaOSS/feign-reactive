@@ -17,8 +17,10 @@ import feign.RetryableException;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
 import reactivefeign.publisher.RetryPublisherHttpClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.List;
 import java.util.stream.Stream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -33,6 +35,9 @@ import static reactivefeign.ReactiveRetryers.retry;
  * @author Sergii Karpenko
  */
 public class LoadBalancingReactiveHttpClientTest {
+
+    public static final String MONO_URL = "/mono";
+    public static final String FLUX_URL = "/flux";
 
     @ClassRule
     public static WireMockClassRule server1 = new WireMockClassRule(wireMockConfig().dynamicPort());
@@ -62,23 +67,44 @@ public class LoadBalancingReactiveHttpClientTest {
     @Test
     public void shouldLoadBalanceRequests() {
         String body = "success!";
-        mockSuccess(server1, body);
-        mockSuccess(server2, body);
+        mockSuccessMono(server1, body);
+        mockSuccessMono(server2, body);
 
-        TestInterface client = CloudReactiveFeign.<TestInterface>builder()
+        TestMonoInterface client = CloudReactiveFeign.<TestMonoInterface>builder()
                 .enableLoadBalancer()
-                .setHystrixCommandSetterFactory(getSetterFactoryWithTimeoutDisabled())
-                .target(TestInterface.class, "http://" + serviceName);
+                .disableHystrix()
+                .target(TestMonoInterface.class, "http://" + serviceName);
 
-        String result1 = client.get().block();
-        String result2 = client.get().block();
+        String result1 = client.getMono().block();
+        String result2 = client.getMono().block();
 
         assertThat(result1)
                 .isEqualTo(result2)
                 .isEqualTo(body);
 
-        server1.verify(1, getRequestedFor(urlEqualTo("/")));
-        server2.verify(1, getRequestedFor(urlEqualTo("/")));
+        server1.verify(1, getRequestedFor(urlEqualTo(MONO_URL)));
+        server2.verify(1, getRequestedFor(urlEqualTo(MONO_URL)));
+    }
+
+    @Test
+    public void shouldLoadBalanceFluxRequests() {
+        String body = "[1, 2]";
+        mockSuccessFlux(server1, body);
+        mockSuccessFlux(server2, body);
+
+        TestFluxInterface client = CloudReactiveFeign.<TestFluxInterface>builder()
+                .enableLoadBalancer()
+                .disableHystrix()
+                .target(TestFluxInterface.class, "http://" + serviceName);
+
+        List<Integer> result1 = client.getFlux().collectList().block();
+        List<Integer> result2 = client.getFlux().collectList().block();
+
+        assertThat(result1)
+                .isEqualTo(result2);
+
+        server1.verify(1, getRequestedFor(urlEqualTo(FLUX_URL)));
+        server2.verify(1, getRequestedFor(urlEqualTo(FLUX_URL)));
     }
 
     @Test
@@ -141,7 +167,7 @@ public class LoadBalancingReactiveHttpClientTest {
     private void loadBalancingWithRetry(int failedAttemptsNo, int retryOnSame, int retryOnNext) {
         String body = "success!";
         Stream.of(server1, server2).forEach(server -> {
-            mockSuccessAfterSeveralAttempts(server, "/",
+            mockSuccessAfterSeveralAttempts(server, MONO_URL,
                     failedAttemptsNo, 503,
                     aResponse()
                             .withStatus(200)
@@ -152,31 +178,26 @@ public class LoadBalancingReactiveHttpClientTest {
         RetryHandler retryHandler = new RequestSpecificRetryHandler(true, true,
                 new DefaultLoadBalancerRetryHandler(0, retryOnNext, true), null);
 
-        TestInterface client = CloudReactiveFeign.<TestInterface>builder()
+        TestMonoInterface client = CloudReactiveFeign.<TestMonoInterface>builder()
                 .retryWhen(retry(retryOnSame))
                 .enableLoadBalancer(retryHandler)
-                .setHystrixCommandSetterFactory(getSetterFactoryWithTimeoutDisabled())
-                .target(TestInterface.class, "http://" + serviceName);
+                .disableHystrix()
+                .target(TestMonoInterface.class, "http://" + serviceName);
 
-        String result = client.get().block();
+        String result = client.getMono().block();
         assertThat(result).isEqualTo(body);
     }
 
-    private CloudReactiveFeign.SetterFactory getSetterFactoryWithTimeoutDisabled() {
-        return (target, methodMetadata) -> {
-			String groupKey = target.name();
-			HystrixCommandKey commandKey = HystrixCommandKey.Factory.asKey(methodMetadata.configKey());
-			return HystrixObservableCommand.Setter
-					.withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
-					.andCommandKey(commandKey)
-					.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
-							.withExecutionTimeoutEnabled(false)
-					);
-		};
+    static void mockSuccessMono(WireMockClassRule server, String body) {
+        server.stubFor(get(urlEqualTo(MONO_URL))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(body)));
     }
 
-    static void mockSuccess(WireMockClassRule server, String body) {
-        server.stubFor(get(urlEqualTo("/"))
+    static void mockSuccessFlux(WireMockClassRule server, String body) {
+        server.stubFor(get(urlEqualTo(FLUX_URL))
                 .willReturn(aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
@@ -206,9 +227,15 @@ public class LoadBalancingReactiveHttpClientTest {
     }
 
 
-    interface TestInterface {
+    interface TestMonoInterface {
 
-        @RequestLine("GET /")
-        Mono<String> get();
+        @RequestLine("GET "+MONO_URL)
+        Mono<String> getMono();
+    }
+
+    interface TestFluxInterface {
+
+        @RequestLine("GET "+FLUX_URL)
+        Flux<Integer> getFlux();
     }
 }

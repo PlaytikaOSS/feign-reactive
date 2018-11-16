@@ -120,6 +120,16 @@ abstract public class SmokeTest {
   }
 
   @Test
+  public void shouldFailOnCorruptedUrl() {
+
+    Mono<IceCreamOrder> orderEmpty = client.corruptedUrl(123);
+
+    StepVerifier.create(orderEmpty)
+            .expectError(RuntimeException.class)
+            .verify();
+  }
+
+  @Test
   public void testMakeOrder_success() throws JsonProcessingException {
 
     IceCreamOrder order = new OrderGenerator().generate(20);

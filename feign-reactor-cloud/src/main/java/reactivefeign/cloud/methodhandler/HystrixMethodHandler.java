@@ -16,6 +16,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 import static feign.Feign.configKey;
@@ -87,7 +88,11 @@ public class HystrixMethodHandler implements MethodHandler {
         }.toObservable();
 
         if(returnPublisherType == Mono.class){
-            return Mono.from(RxReactiveStreams.toPublisher(observable.toSingle()));
+            return Mono.from(RxReactiveStreams.toPublisher(observable.toSingle()))
+                    .onErrorResume(
+                            throwable -> throwable instanceof NoSuchElementException
+                                         && throwable.getMessage().equals("Observable emitted no items"),
+                            throwable -> Mono.empty());
         } else if(returnPublisherType == Flux.class){
             return Flux.from(RxReactiveStreams.toPublisher(observable));
         } else {

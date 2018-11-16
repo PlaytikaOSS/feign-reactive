@@ -11,10 +11,13 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package reactivefeign.jetty;
+package reactivefeign.cloud;
 
+import com.netflix.hystrix.exception.HystrixRuntimeException;
+import feign.FeignException;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
+import reactivefeign.webclient.WebReactiveFeign;
 
 import java.util.function.Predicate;
 
@@ -25,11 +28,12 @@ public class RequestInterceptorTest extends reactivefeign.RequestInterceptorTest
 
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
-    return JettyReactiveFeign.builder();
+    return CloudReactiveFeign.builder();
   }
 
   @Override
   protected Predicate<Throwable> notAuthorizedException() {
-    return throwable -> throwable instanceof org.eclipse.jetty.client.HttpResponseException;
+    return throwable -> throwable instanceof HystrixRuntimeException
+            && throwable.getCause() instanceof FeignException;
   }
 }

@@ -22,7 +22,6 @@ import reactivefeign.publisher.PublisherHttpClient;
 import reactivefeign.utils.Pair;
 import reactor.core.publisher.Mono;
 
-import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -33,8 +32,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static feign.Util.checkNotNull;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.*;
-import static reactivefeign.utils.FeignUtils.returnPublisherType;
 import static reactivefeign.utils.MultiValueMapUtils.*;
 
 /**
@@ -46,201 +45,240 @@ import static reactivefeign.utils.MultiValueMapUtils.*;
  */
 public class PublisherClientMethodHandler implements MethodHandler {
 
-  private final Target target;
-  private final MethodMetadata methodMetadata;
-  private final PublisherHttpClient publisherClient;
-  private final Function<Map<String, ?>, String> pathExpander;
-  private final Map<String, List<Function<Map<String, ?>, String>>> headerExpanders;
-  private final Map<String, Collection<String>> queriesAll;
-  private final Map<String, List<Function<Map<String, ?>, String>>> queryExpanders;
+    private final Target target;
+    private final MethodMetadata methodMetadata;
+    private final PublisherHttpClient publisherClient;
+    private final Function<Map<String, ?>, String> pathExpander;
+    private final Map<String, List<Function<Map<String, ?>, List<String>>>> headerExpanders;
+    private final Map<String, Collection<String>> queriesAll;
+    private final Map<String, List<Function<Map<String, ?>, List<String>>>> queryExpanders;
 
-  public PublisherClientMethodHandler(Target target,
-                                       MethodMetadata methodMetadata,
-                                       PublisherHttpClient publisherClient) {
-    this.target = checkNotNull(target, "target must be not null");
-    this.methodMetadata = checkNotNull(methodMetadata,
-        "methodMetadata must be not null");
-    this.publisherClient = checkNotNull(publisherClient, "client must be not null");
-    this.pathExpander = buildExpandFunction(methodMetadata.template().url());
-    this.headerExpanders = buildExpanders(methodMetadata.template().headers());
+    public PublisherClientMethodHandler(Target target,
+                                        MethodMetadata methodMetadata,
+                                        PublisherHttpClient publisherClient) {
+        this.target = checkNotNull(target, "target must be not null");
+        this.methodMetadata = checkNotNull(methodMetadata,
+                "methodMetadata must be not null");
+        this.publisherClient = checkNotNull(publisherClient, "client must be not null");
+        this.pathExpander = buildUrlExpandFunction(methodMetadata.template().url());
+        this.headerExpanders = buildExpanders(methodMetadata.template().headers());
 
-    this.queriesAll = new HashMap<>(methodMetadata.template().queries());
-    if (methodMetadata.formParams() != null) {
-      methodMetadata.formParams()
-          .forEach(param -> add(queriesAll, param, "{" + param + "}"));
-    }
-    this.queryExpanders = buildExpanders(queriesAll);
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public Publisher<?> invoke(final Object[] argv) {
-
-    final ReactiveHttpRequest request = buildRequest(argv);
-
-    return publisherClient.executeRequest(request);
-  }
-
-  protected ReactiveHttpRequest buildRequest(Object[] argv) {
-
-    Map<String, ?> substitutionsMap = methodMetadata.indexToName().entrySet().stream()
-        .flatMap(e -> e.getValue().stream()
-            .map(v -> new AbstractMap.SimpleImmutableEntry<>(e.getKey(), v)))
-        .collect(Collectors.toMap(Map.Entry::getValue,
-            entry -> argv[entry.getKey()]));
-
-    try {
-      String path = pathExpander.apply(substitutionsMap);
-      Map<String, Collection<String>> queries = queries(argv, substitutionsMap);
-      Map<String, List<String>> headers = headers(argv, substitutionsMap);
-
-      URI uri = new URI(target.url() + path + queryLine(queries));
-
-      return new ReactiveHttpRequest(methodMetadata.template().method(), uri, headers, body(argv));
-
-    } catch (URISyntaxException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private String queryLine(Map<String, Collection<String>> queries) {
-    if (queries.isEmpty()) {
-      return "";
+        this.queriesAll = new HashMap<>(methodMetadata.template().queries());
+        methodMetadata.formParams()
+                .forEach(param -> add(queriesAll, param, "{" + param + "}"));
+        this.queryExpanders = buildExpanders(queriesAll);
     }
 
-    StringBuilder queryBuilder = new StringBuilder();
-    for (Map.Entry<String, Collection<String>> query : queries.entrySet()) {
-      String field = query.getKey();
-      for (String value : query.getValue()) {
-        queryBuilder.append('&');
-        queryBuilder.append(field);
-        if (value != null) {
-          queryBuilder.append('=');
-          if (!value.isEmpty()) {
-            queryBuilder.append(value);
-          }
+    @Override
+    @SuppressWarnings("unchecked")
+    public Publisher<?> invoke(final Object[] argv) {
+
+        final ReactiveHttpRequest request = buildRequest(argv);
+
+        return publisherClient.executeRequest(request);
+    }
+
+    protected ReactiveHttpRequest buildRequest(Object[] argv) {
+
+        Map<String, ?> substitutionsMap = methodMetadata.indexToName().entrySet().stream()
+                .filter(e -> argv[e.getKey()] != null)
+                .flatMap(e -> e.getValue().stream()
+                        .map(v -> new AbstractMap.SimpleImmutableEntry<>(e.getKey(), v)))
+                .collect(Collectors.toMap(Map.Entry::getValue,
+                        entry -> argv[entry.getKey()]));
+
+        try {
+            String path = pathExpander.apply(substitutionsMap);
+            Map<String, Collection<String>> queries = queries(argv, substitutionsMap);
+            Map<String, List<String>> headers = headers(argv, substitutionsMap);
+
+            URI uri = new URI(target.url() + path + queryLine(queries));
+
+            return new ReactiveHttpRequest(methodMetadata.template().method(), uri, headers, body(argv));
+
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
         }
-      }
     }
-    queryBuilder.deleteCharAt(0);
-    return queryBuilder.insert(0, '?').toString();
-  }
 
-  protected Map<String, Collection<String>> queries(Object[] argv,
-                                                    Map<String, ?> substitutionsMap) {
-    Map<String, Collection<String>> queries = new LinkedHashMap<>();
+    private String queryLine(Map<String, Collection<String>> queries) {
+        if (queries.isEmpty()) {
+            return "";
+        }
 
-    // queries from template
-    queriesAll.keySet()
-        .forEach(queryName -> addAll(queries, queryName,
-            queryExpanders.get(queryName).stream()
-                .map(expander -> expander.apply(substitutionsMap))
-                .collect(toList())));
-
-    // queries from args
-    if (methodMetadata.queryMapIndex() != null) {
-      ((Map<String, ?>) argv[methodMetadata.queryMapIndex()])
-          .forEach((key, value) -> {
-            if (value instanceof Iterable) {
-              ((Iterable<?>) value).forEach(element -> add(queries, key, element.toString()));
-            } else {
-              add(queries, key, value.toString());
+        StringBuilder queryBuilder = new StringBuilder();
+        for (Map.Entry<String, Collection<String>> query : queries.entrySet()) {
+            String field = query.getKey();
+            for (String value : query.getValue()) {
+                queryBuilder.append('&');
+                queryBuilder.append(field);
+                queryBuilder.append('=');
+                if (!value.isEmpty()) {
+                    queryBuilder.append(value);
+                }
             }
-          });
-    }
-
-    return queries;
-  }
-
-  protected Map<String, List<String>> headers(Object[] argv, Map<String, ?> substitutionsMap) {
-
-    Map<String, List<String>> headers = new LinkedHashMap<>();
-
-    // headers from template
-    methodMetadata.template().headers().keySet()
-        .forEach(headerName -> addAllOrdered(headers, headerName,
-            headerExpanders.get(headerName).stream()
-                .map(expander -> expander.apply(substitutionsMap))
-                .collect(toList())));
-
-    // headers from args
-    if (methodMetadata.headerMapIndex() != null) {
-      ((Map<String, ?>) argv[methodMetadata.headerMapIndex()])
-          .forEach((key, value) -> {
-            if (value instanceof Iterable) {
-              ((Iterable<?>) value)
-                  .forEach(element -> addOrdered(headers, key, element.toString()));
-            } else {
-              addOrdered(headers, key, value.toString());
-            }
-          });
-    }
-
-    return headers;
-  }
-
-  protected Publisher<Object> body(Object[] argv) {
-    if (methodMetadata.bodyIndex() != null) {
-      return body(argv[methodMetadata.bodyIndex()]);
-    } else {
-      return Mono.empty();
-    }
-  }
-
-  protected Publisher<Object> body(Object body) {
-    if (body instanceof Publisher) {
-      return (Publisher<Object>) body;
-    } else {
-      return Mono.just(body);
-    }
-  }
-
-  private static Map<String, List<Function<Map<String, ?>, String>>> buildExpanders(
-          Map<String, Collection<String>> templates) {
-    Stream<Pair<String, String>> headersFlattened = templates.entrySet().stream()
-        .flatMap(e -> e.getValue().stream()
-            .map(v -> new Pair<>(e.getKey(), v)));
-    return headersFlattened.collect(groupingBy(
-        entry -> entry.left,
-        mapping(entry -> buildExpandFunction(entry.right), toList())));
-  }
-
-  /**
-   *
-   * @param template
-   * @return function that able to map substitutions map to actual value for specified template
-   */
-  private static final Pattern PATTERN = Pattern.compile("\\{([^}]+)\\}");
-
-  private static Function<Map<String, ?>, String> buildExpandFunction(String template) {
-    List<Function<Map<String, ?>, String>> chunks = new ArrayList<>();
-    Matcher matcher = PATTERN.matcher(template);
-    int previousMatchEnd = 0;
-    while (matcher.find()) {
-      String textChunk = template.substring(previousMatchEnd, matcher.start());
-      if (textChunk.length() > 0) {
-        chunks.add(data -> textChunk);
-      }
-
-      String substitute = matcher.group(1);
-      chunks.add(data -> {
-        Object substitution = data.get(substitute);
-        if (substitution != null) {
-          return substitution.toString();
+        }
+        if(queryBuilder.length() > 0) {
+            queryBuilder.deleteCharAt(0);
+            return queryBuilder.insert(0, '?').toString();
         } else {
-          return substitute;
+            return "";
         }
-      });
-      previousMatchEnd = matcher.end();
     }
 
-    String textChunk = template.substring(previousMatchEnd, template.length());
-    if (textChunk.length() > 0) {
-      chunks.add(data -> textChunk);
+    protected Map<String, Collection<String>> queries(Object[] argv,
+                                                      Map<String, ?> substitutionsMap) {
+        Map<String, Collection<String>> queries = new LinkedHashMap<>();
+
+        // queries from template
+        queriesAll.keySet()
+                .forEach(queryName -> addAll(queries, queryName,
+                        queryExpanders.get(queryName).stream()
+                                .map(expander -> expander.apply(substitutionsMap))
+                                .filter(Objects::nonNull)
+                                .flatMap(Collection::stream)
+                                .collect(toList())));
+
+        // queries from args
+        if (methodMetadata.queryMapIndex() != null && argv[methodMetadata.queryMapIndex()] != null) {
+            ((Map<String, ?>) argv[methodMetadata.queryMapIndex()])
+                    .forEach((key, value) -> {
+                        if (value instanceof Iterable) {
+                            ((Iterable<?>) value).forEach(element -> add(queries, key, element.toString()));
+                        } else if(value != null){
+                            add(queries, key, value.toString());
+                        }
+                    });
+        }
+
+        return queries;
     }
 
-    return traceData -> chunks.stream().map(chunk -> chunk.apply(traceData))
-        .collect(Collectors.joining());
-  }
+    protected Map<String, List<String>> headers(Object[] argv, Map<String, ?> substitutionsMap) {
+
+        Map<String, List<String>> headers = new LinkedHashMap<>();
+
+        // headers from template
+        methodMetadata.template().headers().keySet()
+                .forEach(headerName -> addAllOrdered(headers, headerName,
+                        headerExpanders.get(headerName).stream()
+                                .map(expander -> expander.apply(substitutionsMap))
+                                .filter(Objects::nonNull)
+                                .flatMap(Collection::stream)
+                                .collect(toList())));
+
+        // headers from args
+        if (methodMetadata.headerMapIndex() != null) {
+            ((Map<String, ?>) argv[methodMetadata.headerMapIndex()])
+                    .forEach((key, value) -> {
+                        if (value instanceof Iterable) {
+                            ((Iterable<?>) value)
+                                    .forEach(element -> addOrdered(headers, key, element.toString()));
+                        } else {
+                            addOrdered(headers, key, value.toString());
+                        }
+                    });
+        }
+
+        return headers;
+    }
+
+    protected Publisher<Object> body(Object[] argv) {
+        if (methodMetadata.bodyIndex() != null) {
+            return body(argv[methodMetadata.bodyIndex()]);
+        } else {
+            return Mono.empty();
+        }
+    }
+
+    protected Publisher<Object> body(Object body) {
+        if (body instanceof Publisher) {
+            return (Publisher<Object>) body;
+        } else {
+            return Mono.just(body);
+        }
+    }
+
+    private static Map<String, List<Function<Map<String, ?>, List<String>>>> buildExpanders(
+            Map<String, Collection<String>> templates) {
+        Stream<Pair<String, String>> templatesFlattened = templates.entrySet().stream()
+                .flatMap(e -> e.getValue().stream()
+                        .map(v -> new Pair<>(e.getKey(), v)));
+        return templatesFlattened.collect(groupingBy(
+                entry -> entry.left,
+                mapping(entry -> buildExpandFunction(entry.right), toList())));
+    }
+
+    /**
+     *
+     * @param template
+     * @return function that able to map substitutions map to actual value for specified template
+     */
+    private static final Pattern PATTERN = Pattern.compile("\\{([^}]+)\\}");
+
+    /**
+     *
+     * @param template
+     * @return function that able to map substitutions map to actual value for specified template
+     */
+    private static Function<Map<String, ?>, List<String>> buildExpandFunction(String template) {
+        Matcher matcher = PATTERN.matcher(template);
+        if(matcher.matches()){
+            String substitute = matcher.group(1);
+
+            return traceData -> {
+                Object substitution = traceData.get(substitute);
+                if (substitution != null) {
+                    if(substitution instanceof Iterable){
+                        List<String> stringValues = new ArrayList<>();
+                        ((Iterable) substitution).forEach(o -> stringValues.add(o.toString()));
+                        return stringValues;
+                    } else {
+                        return singletonList(substitution.toString());
+                    }
+                } else {
+                    return null;
+                }
+            };
+        } else {
+            return traceData -> singletonList(template);
+        }
+    }
+
+    /**
+     *
+     * @param template
+     * @return function that able to map substitutions map to actual value for specified template
+     */
+    private static Function<Map<String, ?>, String> buildUrlExpandFunction(String template) {
+        List<Function<Map<String, ?>, String>> chunks = new ArrayList<>();
+        Matcher matcher = PATTERN.matcher(template);
+        int previousMatchEnd = 0;
+        while (matcher.find()) {
+            String textChunk = template.substring(previousMatchEnd, matcher.start());
+            if (textChunk.length() > 0) {
+                chunks.add(data -> textChunk);
+            }
+
+            String substitute = matcher.group(1);
+            chunks.add(data -> {
+                Object substitution = data.get(substitute);
+                if (substitution != null) {
+                    return substitution.toString();
+                } else {
+                    throw new IllegalArgumentException("No substitution in url for:"+substitute);
+                }
+            });
+            previousMatchEnd = matcher.end();
+        }
+
+        String textChunk = template.substring(previousMatchEnd, template.length());
+        if (textChunk.length() > 0) {
+            chunks.add(data -> textChunk);
+        }
+
+        return traceData -> chunks.stream().map(chunk -> chunk.apply(traceData))
+                .collect(Collectors.joining());
+    }
 
 }

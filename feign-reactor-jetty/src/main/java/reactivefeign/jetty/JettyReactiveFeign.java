@@ -38,7 +38,6 @@ public class JettyReactiveFeign {
       } catch (Exception e) {
           throw new RuntimeException(e);
       }
-
   }
 
   public static <T> Builder<T> builder(HttpClient httpClient, JsonFactory jsonFactory, ObjectMapper objectMapper) {

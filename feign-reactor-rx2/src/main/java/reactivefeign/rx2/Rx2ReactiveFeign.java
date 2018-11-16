@@ -36,12 +36,7 @@ import static reactivefeign.utils.FeignUtils.returnPublisherType;
 /**
  * @author Sergii Karpenko
  */
-public class Rx2ReactiveFeign extends ReactiveFeign {
-
-    private Rx2ReactiveFeign(ReactiveFeign.ParseHandlersByName targetToHandlersByName,
-                             InvocationHandlerFactory factory) {
-        super(targetToHandlersByName, factory);
-    }
+public class Rx2ReactiveFeign {
 
     public static <T> Builder<T> builder() {
         return new Builder<>();

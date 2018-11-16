@@ -5,24 +5,25 @@ import com.netflix.hystrix.*;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import feign.MethodMetadata;
 import feign.Target;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.apache.http.HttpStatus.SC_SERVICE_UNAVAILABLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.isA;
+import static reactivefeign.cloud.LoadBalancingReactiveHttpClientTest.MONO_URL;
 
 /**
  * @author Sergii Karpenko
@@ -57,35 +58,35 @@ public class HystrixReactiveHttpClientTest {
         expectedException.expectMessage(containsString("failed and no fallback available"));
 
         String body = "success!";
-        LoadBalancingReactiveHttpClientTest.mockSuccessAfterSeveralAttempts(server, "/", 1, 598,
+        LoadBalancingReactiveHttpClientTest.mockSuccessAfterSeveralAttempts(server, MONO_URL, 1, 598,
                 aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(body));
 
-        LoadBalancingReactiveHttpClientTest.TestInterface client = CloudReactiveFeign.<LoadBalancingReactiveHttpClientTest.TestInterface>builder()
+        LoadBalancingReactiveHttpClientTest.TestMonoInterface client = CloudReactiveFeign.<LoadBalancingReactiveHttpClientTest.TestMonoInterface>builder()
                 .setHystrixCommandSetterFactory(getSetterFactory(testNo))
-                .target(LoadBalancingReactiveHttpClientTest.TestInterface.class, "http://localhost:" + server.port());
+                .target(LoadBalancingReactiveHttpClientTest.TestMonoInterface.class, "http://localhost:" + server.port());
 
-        client.get().block();
+        client.getMono().block();
     }
 
     @Test
     public void shouldNotFailDueToFallback() {
 
         String body = "success!";
-        LoadBalancingReactiveHttpClientTest.mockSuccessAfterSeveralAttempts(server, "/", 1, 598,
+        LoadBalancingReactiveHttpClientTest.mockSuccessAfterSeveralAttempts(server, MONO_URL, 1, 598,
                 aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(body));
 
-        LoadBalancingReactiveHttpClientTest.TestInterface client = CloudReactiveFeign.<LoadBalancingReactiveHttpClientTest.TestInterface>builder()
+        LoadBalancingReactiveHttpClientTest.TestMonoInterface client = CloudReactiveFeign.<LoadBalancingReactiveHttpClientTest.TestMonoInterface>builder()
                 .setHystrixCommandSetterFactory(getSetterFactory(testNo))
                 .setFallback(() -> Mono.just(FALLBACK))
-                .target(LoadBalancingReactiveHttpClientTest.TestInterface.class, "http://localhost:" + server.port());
+                .target(LoadBalancingReactiveHttpClientTest.TestMonoInterface.class, "http://localhost:" + server.port());
 
-        String result = client.get().block();
+        String result = client.getMono().block();
         assertThat(result).isEqualTo(FALLBACK);
     }
 
@@ -93,20 +94,21 @@ public class HystrixReactiveHttpClientTest {
     public void shouldOpenCircuitBreakerAndCloseAfterSleepTime() throws InterruptedException {
 
         int callsNo = VOLUME_THRESHOLD + 1;
-        LoadBalancingReactiveHttpClientTest.mockSuccessAfterSeveralAttempts(server, "/", VOLUME_THRESHOLD, SC_SERVICE_UNAVAILABLE,
+        LoadBalancingReactiveHttpClientTest.mockSuccessAfterSeveralAttempts(
+                server, MONO_URL, VOLUME_THRESHOLD, SC_SERVICE_UNAVAILABLE,
                 aResponse()
                         .withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(SUCCESS));
 
-        LoadBalancingReactiveHttpClientTest.TestInterface client = CloudReactiveFeign.<LoadBalancingReactiveHttpClientTest.TestInterface>builder()
+        LoadBalancingReactiveHttpClientTest.TestMonoInterface client = CloudReactiveFeign.<LoadBalancingReactiveHttpClientTest.TestMonoInterface>builder()
                 .setHystrixCommandSetterFactory(getSetterFactory(testNo))
-                .target(LoadBalancingReactiveHttpClientTest.TestInterface.class, "http://localhost:" + server.port());
+                .target(LoadBalancingReactiveHttpClientTest.TestMonoInterface.class, "http://localhost:" + server.port());
 
         //check that circuit breaker get opened on volume threshold
         List<Object> results = IntStream.range(0, callsNo).mapToObj(i -> {
             try {
-                return client.get().block();
+                return client.getMono().block();
             } catch (Throwable t) {
                 return t;
             }
@@ -133,7 +135,7 @@ public class HystrixReactiveHttpClientTest {
         //check that circuit breaker get closed again
         List<Object> resultsAfterSleep = IntStream.range(0, callsNo).mapToObj(i -> {
             try {
-                return client.get().block();
+                return client.getMono().block();
             } catch (Throwable t) {
                 return t;
             }
@@ -143,6 +145,26 @@ public class HystrixReactiveHttpClientTest {
         assertThat(HystrixCircuitBreaker.Factory.getInstance(lastCommandKey.get())
                 .isOpen())
                 .isFalse();
+    }
+
+    @Test
+    public void shouldFailOnTimeoutExceptionOnDefaultSettings() {
+
+        expectedException.expect(HystrixRuntimeException.class);
+        expectedException.expectCause(isA(TimeoutException.class));
+
+        server.stubFor(get(urlEqualTo(MONO_URL))
+                .inScenario("testScenario")
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withFixedDelay(2000)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("success!")));
+
+        LoadBalancingReactiveHttpClientTest.TestMonoInterface client = CloudReactiveFeign.<LoadBalancingReactiveHttpClientTest.TestMonoInterface>builder()
+                .target(LoadBalancingReactiveHttpClientTest.TestMonoInterface.class, "http://localhost:" + server.port());
+
+        client.getMono().block();
     }
 
     CloudReactiveFeign.SetterFactory getSetterFactory(int testNo) {

@@ -22,10 +22,14 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.IceCreamOrder;
+import reactivefeign.testcase.domain.Mixin;
 import reactivefeign.testcase.domain.OrderGenerator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -69,6 +73,24 @@ abstract public class DefaultMethodTest {
         .expectNextMatches(equalsComparingFieldByFieldRecursively(orderGenerated))
         .verifyComplete();
   }
+
+  @Test
+  public void shouldProcessDefaultFluxMethodOnProxy() throws JsonProcessingException {
+    String mixinsStr = TestUtils.MAPPER.writeValueAsString(Mixin.values());
+
+    wireMockRule.stubFor(get(urlEqualTo("/icecream/mixins"))
+            .willReturn(aResponse().withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(mixinsStr)));
+
+    IcecreamServiceApi client = builder()
+            .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
+
+    StepVerifier.create(client.getAvailableMixinNames())
+            .expectNext(Stream.of(Mixin.values()).map(Enum::name).toArray(String[]::new))
+            .verifyComplete();
+  }
+
 
   @Test(expected = RuntimeException.class)
   public void shouldNotWrapException() {
