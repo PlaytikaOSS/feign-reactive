@@ -75,7 +75,7 @@ public class JettyReactiveFeign {
           clientFactory(methodMetadata -> {
               JettyReactiveHttpClient jettyClient = JettyReactiveHttpClient.jettyClient(methodMetadata, httpClient, jsonFactory, objectMapper);
               if (options != null && options.getReadTimeoutMillis() != null) {
-                  jettyClient.setRequestTimeout(options.getReadTimeoutMillis());
+                  jettyClient = jettyClient.setRequestTimeout(options.getReadTimeoutMillis());
               }
               return jettyClient;
           });

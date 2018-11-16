@@ -32,7 +32,6 @@ import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.client.ReadTimeoutException;
-import reactivefeign.jetty.jetty.ResponseListenerPublisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -47,8 +46,6 @@ import static feign.Util.resolveLastTypeParameter;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static org.eclipse.jetty.http.HttpHeader.ACCEPT;
-import static org.eclipse.jetty.http.HttpHeader.CONTENT_TYPE;
-import static reactivefeign.jetty.utils.ProxyPostProcessor.postProcess;
 import static reactivefeign.utils.FeignUtils.getBodyActualType;
 
 /**
@@ -125,25 +122,12 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 			requestBuilder.content(provideBody(request));
 		}
 
-		ReactiveRequest reactiveRequest = requestBuilder.build();
-		return Mono.<ReactiveHttpResponse>from(
-				new ResponseListenerPublisher<>(reactiveRequest,
-						(response, content) -> Mono.just(
-								new JettyReactiveHttpResponse(response.getResponse(),
-										postProcess(content,
-												(contentChunk, throwable) -> {
-													if(throwable != null){
-														contentChunk.callback.failed(throwable);
-													} else {
-														contentChunk.callback.succeeded();
-													}
-												}),
-										returnPublisherClass, returnActualClass,
-										jsonFactory, responseReader))
-
-
-				)).onErrorMap(ex -> ex instanceof java.util.concurrent.TimeoutException,
-				ReadTimeoutException::new);
+		return Mono.<ReactiveHttpResponse>create(sink -> {
+			requestBuilder.build().getRequest().send(new JettyReactiveResponseListener(sink,
+					returnPublisherClass, returnActualClass, jsonFactory, responseReader));
+		})
+				.onErrorMap(ex -> ex instanceof java.util.concurrent.TimeoutException,
+						ReadTimeoutException::new);
 	}
 
 	protected void setUpHeaders(ReactiveHttpRequest request, HttpFields httpHeaders) {
