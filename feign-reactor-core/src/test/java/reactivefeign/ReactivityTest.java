@@ -36,7 +36,7 @@ abstract public class ReactivityTest {
 
   public static final int DELAY_IN_MILLIS = 500;
   public static final int CALLS_NUMBER = 500;
-  public static final int REACTIVE_GAIN_RATIO = 10;
+  public static final int REACTIVE_GAIN_RATIO = 20;
   @ClassRule
   public static WireMockClassRule wireMockRule = new WireMockClassRule(
           wireMockConfig()
@@ -76,7 +76,11 @@ abstract public class ReactivityTest {
             .until(() -> counter.get() == CALLS_NUMBER);
   }
 
-  public static int timeToCompleteReactively() {
-    return CALLS_NUMBER * DELAY_IN_MILLIS / REACTIVE_GAIN_RATIO;
+  private int timeToCompleteReactively(){
+    return CALLS_NUMBER * DELAY_IN_MILLIS / getReactiveGainRatio();
+  }
+
+  protected int getReactiveGainRatio(){
+    return REACTIVE_GAIN_RATIO;
   }
 }

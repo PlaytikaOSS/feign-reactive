@@ -52,7 +52,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.waitAtMost;
 import static reactivefeign.ReactivityTest.CALLS_NUMBER;
-import static reactivefeign.ReactivityTest.timeToCompleteReactively;
+import static reactivefeign.ReactivityTest.DELAY_IN_MILLIS;
+import static reactivefeign.ReactivityTest.REACTIVE_GAIN_RATIO;
 import static reactor.core.publisher.Flux.empty;
 import static reactor.core.publisher.Mono.fromFuture;
 import static reactor.core.publisher.Mono.just;
@@ -320,6 +321,14 @@ abstract public class AllFeaturesTest {
 
 		waitAtMost(new Duration(timeToCompleteReactively(), TimeUnit.MILLISECONDS))
 				.until(() -> counter.get() == CALLS_NUMBER);
+	}
+
+	private int timeToCompleteReactively(){
+		return CALLS_NUMBER * DELAY_IN_MILLIS / getReactiveGainRatio();
+	}
+
+	protected int getReactiveGainRatio(){
+		return REACTIVE_GAIN_RATIO;
 	}
 
 	@Test

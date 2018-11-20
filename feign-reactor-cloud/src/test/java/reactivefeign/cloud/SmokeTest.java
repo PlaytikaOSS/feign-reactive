@@ -11,22 +11,18 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package reactivefeign.jetty;
+package reactivefeign.cloud;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
 
-public class ReactivityTest extends reactivefeign.ReactivityTest {
+/**
+ * @author Sergii Karpenko
+ */
+public class SmokeTest extends reactivefeign.SmokeTest {
 
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
-    return JettyReactiveFeign.builder();
+    return CloudReactiveFeign.builder();
   }
-
-  @Override
-  protected int getReactiveGainRatio(){
-    return 8;
-  }
-
 }
