@@ -23,10 +23,4 @@ public class ReactivityTest extends reactivefeign.ReactivityTest {
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
     return JettyReactiveFeign.builder();
   }
-
-  @Override
-  protected int getReactiveGainRatio(){
-    return 8;
-  }
-
 }
