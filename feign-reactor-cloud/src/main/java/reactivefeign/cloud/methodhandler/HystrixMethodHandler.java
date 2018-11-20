@@ -37,14 +37,13 @@ public class HystrixMethodHandler implements MethodHandler {
             Target target, MethodMetadata methodMetadata,
             MethodHandler methodHandler,
             CloudReactiveFeign.SetterFactory setterFactory,
-            @Nullable
-                    Function<Throwable, Object> fallbackFactory) {
+            @Nullable Function<Throwable, Object> fallbackFactory) {
         checkNotNull(target, "target must be not null");
 
         checkNotNull(methodMetadata, "methodMetadata must be not null");
         method = Arrays.stream(target.type().getMethods())
                 .filter(method -> configKey(target.type(), method).equals(methodMetadata.configKey()))
-                .findFirst().orElseThrow(() -> new IllegalArgumentException());
+                .findFirst().orElseThrow(IllegalArgumentException::new);
         method.setAccessible(true);
 
         returnPublisherType = ((ParameterizedType) methodMetadata.returnType()).getRawType();
