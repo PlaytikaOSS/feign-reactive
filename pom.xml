@@ -13,6 +13,7 @@
         <module>feign-reactor-cloud</module>
         <module>feign-reactor-rx2</module>
         <module>feign-reactor-jetty</module>
+        <module>feign-reactor-benchmarks</module>
     </modules>
 
     <name>feign-reactive</name>
@@ -221,6 +222,11 @@
             </dependency>
             <dependency>
                 <groupId>com.playtika.reactivefeign</groupId>
+                <artifactId>feign-reactor-jetty</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.playtika.reactivefeign</groupId>
                 <artifactId>feign-reactor-cloud</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -411,7 +417,6 @@
                 <groupId>com.github.tomakehurst</groupId>
                 <artifactId>wiremock</artifactId>
                 <version>${wiremock.version}</version>
-                <scope>test</scope>
             </dependency>
 
             <dependency>
@@ -446,7 +451,6 @@
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
-                <scope>test</scope>
             </dependency>
 
         </dependencies>

@@ -28,58 +28,62 @@ import reactivefeign.jetty.client.JettyReactiveHttpClient;
  */
 public class JettyReactiveFeign {
 
-  public static <T> Builder<T> builder() {
-      try {
-          HttpClient httpClient = new HttpClient();
-          httpClient.start();
-          ObjectMapper objectMapper = new ObjectMapper();
-          objectMapper.registerModule(new JavaTimeModule());
-          return new Builder<>(httpClient, new JsonFactory(), objectMapper);
-      } catch (Exception e) {
-          throw new RuntimeException(e);
-      }
-  }
+    public static <T> Builder<T> builder() {
+        try {
+            HttpClient httpClient = new HttpClient();
+            httpClient.start();
+            return builder(httpClient);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-  public static <T> Builder<T> builder(HttpClient httpClient, JsonFactory jsonFactory, ObjectMapper objectMapper) {
+    public static <T> Builder<T> builder(HttpClient httpClient) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        return builder(httpClient, new JsonFactory(), objectMapper);
+    }
+
+    public static <T> Builder<T> builder(HttpClient httpClient, JsonFactory jsonFactory, ObjectMapper objectMapper) {
         return new Builder<>(httpClient, jsonFactory, objectMapper);
     }
 
-  public static class Builder<T> extends ReactiveFeign.Builder<T> {
+    public static class Builder<T> extends ReactiveFeign.Builder<T> {
 
-      protected HttpClient httpClient;
-      protected JsonFactory jsonFactory;
-      private ObjectMapper objectMapper;
-      protected ReactiveOptions options;
+        protected HttpClient httpClient;
+        protected JsonFactory jsonFactory;
+        private ObjectMapper objectMapper;
+        protected ReactiveOptions options;
 
-      protected Builder(HttpClient httpClient, JsonFactory jsonFactory, ObjectMapper objectMapper) {
-          setHttpClient(httpClient, jsonFactory, objectMapper);
-          this.jsonFactory = jsonFactory;
-          this.objectMapper = objectMapper;
-      }
+        protected Builder(HttpClient httpClient, JsonFactory jsonFactory, ObjectMapper objectMapper) {
+            setHttpClient(httpClient, jsonFactory, objectMapper);
+            this.jsonFactory = jsonFactory;
+            this.objectMapper = objectMapper;
+        }
 
-      @Override
-      public Builder<T> options(ReactiveOptions options) {
-          if (options.getConnectTimeoutMillis() != null) {
-              httpClient.setConnectTimeout(options.getConnectTimeoutMillis());
-          }
-          if (options.getReadTimeoutMillis() != null) {
-              setHttpClient(httpClient, jsonFactory, objectMapper);
-          }
-          this.options = options;
-          return this;
-      }
+        @Override
+        public Builder<T> options(ReactiveOptions options) {
+            if (options.getConnectTimeoutMillis() != null) {
+                httpClient.setConnectTimeout(options.getConnectTimeoutMillis());
+            }
+            if (options.getReadTimeoutMillis() != null) {
+                setHttpClient(httpClient, jsonFactory, objectMapper);
+            }
+            this.options = options;
+            return this;
+        }
 
-      protected void setHttpClient(HttpClient httpClient, JsonFactory jsonFactory, ObjectMapper objectMapper){
-          this.httpClient = httpClient;
-          clientFactory(methodMetadata -> {
-              JettyReactiveHttpClient jettyClient = JettyReactiveHttpClient.jettyClient(methodMetadata, httpClient, jsonFactory, objectMapper);
-              if (options != null && options.getReadTimeoutMillis() != null) {
-                  jettyClient = jettyClient.setRequestTimeout(options.getReadTimeoutMillis());
-              }
-              return jettyClient;
-          });
-      }
-  }
+        protected void setHttpClient(HttpClient httpClient, JsonFactory jsonFactory, ObjectMapper objectMapper){
+            this.httpClient = httpClient;
+            clientFactory(methodMetadata -> {
+                JettyReactiveHttpClient jettyClient = JettyReactiveHttpClient.jettyClient(methodMetadata, httpClient, jsonFactory, objectMapper);
+                if (options != null && options.getReadTimeoutMillis() != null) {
+                    jettyClient = jettyClient.setRequestTimeout(options.getReadTimeoutMillis());
+                }
+                return jettyClient;
+            });
+        }
+    }
 }
 
 
