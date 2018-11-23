@@ -14,6 +14,7 @@
 
 package reactivefeign;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -23,7 +24,6 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.assertj.core.api.Condition;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -33,12 +33,14 @@ import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.Bill;
 import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.OrderGenerator;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
@@ -56,10 +58,10 @@ abstract public class LoggerTest {
 
   abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder();
 
-  protected Appender appender;
-
   @Test
-  public void shouldLog() throws Exception {
+  public void shouldLogMono() throws Exception {
+
+    Appender appender = createAppender("TestMonoAppender");
 
     Level originalLevel = setLogLevel(Level.TRACE);
 
@@ -109,6 +111,114 @@ abstract public class LoggerTest {
     setLogLevel(originalLevel);
   }
 
+  @Test
+  public void shouldLogFlux() throws Exception {
+
+    Appender appender = createAppender("TestFluxAppender");
+
+    Level originalLevel = setLogLevel(Level.TRACE);
+
+    IceCreamOrder order1 = new OrderGenerator().generate(21);
+    Bill billExpected1 = Bill.makeBill(order1);
+
+    IceCreamOrder order2 = new OrderGenerator().generate(22);
+    Bill billExpected2 = Bill.makeBill(order2);
+
+    wireMockRule.stubFor(post(urlEqualTo("/icecream/orders/batch"))
+            .withRequestBody(equalTo(fluxRequestBody(asList(order1, order2))))
+            .willReturn(aResponse().withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(TestUtils.MAPPER.writeValueAsString(asList(billExpected1, billExpected2)))));
+
+    IcecreamServiceApi client = builder()
+            .target(IcecreamServiceApi.class,
+                    "http://localhost:" + wireMockRule.port());
+
+    Flux<Bill> billsFlux = client.makeOrders(Flux.just(order1, order2));
+
+    // no logs before subscription
+    ArgumentCaptor<LogEvent> argumentCaptor = ArgumentCaptor.forClass(LogEvent.class);
+    Mockito.verify(appender, never()).append(argumentCaptor.capture());
+
+    billsFlux.collectList().block();
+
+    Mockito.verify(appender, times(10)).append(argumentCaptor.capture());
+
+    List<LogEvent> logEvents = argumentCaptor.getAllValues();
+    assertLogEvent(logEvents, 0, Level.DEBUG,
+            "[IcecreamServiceApi#makeOrders]--->POST http://localhost");
+    assertLogEvent(logEvents, 1, Level.TRACE,
+            "[IcecreamServiceApi#makeOrders] REQUEST HEADERS\n" +
+                    "Accept:[application/json]");
+    assertLogEvent(logEvents, 2, Level.TRACE,
+            "[IcecreamServiceApi#makeOrders] REQUEST BODY ELEMENT\n" +
+                    "IceCreamOrder{ id=21, balls=");
+    assertLogEvent(logEvents, 3, Level.TRACE,
+            "[IcecreamServiceApi#makeOrders] REQUEST BODY ELEMENT\n" +
+                    "IceCreamOrder{ id=22, balls=");
+    assertLogEvent(logEvents, 4, Level.TRACE,
+            "[IcecreamServiceApi#makeOrders] RESPONSE HEADERS",
+            "Content-Type:application/json");
+    assertLogEvent(logEvents, 5, Level.DEBUG,
+            "[IcecreamServiceApi#makeOrders]<--- headers takes");
+    assertLogEvent(logEvents, 6, Level.TRACE,
+            "[IcecreamServiceApi#makeOrders] RESPONSE BODY ELEMENT\n" +
+                    "reactivefeign.testcase.domain.Bill");
+    assertLogEvent(logEvents, 7, Level.DEBUG,
+            "[IcecreamServiceApi#makeOrders]<--- body takes");
+    assertLogEvent(logEvents, 8, Level.TRACE,
+            "[IcecreamServiceApi#makeOrders] RESPONSE BODY ELEMENT\n" +
+                    "reactivefeign.testcase.domain.Bill");
+    assertLogEvent(logEvents, 9, Level.DEBUG,
+            "[IcecreamServiceApi#makeOrders]<--- body takes");
+
+    setLogLevel(originalLevel);
+  }
+
+  protected String fluxRequestBody(List<?> list) throws JsonProcessingException {
+    return TestUtils.MAPPER.writeValueAsString(list);
+  }
+
+  @Test
+  public void shouldLogNoBody() throws Exception {
+
+    Appender appender = createAppender("TestPingAppender");
+
+    Level originalLevel = setLogLevel(Level.TRACE);
+
+    wireMockRule.stubFor(get(urlEqualTo("/ping"))
+            .willReturn(aResponse().withStatus(200)
+                    .withHeader("Content-Type", "application/json")));
+
+    IcecreamServiceApi client = builder()
+            .target(IcecreamServiceApi.class,
+                    "http://localhost:" + wireMockRule.port());
+
+    Mono<Void> ping = client.ping();
+
+    // no logs before subscription
+    ArgumentCaptor<LogEvent> argumentCaptor = ArgumentCaptor.forClass(LogEvent.class);
+    Mockito.verify(appender, never()).append(argumentCaptor.capture());
+
+    ping.block();
+
+    Mockito.verify(appender, times(4)).append(argumentCaptor.capture());
+
+    List<LogEvent> logEvents = argumentCaptor.getAllValues();
+    assertLogEvent(logEvents, 0, Level.DEBUG,
+            "[IcecreamServiceApi#ping]--->GET http://localhost");
+    assertLogEvent(logEvents, 1, Level.TRACE,
+            "[IcecreamServiceApi#ping] REQUEST HEADERS\n" +
+                    "Accept:[application/json]");
+    assertLogEvent(logEvents, 2, Level.TRACE,
+            "[IcecreamServiceApi#ping] RESPONSE HEADERS",
+            "Content-Type:application/json");
+    assertLogEvent(logEvents, 3, Level.DEBUG,
+            "[IcecreamServiceApi#ping]<--- headers takes");
+
+    setLogLevel(originalLevel);
+  }
+
   private void assertLogEvent(List<LogEvent> events, int index, Level level, String message) {
     assertThat(events).element(index)
         .hasFieldOrPropertyWithValue("level", level)
@@ -126,12 +236,12 @@ abstract public class LoggerTest {
             .have(new Condition<>(o -> ((String) o).contains(message2), "check message2"));;
   }
 
-  @Before
-  public void before() {
-    appender = Mockito.mock(Appender.class);
-    when(appender.getName()).thenReturn("TestAppender");
+  public Appender createAppender(String name) {
+    Appender appender = Mockito.mock(Appender.class);
+    when(appender.getName()).thenReturn(name);
     when(appender.isStarted()).thenReturn(true);
     getLoggerConfig().addAppender(appender, Level.ALL, null);
+    return appender;
   }
 
   private static Level setLogLevel(Level logLevel) {

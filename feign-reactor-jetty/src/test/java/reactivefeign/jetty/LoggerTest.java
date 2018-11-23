@@ -13,8 +13,14 @@
  */
 package reactivefeign.jetty;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static reactivefeign.TestUtils.MAPPER;
 
 /**
  * @author Sergii Karpenko
@@ -26,4 +32,16 @@ public class LoggerTest extends reactivefeign.LoggerTest {
     return JettyReactiveFeign.builder();
   }
 
+  @Override
+  protected String fluxRequestBody(List<?> list) {
+    return list.stream()
+            .map(element -> {
+              try {
+                return MAPPER.writeValueAsString(element);
+              } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+              }
+            }).collect(Collectors.joining("\n"))+"\n";
+
+  }
 }

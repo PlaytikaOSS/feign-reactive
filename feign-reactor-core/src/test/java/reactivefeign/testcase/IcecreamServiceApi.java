@@ -43,12 +43,20 @@ public interface IcecreamServiceApi {
   @Headers("Content-Type: application/json")
   Mono<Bill> makeOrder(IceCreamOrder order);
 
+  @RequestLine("POST /icecream/orders/batch")
+  @Headers("Content-Type: application/json")
+  Flux<Bill> makeOrders(Flux<IceCreamOrder> orders);
+
   @RequestLine("GET /icecream/orders/{orderId}")
   Mono<IceCreamOrder> findOrder(@Param("orderId") int orderId);
 
   @RequestLine("POST /icecream/bills/pay")
   @Headers("Content-Type: application/json")
   Mono<Void> payBill(Bill bill);
+
+  @RequestLine("GET /ping")
+  @Headers("Content-Type: application/json")
+  Mono<Void> ping();
 
   default Mono<IceCreamOrder> findFirstOrder() {
     return findOrder(1);

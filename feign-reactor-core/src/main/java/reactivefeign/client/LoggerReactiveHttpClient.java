@@ -118,9 +118,13 @@ public class LoggerReactiveHttpClient implements ReactiveHttpClient {
     }
   }
 
-  private void logResponseBodyAndTime(String feignMethodTag, Object response, long elapsedTime) {
+  private void logResponseBodyAndTime(String feignMethodTag, Object response, long elapsedTime, boolean mono) {
     if (logger.isTraceEnabled()) {
-      logger.trace("[{}] RESPONSE BODY\n{}", feignMethodTag, response);
+      if(mono) {
+        logger.trace("[{}] RESPONSE BODY\n{}", feignMethodTag, response);
+      } else {
+        logger.trace("[{}] RESPONSE BODY ELEMENT\n{}", feignMethodTag, response);
+      }
     }
 
     if (logger.isDebugEnabled()) {
@@ -142,9 +146,9 @@ public class LoggerReactiveHttpClient implements ReactiveHttpClient {
       Publisher<?> publisher = getResponse().body();
 
       if (publisher instanceof Mono) {
-        return ((Mono<?>) publisher).doOnNext(responseBodyLogger(start));
+        return ((Mono<?>) publisher).doOnNext(responseBodyLogger(start, true));
       } else {
-        return ((Flux<?>) publisher).doOnNext(responseBodyLogger(start));
+        return ((Flux<?>) publisher).doOnNext(responseBodyLogger(start, false));
       }
 
     }
@@ -153,12 +157,12 @@ public class LoggerReactiveHttpClient implements ReactiveHttpClient {
     public Mono<byte[]> bodyData() {
       Mono<byte[]> publisher = getResponse().bodyData();
 
-      return publisher.doOnNext(responseBodyLogger(start));
+      return publisher.doOnNext(responseBodyLogger(start, true));
     }
 
-    private Consumer<Object> responseBodyLogger(AtomicLong start) {
+    private Consumer<Object> responseBodyLogger(AtomicLong start, boolean mono) {
       return result -> logResponseBodyAndTime(methodTag, result,
-          System.currentTimeMillis() - start.get());
+          System.currentTimeMillis() - start.get(), mono);
     }
   }
 
