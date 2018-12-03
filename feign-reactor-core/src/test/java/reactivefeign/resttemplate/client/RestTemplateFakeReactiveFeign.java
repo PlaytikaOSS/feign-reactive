@@ -44,8 +44,10 @@ public class RestTemplateFakeReactiveFeign {
         if (options.getConnectTimeoutMillis() != null) {
           requestFactory.setConnectTimeout(options.getConnectTimeoutMillis().intValue());
         }
-        if (options.getReadTimeoutMillis() != null) {
-          requestFactory.setReadTimeout(options.getReadTimeoutMillis().intValue());
+
+        RestTemplateReactiveOptions restTemplateOptions = (RestTemplateReactiveOptions)options;
+        if (restTemplateOptions.getReadTimeoutMillis() != null) {
+          requestFactory.setReadTimeout(restTemplateOptions.getReadTimeoutMillis().intValue());
         }
 
         this.clientFactory(methodMetadata -> {

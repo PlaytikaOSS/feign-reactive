@@ -3,8 +3,8 @@ package reactivefeign.utils;
 import org.junit.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static reactivefeign.utils.HttpUtils.familyOf;
 import static reactivefeign.utils.HttpUtils.StatusCodeFamily.*;
+import static reactivefeign.utils.HttpUtils.familyOf;
 
 public class HttpUtilsTest {
 

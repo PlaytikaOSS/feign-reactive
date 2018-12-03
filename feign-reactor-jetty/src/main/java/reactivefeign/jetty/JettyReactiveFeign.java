@@ -21,6 +21,9 @@ import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.jetty.client.JettyReactiveHttpClient;
 
+import java.util.Optional;
+import java.util.stream.Stream;
+
 /**
  * Reactive Jetty client based implementation of reactive Feign
  *
@@ -53,7 +56,7 @@ public class JettyReactiveFeign {
         protected HttpClient httpClient;
         protected JsonFactory jsonFactory;
         private ObjectMapper objectMapper;
-        protected ReactiveOptions options;
+        protected JettyReactiveOptions options;
 
         protected Builder(HttpClient httpClient, JsonFactory jsonFactory, ObjectMapper objectMapper) {
             setHttpClient(httpClient, jsonFactory, objectMapper);
@@ -63,13 +66,15 @@ public class JettyReactiveFeign {
 
         @Override
         public Builder<T> options(ReactiveOptions options) {
-            if (options.getConnectTimeoutMillis() != null) {
+            this.options = (JettyReactiveOptions)options;
+
+            if (this.options.getConnectTimeoutMillis() != null) {
                 httpClient.setConnectTimeout(options.getConnectTimeoutMillis());
             }
-            if (options.getReadTimeoutMillis() != null) {
+            if (this.options.getRequestTimeoutMillis() != null) {
                 setHttpClient(httpClient, jsonFactory, objectMapper);
             }
-            this.options = options;
+
             return this;
         }
 
@@ -77,8 +82,9 @@ public class JettyReactiveFeign {
             this.httpClient = httpClient;
             clientFactory(methodMetadata -> {
                 JettyReactiveHttpClient jettyClient = JettyReactiveHttpClient.jettyClient(methodMetadata, httpClient, jsonFactory, objectMapper);
-                if (options != null && options.getReadTimeoutMillis() != null) {
-                    jettyClient = jettyClient.setRequestTimeout(options.getReadTimeoutMillis());
+                if (options != null && options.getRequestTimeoutMillis() != null) {
+
+                    jettyClient = jettyClient.setRequestTimeout(options.getRequestTimeoutMillis());
                 }
                 return jettyClient;
             });

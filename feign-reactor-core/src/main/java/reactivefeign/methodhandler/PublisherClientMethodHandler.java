@@ -23,7 +23,6 @@ import reactivefeign.utils.Pair;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -80,25 +79,27 @@ public class PublisherClientMethodHandler implements MethodHandler {
 
     protected ReactiveHttpRequest buildRequest(Object[] argv) {
 
-        Map<String, ?> substitutionsMap = methodMetadata.indexToName().entrySet().stream()
+        Map<String, ?> substitutionsMap = buildSubstitutions(argv);
+
+        String path = pathExpander.apply(substitutionsMap);
+
+        Map<String, Collection<String>> queries = queries(argv, substitutionsMap);
+        String queryLine = queryLine(queries);
+
+        URI uri = URI.create(target.url() + path + queryLine);
+
+        Map<String, List<String>> headers = headers(argv, substitutionsMap);
+
+        return new ReactiveHttpRequest(methodMetadata.template().method(), uri, headers, body(argv));
+    }
+
+    private Map<String, Object> buildSubstitutions(Object[] argv) {
+        return methodMetadata.indexToName().entrySet().stream()
                 .filter(e -> argv[e.getKey()] != null)
                 .flatMap(e -> e.getValue().stream()
                         .map(v -> new AbstractMap.SimpleImmutableEntry<>(e.getKey(), v)))
                 .collect(Collectors.toMap(Map.Entry::getValue,
                         entry -> argv[entry.getKey()]));
-
-        try {
-            String path = pathExpander.apply(substitutionsMap);
-            Map<String, Collection<String>> queries = queries(argv, substitutionsMap);
-            Map<String, List<String>> headers = headers(argv, substitutionsMap);
-
-            URI uri = new URI(target.url() + path + queryLine(queries));
-
-            return new ReactiveHttpRequest(methodMetadata.template().method(), uri, headers, body(argv));
-
-        } catch (URISyntaxException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private String queryLine(Map<String, Collection<String>> queries) {

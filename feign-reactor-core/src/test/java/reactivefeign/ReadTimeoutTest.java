@@ -32,7 +32,7 @@ abstract public class ReadTimeoutTest {
   public static WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig().dynamicPort());
 
-  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder(ReactiveOptions options);
+  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long readTimeoutInMillis);
 
   @Test
   public void shouldFailOnReadTimeout() {
@@ -43,11 +43,7 @@ abstract public class ReadTimeoutTest {
         .withHeader("Accept", equalTo("application/json"))
         .willReturn(aResponse().withFixedDelay(200)));
 
-    IcecreamServiceApi client = builder(
-        new ReactiveOptions.Builder()
-            .setConnectTimeoutMillis(300)
-            .setReadTimeoutMillis(100)
-            .build())
+    IcecreamServiceApi client = builder(100)
                 .target(IcecreamServiceApi.class,
                     "http://localhost:" + wireMockRule.port());
 

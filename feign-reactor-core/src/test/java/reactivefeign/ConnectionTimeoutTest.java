@@ -35,7 +35,7 @@ abstract public class ConnectionTimeoutTest {
   private Socket socket;
   private int port;
 
-  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder(ReactiveOptions options);
+  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long connectTimeoutInMillis);
 
   @Before
   public void before() throws IOException {
@@ -66,11 +66,7 @@ abstract public class ConnectionTimeoutTest {
 
         Matchers.any(ConnectException.class));
 
-    IcecreamServiceApi client = builder(
-        new ReactiveOptions.Builder()
-            .setConnectTimeoutMillis(300)
-            .setReadTimeoutMillis(100)
-            .build())
+    IcecreamServiceApi client = builder(300)
                 .target(IcecreamServiceApi.class, "http://localhost:" + port);
 
     client.findOrder(1).block();

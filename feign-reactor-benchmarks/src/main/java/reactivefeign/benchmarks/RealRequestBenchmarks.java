@@ -1,65 +1,62 @@
 package reactivefeign.benchmarks;
 
-import com.github.tomakehurst.wiremock.WireMockServer;
 import feign.Feign;
+import io.netty.buffer.ByteBuf;
+import io.reactivex.netty.RxNetty;
+import io.reactivex.netty.protocol.http.server.HttpServer;
+import io.reactivex.netty.protocol.http.server.HttpServerRequest;
+import io.reactivex.netty.protocol.http.server.HttpServerResponse;
+import io.reactivex.netty.protocol.http.server.RequestHandler;
 import org.eclipse.jetty.client.HttpClient;
-import org.openjdk.jmh.annotations.*;
+import org.eclipse.jetty.util.ProcessorUtils;
+import org.eclipse.jetty.util.thread.ExecutorThreadPool;
+import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.webclient.WebReactiveFeign;
 
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-
-@Measurement(iterations = 10, time = 1)
-@Warmup(iterations = 5, time = 1)
-@Fork(3)
-@BenchmarkMode(Mode.Throughput)
-@OutputTimeUnit(TimeUnit.SECONDS)
-@State(Scope.Benchmark)
 abstract public class RealRequestBenchmarks {
 
-  private WireMockServer server;
+    public static final int SERVER_PORT = 8766;
+    private HttpServer<ByteBuf, ByteBuf> server;
 
-  protected FeignReactorTestInterface webClientFeign;
+    protected FeignReactorTestInterface webClientFeign;
 
-  protected HttpClient jettyHttpClient;
-  protected FeignReactorTestInterface jettyFeign;
+    protected HttpClient jettyHttpClient;
+    protected FeignReactorTestInterface jettyFeign;
 
-  protected FeignTestInterface feign;
+    protected FeignTestInterface feign;
 
-  @Setup
-  public void setup() throws Exception {
+    protected void setup() throws Exception {
 
-      server = new WireMockServer(wireMockConfig()
-              .dynamicPort()
-              .asynchronousResponseEnabled(true));
+        //just OK response with empty body on any request
+        server = RxNetty.createHttpServer(SERVER_PORT, new RequestHandler<ByteBuf, ByteBuf>() {
+            public rx.Observable<Void> handle(HttpServerRequest<ByteBuf> request,
+                                              HttpServerResponse<ByteBuf> response) {
+                return response.flush();
+            }
+        });
+        server.start();
 
-      server.stubFor(get(urlEqualTo("/"))
-            .willReturn(aResponse().withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody("testBody")));
+        webClientFeign = WebReactiveFeign.<FeignReactorTestInterface>builder()
+                .target(FeignReactorTestInterface.class, "http://localhost:" + SERVER_PORT);
 
-    server.start();
+        jettyHttpClient = new HttpClient();
+        jettyHttpClient.setMaxConnectionsPerDestination(10000);
+        jettyHttpClient.start();
+        jettyFeign = JettyReactiveFeign.<FeignReactorTestInterface>builder(jettyHttpClient)
+                .target(FeignReactorTestInterface.class, "http://localhost:" + SERVER_PORT);
 
-    int serverPort = server.port();
-    webClientFeign = WebReactiveFeign.<FeignReactorTestInterface>builder()
-        .target(FeignReactorTestInterface.class, "http://localhost:" + serverPort);
+        feign = Feign.builder().target(FeignTestInterface.class, "http://localhost:" + SERVER_PORT);
+    }
 
-    jettyHttpClient = new HttpClient();
-    jettyHttpClient.start();
-    jettyFeign = JettyReactiveFeign.<FeignReactorTestInterface>builder(jettyHttpClient)
-            .target(FeignReactorTestInterface.class, "http://localhost:" + serverPort);
-
-    feign = Feign.builder().target(FeignTestInterface.class, "http://localhost:" + serverPort);
-  }
-
-  @TearDown
-  public void tearDown() throws Exception {
-    server.shutdown();
-    jettyHttpClient.stop();
-  }
-
+    protected void tearDown() throws Exception {
+        server.shutdown();
+        ((QueuedThreadPool)jettyHttpClient.getExecutor()).stop();
+        jettyHttpClient.stop();
+    }
 
 }

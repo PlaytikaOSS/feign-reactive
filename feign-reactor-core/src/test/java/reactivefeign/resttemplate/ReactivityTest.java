@@ -15,7 +15,6 @@ package reactivefeign.resttemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.awaitility.core.ConditionTimeoutException;
-import org.junit.Before;
 import org.junit.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;

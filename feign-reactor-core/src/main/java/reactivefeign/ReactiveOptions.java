@@ -19,13 +19,10 @@ package reactivefeign;
 public class ReactiveOptions {
 
   private final Long connectTimeoutMillis;
-  private final Long readTimeoutMillis;
   private final Boolean tryUseCompression;
 
-  private ReactiveOptions(Long connectTimeoutMillis, Long readTimeoutMillis,
-      Boolean tryUseCompression) {
+  protected ReactiveOptions(Long connectTimeoutMillis, Boolean tryUseCompression) {
     this.connectTimeoutMillis = connectTimeoutMillis;
-    this.readTimeoutMillis = readTimeoutMillis;
     this.tryUseCompression = tryUseCompression;
   }
 
@@ -33,23 +30,17 @@ public class ReactiveOptions {
     return connectTimeoutMillis;
   }
 
-  public Long getReadTimeoutMillis() {
-    return readTimeoutMillis;
-  }
-
   public Boolean isTryUseCompression() {
     return tryUseCompression;
   }
 
   public boolean isEmpty() {
-    return connectTimeoutMillis == null && readTimeoutMillis == null
-        && tryUseCompression == null;
+    return connectTimeoutMillis == null && tryUseCompression == null;
   }
 
-  public static class Builder {
-    private Long connectTimeoutMillis;
-    private Long readTimeoutMillis;
-    private Boolean tryUseCompression;
+  abstract public static class Builder {
+    protected Long connectTimeoutMillis;
+    protected Boolean tryUseCompression;
 
     public Builder() {}
 
@@ -58,19 +49,11 @@ public class ReactiveOptions {
       return this;
     }
 
-    public Builder setReadTimeoutMillis(long readTimeoutMillis) {
-      this.readTimeoutMillis = readTimeoutMillis;
-      return this;
-    }
-
     public Builder setTryUseCompression(boolean tryUseCompression) {
       this.tryUseCompression = tryUseCompression;
       return this;
     }
 
-    public ReactiveOptions build() {
-      return new ReactiveOptions(connectTimeoutMillis, readTimeoutMillis,
-          tryUseCompression);
-    }
+    abstract public ReactiveOptions build();
   }
 }

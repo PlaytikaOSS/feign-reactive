@@ -42,7 +42,7 @@ abstract public class CompressionTest {
   public static WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig().dynamicPort());
 
-  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder(ReactiveOptions options);
+  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder(boolean tryUseCompression);
 
   @Test
   public void testCompression() throws JsonProcessingException {
@@ -58,10 +58,7 @@ abstract public class CompressionTest {
             .withHeader("Content-Encoding", "gzip")
             .withBody(Gzip.gzip(TestUtils.MAPPER.writeValueAsString(billExpected)))));
 
-    IcecreamServiceApi client = builder(
-        new ReactiveOptions.Builder()
-            .setTryUseCompression(true)
-            .build())
+    IcecreamServiceApi client = builder(true)
                 .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     Mono<Bill> bill = client.makeOrder(order);

@@ -13,8 +13,6 @@
  */
 package reactivefeign.jetty;
 
-import org.junit.Ignore;
-import org.junit.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
 

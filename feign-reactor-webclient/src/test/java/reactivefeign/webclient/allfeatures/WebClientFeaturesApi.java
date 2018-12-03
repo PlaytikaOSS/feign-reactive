@@ -7,8 +7,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.buffer.DataBuffer;
 import reactor.core.publisher.Flux;
 
-import java.nio.ByteBuffer;
-
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
 
 public interface WebClientFeaturesApi {

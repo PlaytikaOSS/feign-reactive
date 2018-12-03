@@ -26,6 +26,7 @@ import reactivefeign.ReactiveOptions;
 import reactivefeign.rx2.testcase.IcecreamServiceApi;
 import reactivefeign.rx2.testcase.domain.IceCreamOrder;
 import reactivefeign.rx2.testcase.domain.OrderGenerator;
+import reactivefeign.webclient.WebReactiveOptions;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -94,9 +95,10 @@ public class DefaultMethodTest {
   public void shouldOverrideEquals() {
 
     IcecreamServiceApi client = builder(
-        new ReactiveOptions.Builder()
+        new WebReactiveOptions.Builder()
+            .setReadTimeoutMillis(100)
             .setConnectTimeoutMillis(300)
-            .setReadTimeoutMillis(100).build())
+            .build())
                 .target(IcecreamServiceApi.class,
                     "http://localhost:" + wireMockRule.port());
 

@@ -14,7 +14,6 @@
 package reactivefeign.jetty;
 
 import reactivefeign.ReactiveFeign;
-import reactivefeign.ReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 /**
@@ -23,7 +22,8 @@ import reactivefeign.testcase.IcecreamServiceApi;
 public class ReadTimeoutTest extends reactivefeign.ReadTimeoutTest {
 
   @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder(ReactiveOptions options) {
-    return JettyReactiveFeign.<IcecreamServiceApi>builder().options(options);
+  protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
+    return JettyReactiveFeign.<IcecreamServiceApi>builder().options(
+            new JettyReactiveOptions.Builder().setRequestTimeoutMillis(readTimeoutInMillis).build());
   }
 }

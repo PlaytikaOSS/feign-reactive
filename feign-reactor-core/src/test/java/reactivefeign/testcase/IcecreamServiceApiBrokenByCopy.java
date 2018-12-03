@@ -13,19 +13,13 @@
  */
 package reactivefeign.testcase;
 
-import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
 import reactivefeign.ReactiveContract;
-import reactivefeign.testcase.domain.Bill;
-import reactivefeign.testcase.domain.Flavor;
-import reactivefeign.testcase.domain.IceCreamOrder;
-import reactivefeign.testcase.domain.Mixin;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.nio.ByteBuffer;
-import java.util.Collection;
 
 /**
  * API of an iceream web service with one method that returns {@link Mono} or {@link Flux} of byte array

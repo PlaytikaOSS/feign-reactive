@@ -14,7 +14,6 @@
 package reactivefeign.webclient;
 
 import reactivefeign.ReactiveFeign;
-import reactivefeign.ReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 /**
@@ -33,7 +32,9 @@ public class DefaultMethodTest extends reactivefeign.DefaultMethodTest {
   }
 
   @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder(ReactiveOptions options) {
-    return WebReactiveFeign.<IcecreamServiceApi>builder().options(options);
+  protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long connectTimeoutInMillis) {
+    return WebReactiveFeign.<IcecreamServiceApi>builder().options(
+            new WebReactiveOptions.Builder().setConnectTimeoutMillis(connectTimeoutInMillis).build()
+    );
   }
 }

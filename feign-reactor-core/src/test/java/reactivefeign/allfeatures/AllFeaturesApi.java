@@ -18,7 +18,6 @@ package reactivefeign.allfeatures;
 
 import feign.*;
 import org.reactivestreams.Publisher;
-import org.springframework.web.bind.annotation.RequestHeader;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -26,9 +25,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.Map;
 
-import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
-import static org.springframework.http.MediaType.APPLICATION_STREAM_JSON_VALUE;
-import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
+import static org.springframework.http.MediaType.*;
 
 @Headers({ "Accept: application/json" })
 public interface AllFeaturesApi {

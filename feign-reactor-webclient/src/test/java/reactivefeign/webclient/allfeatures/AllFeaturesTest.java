@@ -18,14 +18,10 @@ package reactivefeign.webclient.allfeatures;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 import reactivefeign.ReactiveFeign;
-import reactivefeign.allfeatures.AllFeaturesController;
 import reactivefeign.webclient.WebReactiveFeign;
 
 /**

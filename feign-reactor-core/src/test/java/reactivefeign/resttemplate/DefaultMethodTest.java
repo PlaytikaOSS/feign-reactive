@@ -14,8 +14,8 @@
 package reactivefeign.resttemplate;
 
 import reactivefeign.ReactiveFeign;
-import reactivefeign.ReactiveOptions;
 import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
+import reactivefeign.resttemplate.client.RestTemplateReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 /**
@@ -34,7 +34,9 @@ public class DefaultMethodTest extends reactivefeign.DefaultMethodTest {
   }
 
   @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder(ReactiveOptions options) {
-    return RestTemplateFakeReactiveFeign.<IcecreamServiceApi>builder().options(options);
+  protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long connectTimeoutInMillis) {
+    return RestTemplateFakeReactiveFeign.<IcecreamServiceApi>builder().options(
+            new RestTemplateReactiveOptions.Builder().setConnectTimeoutMillis(connectTimeoutInMillis).build()
+    );
   }
 }

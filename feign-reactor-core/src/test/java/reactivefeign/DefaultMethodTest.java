@@ -24,11 +24,9 @@ import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.Mixin;
 import reactivefeign.testcase.domain.OrderGenerator;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -53,7 +51,7 @@ abstract public class DefaultMethodTest {
 
   abstract protected <API> ReactiveFeign.Builder<API> builder(Class<API> apiClass);
 
-  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder(ReactiveOptions options);
+  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long connectTimeoutInMillis);
 
   @Test
   public void shouldProcessDefaultMethodOnProxy() throws JsonProcessingException {
@@ -107,10 +105,7 @@ abstract public class DefaultMethodTest {
   @Test
   public void shouldOverrideEquals() {
 
-    IcecreamServiceApi client = builder(
-        new ReactiveOptions.Builder()
-            .setConnectTimeoutMillis(300)
-            .setReadTimeoutMillis(100).build())
+    IcecreamServiceApi client = builder(300)
                 .target(IcecreamServiceApi.class,
                     "http://localhost:" + wireMockRule.port());
 

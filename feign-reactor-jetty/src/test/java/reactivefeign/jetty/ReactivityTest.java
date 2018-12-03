@@ -13,7 +13,6 @@
  */
 package reactivefeign.jetty;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
 
