@@ -77,7 +77,7 @@
         <rxjava2.version>2.2.2</rxjava2.version>
 
         <!--Jetty-->
-        <jetty-reactive-httpclient.version>1.0.1</jetty-reactive-httpclient.version>
+        <jetty-reactive-httpclient.version>1.0.2</jetty-reactive-httpclient.version>
         <json-reactor.version>0.0.1</json-reactor.version>
 
         <!-- Tests -->

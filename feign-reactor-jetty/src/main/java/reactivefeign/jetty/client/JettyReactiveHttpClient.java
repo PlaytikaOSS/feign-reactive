@@ -46,6 +46,7 @@ import static feign.Util.resolveLastTypeParameter;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static org.eclipse.jetty.http.HttpHeader.ACCEPT;
+import static reactivefeign.jetty.utils.ProxyPostProcessor.postProcess;
 import static reactivefeign.utils.FeignUtils.getBodyActualType;
 
 /**
@@ -123,12 +124,22 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 			requestBuilder.content(provideBody(request));
 		}
 
-		return Mono.<ReactiveHttpResponse>create(sink -> {
-			requestBuilder.build().getRequest().send(new JettyReactiveResponseListener(sink,
-					returnPublisherClass, returnActualClass, jsonFactory, responseReader));
-		})
-				.onErrorMap(ex -> ex instanceof java.util.concurrent.TimeoutException,
-						ReadTimeoutException::new);
+		return Mono.<ReactiveHttpResponse>from(requestBuilder.build().response((response, content) -> Mono.just(
+				new JettyReactiveHttpResponse(response.getResponse(),
+						postProcess(content,
+								(contentChunk, throwable) -> {
+									if(throwable != null){
+										contentChunk.callback.failed(throwable);
+									} else {
+										contentChunk.callback.succeeded();
+									}
+								}),
+						returnPublisherClass, returnActualClass,
+						jsonFactory, responseReader))
+
+
+		)).onErrorMap(ex -> ex instanceof java.util.concurrent.TimeoutException,
+				ReadTimeoutException::new);
 	}
 
 	protected void setUpHeaders(ReactiveHttpRequest request, HttpFields httpHeaders) {
