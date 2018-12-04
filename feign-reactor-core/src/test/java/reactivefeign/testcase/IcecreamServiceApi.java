@@ -71,5 +71,8 @@ public interface IcecreamServiceApi {
   }
 
   @RequestLine("GET / / /{orderId}")
-  Mono<IceCreamOrder> corruptedUrl(@Param("orderId") int orderId);
+  Mono<IceCreamOrder> corruptedUrlMono(@Param("orderId") int orderId);
+
+  @RequestLine("GET / / /{orderId}")
+  Flux<IceCreamOrder> corruptedUrlFlux(@Param("orderId") int orderId);
 }
