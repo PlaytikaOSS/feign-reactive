@@ -65,8 +65,8 @@ public class ReactiveFeign {
   private final InvocationHandlerFactory factory;
 
   protected ReactiveFeign(
-      final ParseHandlersByName targetToHandlersByName,
-      final InvocationHandlerFactory factory) {
+          final ParseHandlersByName targetToHandlersByName,
+          final InvocationHandlerFactory factory) {
     this.targetToHandlersByName = targetToHandlersByName;
     this.factory = factory;
   }
@@ -108,9 +108,9 @@ public class ReactiveFeign {
     protected ReactiveHttpRequestInterceptor requestInterceptor;
     protected BiFunction<MethodMetadata, ReactiveHttpResponse, ReactiveHttpResponse> responseMapper;
     protected ReactiveStatusHandler statusHandler =
-        ReactiveStatusHandlers.defaultFeign(new ErrorDecoder.Default());
+            ReactiveStatusHandlers.defaultFeign(new ErrorDecoder.Default());
     protected InvocationHandlerFactory invocationHandlerFactory =
-        new ReactiveInvocationHandler.Factory();
+            new ReactiveInvocationHandler.Factory();
     protected boolean decode404 = false;
     protected Target<T> target;
 
@@ -139,11 +139,10 @@ public class ReactiveFeign {
     }
 
     public Builder<T> addHeaders(List<Pair<String, String>> headers) {
-      this.requestInterceptor = request -> {
+      return requestInterceptor(request -> {
         headers.forEach(header -> addOrdered(request.headers(), header.left, header.right));
         return request;
-      };
-      return this;
+      });
     }
 
     public Builder<T> requestInterceptor(ReactiveHttpRequestInterceptor requestInterceptor) {

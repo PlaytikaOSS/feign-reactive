@@ -169,10 +169,6 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 				bodyPublisher = ((Mono)request.body()).map(this::toByteBufferChunk);
 				contentType = APPLICATION_OCTET_STREAM;
 			}
-			else if(bodyActualClass == byte[].class){
-				bodyPublisher = Flux.from(request.body()).map(this::toByteArrayChunk);
-				contentType = APPLICATION_OCTET_STREAM;
-			}
 			else if (CharSequence.class.isAssignableFrom(bodyActualClass)){
 				bodyPublisher = Flux.from(request.body()).map(this::toCharSequenceChunk);
 				contentType = TEXT_UTF_8;
@@ -185,10 +181,6 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 		} else {
 			if(bodyActualClass == ByteBuffer.class){
 				bodyPublisher = Flux.from(request.body()).map(this::toByteBufferChunk);
-				contentType = APPLICATION_OCTET_STREAM;
-			}
-			else if(bodyActualClass == byte[].class){
-				bodyPublisher = Flux.from(request.body()).map(this::toByteArrayChunk);
 				contentType = APPLICATION_OCTET_STREAM;
 			}
 			else {

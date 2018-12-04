@@ -188,6 +188,39 @@ public class LoadBalancingReactiveHttpClientTest {
         assertThat(result).isEqualTo(body);
     }
 
+    @Test
+    public void shouldRetryOnSameAndSuccessWithWarning() {
+
+        loadBalancingWithRetryWithWarning(2, 2, 0);
+
+        assertThat(server1.getAllServeEvents().size() == 3
+                ^ server2.getAllServeEvents().size() == 3);
+
+    }
+
+    private void loadBalancingWithRetryWithWarning(int failedAttemptsNo, int retryOnSame, int retryOnNext) {
+        String body = "success!";
+        Stream.of(server1, server2).forEach(server -> {
+            mockSuccessAfterSeveralAttempts(server, MONO_URL,
+                    failedAttemptsNo, 503,
+                    aResponse()
+                            .withStatus(200)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody(body));
+        });
+
+        RetryHandler retryHandler = new RequestSpecificRetryHandler(true, true,
+                new DefaultLoadBalancerRetryHandler(retryOnSame, retryOnNext, true), null);
+
+        TestMonoInterface client = CloudReactiveFeign.<TestMonoInterface>builder()
+                .enableLoadBalancer(retryHandler)
+                .disableHystrix()
+                .target(TestMonoInterface.class, "http://" + serviceName);
+
+        String result = client.getMono().block();
+        assertThat(result).isEqualTo(body);
+    }
+
     static void mockSuccessMono(WireMockClassRule server, String body) {
         server.stubFor(get(urlEqualTo(MONO_URL))
                 .willReturn(aResponse()

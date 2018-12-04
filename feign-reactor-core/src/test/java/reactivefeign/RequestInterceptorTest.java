@@ -78,7 +78,8 @@ abstract public class RequestInterceptorTest {
 
     StepVerifier.create(clientWithAuth.findFirstOrder())
         .expectNextMatches(equalsComparingFieldByFieldRecursively(orderGenerated))
-        .expectComplete();
+        .verifyComplete();
+
   }
 
   protected Predicate<Throwable> notAuthorizedException() {

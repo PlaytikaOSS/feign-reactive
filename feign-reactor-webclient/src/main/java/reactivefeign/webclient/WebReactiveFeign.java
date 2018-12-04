@@ -39,66 +39,66 @@ public class WebReactiveFeign {
     public static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 5000;
 
     public static <T> Builder<T> builder() {
-    return new Builder<>();
-  }
+        return new Builder<>();
+    }
 
-  public static <T> Builder<T> builder(WebClient webClient) {
+    public static <T> Builder<T> builder(WebClient webClient) {
         return new Builder<>(webClient);
     }
 
-  public static class Builder<T> extends ReactiveFeign.Builder<T> {
+    public static class Builder<T> extends ReactiveFeign.Builder<T> {
 
-      protected WebClient webClient;
+        protected WebClient webClient;
 
-      protected Builder() {
-          this(WebClient.create());
-      }
+        protected Builder() {
+            this(WebClient.create());
+        }
 
-      protected Builder(WebClient webClient) {
-          setWebClient(webClient);
-          options(new WebReactiveOptions.Builder()
-                  .setReadTimeoutMillis(DEFAULT_READ_TIMEOUT_MILLIS)
-                  .setWriteTimeoutMillis(DEFAULT_WRITE_TIMEOUT_MILLIS)
-                  .setConnectTimeoutMillis(DEFAULT_CONNECT_TIMEOUT_MILLIS)
-                  .build());
-      }
+        protected Builder(WebClient webClient) {
+            setWebClient(webClient);
+            options(new WebReactiveOptions.Builder()
+                    .setReadTimeoutMillis(DEFAULT_READ_TIMEOUT_MILLIS)
+                    .setWriteTimeoutMillis(DEFAULT_WRITE_TIMEOUT_MILLIS)
+                    .setConnectTimeoutMillis(DEFAULT_CONNECT_TIMEOUT_MILLIS)
+                    .build());
+        }
 
-      @Override
-      public Builder<T> options(ReactiveOptions options) {
-          if (!options.isEmpty()) {
-              WebReactiveOptions webOptions = (WebReactiveOptions)options;
-              TcpClient tcpClient = TcpClient.create();
-              if (options.getConnectTimeoutMillis() != null) {
-                  tcpClient = tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
-                          options.getConnectTimeoutMillis().intValue());
-              }
-              tcpClient = tcpClient.doOnConnected(connection -> {
-                                  if(webOptions.getReadTimeoutMillis() != null){
-                                      connection.addHandlerLast(new ReadTimeoutHandler(
-                                              webOptions.getReadTimeoutMillis(), TimeUnit.MILLISECONDS));
-                                  }
-                                  if(webOptions.getWriteTimeoutMillis() != null){
-                                      connection.addHandlerLast(new WriteTimeoutHandler(
-                                              webOptions.getWriteTimeoutMillis(), TimeUnit.MILLISECONDS));
-                                  }
-                              });
+        @Override
+        public Builder<T> options(ReactiveOptions options) {
+            if (!options.isEmpty()) {
+                WebReactiveOptions webOptions = (WebReactiveOptions)options;
+                TcpClient tcpClient = TcpClient.create();
+                if (options.getConnectTimeoutMillis() != null) {
+                    tcpClient = tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
+                            options.getConnectTimeoutMillis().intValue());
+                }
+                tcpClient = tcpClient.doOnConnected(connection -> {
+                    if(webOptions.getReadTimeoutMillis() != null){
+                        connection.addHandlerLast(new ReadTimeoutHandler(
+                                webOptions.getReadTimeoutMillis(), TimeUnit.MILLISECONDS));
+                    }
+                    if(webOptions.getWriteTimeoutMillis() != null){
+                        connection.addHandlerLast(new WriteTimeoutHandler(
+                                webOptions.getWriteTimeoutMillis(), TimeUnit.MILLISECONDS));
+                    }
+                });
 
-              HttpClient httpClient = HttpClient.from(tcpClient);
-              if (options.isTryUseCompression() != null) {
-                  httpClient = httpClient.compress(true);
-              }
-              ReactorClientHttpConnector connector = new ReactorClientHttpConnector(httpClient);
+                HttpClient httpClient = HttpClient.from(tcpClient);
+                if (options.isTryUseCompression() != null) {
+                    httpClient = httpClient.compress(true);
+                }
+                ReactorClientHttpConnector connector = new ReactorClientHttpConnector(httpClient);
 
-              setWebClient(webClient.mutate().clientConnector(connector).build());
-          }
-          return this;
-      }
+                setWebClient(webClient.mutate().clientConnector(connector).build());
+            }
+            return this;
+        }
 
-      protected void setWebClient(WebClient webClient){
-          this.webClient = webClient;
-          clientFactory(methodMetadata -> webClient(methodMetadata, webClient));
-      }
-  }
+        protected void setWebClient(WebClient webClient){
+            this.webClient = webClient;
+            clientFactory(methodMetadata -> webClient(methodMetadata, webClient));
+        }
+    }
 }
 
 

@@ -45,6 +45,11 @@ public class AllFeaturesTest extends reactivefeign.allfeatures.AllFeaturesTest {
 	@Ignore
 	@Test
 	@Override
+	public void shouldMirrorBinaryBody(){}
+
+	@Ignore
+	@Test
+	@Override
 	public void shouldRunReactively(){}
 
 	@Ignore

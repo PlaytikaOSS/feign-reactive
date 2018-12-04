@@ -355,6 +355,18 @@ abstract public class AllFeaturesTest {
 	}
 
 	@Test
+	public void shouldMirrorBinaryBody() {
+		StepVerifier.create(client.mirrorStreamingBinaryBodyReactive(
+				Mono.just(fromByteArray(new byte[]{1,2,3}))))
+				.consumeNextWith(buffer -> {
+					byte[] dataReceived = new byte[buffer.limit()];
+					buffer.get(dataReceived);
+					assertThat(dataReceived).isEqualTo(new byte[]{1,2,3});
+				})
+				.verifyComplete();
+	}
+
+	@Test
 	public void shouldMirrorStreamingBinaryBodyReactive() throws InterruptedException {
 
 		CountDownLatch countDownLatch = new CountDownLatch(2);
@@ -364,10 +376,8 @@ abstract public class AllFeaturesTest {
 
 		CompletableFuture<ByteBuffer> firstReceived = new CompletableFuture<>();
 
-		Flux<ByteBuffer> returned = client
-				.mirrorStreamingBinaryBodyReactive(Flux.just(
-						fromByteArray(new byte[]{1,2,3}),
-						fromByteArray(new byte[]{4,5,6})))
+		Flux<ByteBuffer> returned = client.mirrorStreamingBinaryBodyReactive(
+				Flux.just(fromByteArray(new byte[]{1,2,3}), fromByteArray(new byte[]{4,5,6})))
 				.delayUntil(testObject -> sentCount.get() == 1 ? fromFuture(firstReceived)
 						: empty())
 				.doOnNext(sent -> sentCount.incrementAndGet());
