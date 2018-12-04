@@ -20,13 +20,16 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import org.springframework.web.client.RestClientException;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.*;
+import reactor.core.Exceptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.Map;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -94,7 +97,7 @@ abstract public class SmokeTest {
   }
 
   @Test
-  public void testFindOrder_success() throws JsonProcessingException {
+  public void shouldSuccessfullyCall() throws JsonProcessingException {
 
     IceCreamOrder orderExpected = orders.get(1);
     wireMockRule.stubFor(get(urlEqualTo("/icecream/orders/1"))
@@ -107,6 +110,25 @@ abstract public class SmokeTest {
     StepVerifier.create(order)
         .expectNextMatches(equalsComparingFieldByFieldRecursively(orderExpected))
         .verifyComplete();
+  }
+
+  @Test
+  public void shouldFailOnCorruptedJson() {
+
+    wireMockRule.stubFor(get(urlEqualTo("/icecream/orders/1"))
+            .willReturn(aResponse().withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody("{\"corrupted ! json")));
+
+    Mono<IceCreamOrder> order = client.findOrder(1);
+
+    StepVerifier.create(order)
+            .expectErrorMatches(corruptedJsonError())
+            .verify();
+  }
+
+  protected Predicate<Throwable> corruptedJsonError() {
+    return throwable -> throwable instanceof RestClientException;
   }
 
   @Test

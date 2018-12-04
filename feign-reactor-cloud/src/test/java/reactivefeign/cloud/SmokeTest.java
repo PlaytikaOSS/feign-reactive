@@ -13,8 +13,11 @@
  */
 package reactivefeign.cloud;
 
+import org.springframework.core.codec.DecodingException;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
+
+import java.util.function.Predicate;
 
 /**
  * @author Sergii Karpenko
@@ -24,5 +27,10 @@ public class SmokeTest extends reactivefeign.SmokeTest {
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
     return CloudReactiveFeign.builder();
+  }
+
+  @Override
+  protected Predicate<Throwable> corruptedJsonError() {
+    return throwable -> throwable.getCause() instanceof DecodingException;
   }
 }

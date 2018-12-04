@@ -13,8 +13,11 @@
  */
 package reactivefeign.jetty;
 
+import com.fasterxml.jackson.core.io.JsonEOFException;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
+
+import java.util.function.Predicate;
 
 /**
  * @author Sergii Karpenko
@@ -24,5 +27,10 @@ public class SmokeTest extends reactivefeign.SmokeTest {
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
     return JettyReactiveFeign.builder();
+  }
+
+  @Override
+  protected Predicate<Throwable> corruptedJsonError() {
+    return throwable -> throwable instanceof JsonEOFException;
   }
 }

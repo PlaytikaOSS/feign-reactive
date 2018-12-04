@@ -196,10 +196,6 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 		return new ContentChunk((ByteBuffer)data);
 	}
 
-	protected ContentChunk toByteArrayChunk(Object data){
-		return new ContentChunk(ByteBuffer.wrap((byte[])data));
-	}
-
 	protected ContentChunk toCharSequenceChunk(Object data){
 		CharBuffer charBuffer = CharBuffer.wrap((CharSequence) data);
 		ByteBuffer byteBuffer = UTF_8.encode(charBuffer);

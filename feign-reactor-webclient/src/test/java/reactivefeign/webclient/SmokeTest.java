@@ -13,8 +13,12 @@
  */
 package reactivefeign.webclient;
 
+import com.fasterxml.jackson.core.io.JsonEOFException;
+import org.springframework.core.codec.DecodingException;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
+
+import java.util.function.Predicate;
 
 /**
  * @author Sergii Karpenko
@@ -25,4 +29,10 @@ public class SmokeTest extends reactivefeign.SmokeTest {
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
     return WebReactiveFeign.builder();
   }
+
+  @Override
+  protected Predicate<Throwable> corruptedJsonError() {
+    return throwable -> throwable instanceof DecodingException;
+  }
+
 }
