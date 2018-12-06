@@ -14,58 +14,40 @@
  * limitations under the License.
  */
 
-package reactivefeign.resttemplate.allfeatures;
+package reactivefeign.spring.mvc.allfeatures;
 
-import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
-import reactivefeign.ReactiveFeign;
-import reactivefeign.allfeatures.AllFeaturesFeign;
-import reactivefeign.allfeatures.AllFeaturesFeignTest;
-import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
+import org.springframework.cloud.openfeign.support.SpringMvcContract;
+import reactivefeign.allfeatures.AllFeaturesApi;
+import reactivefeign.allfeatures.AllFeaturesTest;
+import reactivefeign.jetty.JettyReactiveFeign;
+import reactor.test.StepVerifier;
 
 /**
  * @author Sergii Karpenko
  *
- * Tests ReactiveFeign in conjunction with WebFlux rest controller.
+ * Tests ReactiveFeign built on Spring Mvc annotations.
  */
 @EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
-public class AllFeaturesTest extends AllFeaturesFeignTest {
+public class AllFeaturesMvcTest extends AllFeaturesTest{
 
 	@Override
-	protected ReactiveFeign.Builder<AllFeaturesFeign> builder() {
-		return RestTemplateFakeReactiveFeign.builder();
+	protected AllFeaturesApi buildClient(String url){
+		return JettyReactiveFeign.<AllFeaturesMvc>builder()
+				.decode404()
+				.contract(new SpringMvcContract())
+				.target(AllFeaturesMvc.class, url);
 	}
 
-	@Ignore
-	@Test
 	@Override
-	public void shouldMirrorStreamingBinaryBodyReactive(){}
+	@Test
+	public void shouldFailIfNoSubstitutionForPath(){
+		StepVerifier.create(client.urlNotSubstituted())
+				.expectNext("should be never called as contain not substituted element in path")
+				.verifyComplete();
+	}
 
-	@Ignore
-	@Test
-	@Override
-	public void shouldMirrorBinaryBody(){}
-
-	@Ignore
-	@Test
-	@Override
-	public void shouldRunReactively(){}
-
-	@Ignore
-	@Test
-	@Override
-	public void shouldReturnFirstResultBeforeSecondSent(){}
-
-	@Ignore
-	@Test
-	@Override
-	public void shouldMirrorStringStreamBody() {}
-
-	@Ignore
-	@Test
-	@Override
-	public void shouldMirrorIntegerStreamBody() {}
 }

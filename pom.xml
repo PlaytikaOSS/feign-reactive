@@ -14,6 +14,7 @@
         <module>feign-reactor-rx2</module>
         <module>feign-reactor-jetty</module>
         <module>feign-reactor-benchmarks</module>
+        <module>feign-reactor-spring-mvc</module>
     </modules>
 
     <name>feign-reactive</name>
@@ -355,6 +356,20 @@
                 <groupId>io.kptfh.reactivejson</groupId>
                 <artifactId>json-reactor</artifactId>
                 <version>${json-reactor.version}</version>
+            </dependency>
+
+            <!--Spring mvc-->
+
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-openfeign</artifactId>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>spring-boot-starter-logging</artifactId>
+                        <groupId>org.springframework.boot</groupId>
+                    </exclusion>
+                </exclusions>
+                <version>2.0.2.RELEASE</version>
             </dependency>
 
             <!--Test-->

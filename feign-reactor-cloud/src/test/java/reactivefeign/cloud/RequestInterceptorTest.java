@@ -20,7 +20,7 @@ import reactivefeign.testcase.IcecreamServiceApi;
 
 import java.util.function.Predicate;
 
-import static reactivefeign.cloud.TestUtils.builderWithExecutionTimeoutDisabled;
+import static reactivefeign.cloud.BuilderUtils.builderWithExecutionTimeoutDisabled;
 
 /**
  * @author Sergii Karpenko

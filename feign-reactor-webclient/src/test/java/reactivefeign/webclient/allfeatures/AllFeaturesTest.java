@@ -22,6 +22,8 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import reactivefeign.ReactiveFeign;
+import reactivefeign.allfeatures.AllFeaturesFeign;
+import reactivefeign.allfeatures.AllFeaturesFeignTest;
 import reactivefeign.webclient.WebReactiveFeign;
 
 /**
@@ -30,10 +32,10 @@ import reactivefeign.webclient.WebReactiveFeign;
  * Tests ReactiveFeign in conjunction with WebFlux rest controller.
  */
 @EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
-public class AllFeaturesTest extends reactivefeign.allfeatures.AllFeaturesTest {
+public class AllFeaturesTest extends AllFeaturesFeignTest {
 
 	@Override
-	protected ReactiveFeign.Builder<reactivefeign.allfeatures.AllFeaturesApi> builder() {
+	protected ReactiveFeign.Builder<AllFeaturesFeign> builder() {
 		return WebReactiveFeign.builder();
 	}
 

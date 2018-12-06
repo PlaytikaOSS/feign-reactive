@@ -7,7 +7,7 @@ import com.netflix.hystrix.HystrixObservableCommand;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
 
-public class TestUtils {
+public class BuilderUtils {
 
     static ReactiveFeign.Builder<IcecreamServiceApi> builderWithExecutionTimeoutDisabled() {
         return CloudReactiveFeign.<IcecreamServiceApi>builder().setHystrixCommandSetterFactory(

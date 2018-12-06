@@ -32,7 +32,6 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
-import reactivefeign.ReactiveFeign;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -67,10 +66,9 @@ import static reactor.core.publisher.Mono.just;
 		properties = {"spring.main.web-application-type=reactive"},
 		classes = {AllFeaturesController.class },
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
 abstract public class AllFeaturesTest {
 
-	private AllFeaturesApi client;
+	protected AllFeaturesApi client;
 
 	@LocalServerPort
 	private int port;
@@ -78,13 +76,11 @@ abstract public class AllFeaturesTest {
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
 
-	abstract protected ReactiveFeign.Builder<AllFeaturesApi> builder();
+	abstract protected AllFeaturesApi buildClient(String url);
 
 	@Before
 	public void setUp() {
-		client = builder()
-				.decode404()
-				.target(AllFeaturesApi.class, "http://localhost:" + port);
+		client = buildClient("http://localhost:" + port);
 	}
 
 	@Test
