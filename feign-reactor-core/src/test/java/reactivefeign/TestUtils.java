@@ -17,6 +17,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.function.Predicate;
 
 /**
@@ -38,5 +40,13 @@ public class TestUtils {
         throw new RuntimeException(e);
       }
     };
+  }
+
+  public static String readJsonFromFile(String path) throws IOException {
+    InputStream is = TestUtils.class.getResourceAsStream(path);
+    byte data[]=new byte[is.available()];
+    is.read(data);
+    is.close();
+    return new String(data);
   }
 }

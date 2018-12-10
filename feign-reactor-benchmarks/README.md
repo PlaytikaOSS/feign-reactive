@@ -1,3 +1,13 @@
+RealParallelRequestBenchmarks.feign                  thrpt   15    130.219 ±  18.528  ops/s
+RealParallelRequestBenchmarks.jetty                  thrpt   15    114.371 ±  59.636  ops/s
+RealParallelRequestBenchmarks.webClient              thrpt   15     81.120 ±  36.470  ops/s
+
+RealParallelRequestBenchmarks.jettyEmptyPayload      thrpt   15   2627.739 ± 384.713  ops/s
+RealParallelRequestBenchmarks.webClientEmptyPayload  thrpt   15    946.115 ± 172.920  ops/s
+RealParallelRequestBenchmarks.feignEmptyPayload      thrpt   15    145.480 ±  28.549  ops/s
+
+
+
 To run benchmarks on Windows increase the number of ephemeral ports 
 
 https://support.microsoft.com/en-ca/help/196271/when-you-try-to-connect-from-tcp-ports-greater-than-5000-you-receive-t

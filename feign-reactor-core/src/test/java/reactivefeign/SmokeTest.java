@@ -28,6 +28,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -35,7 +36,9 @@ import java.util.stream.Collectors;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.util.Arrays.asList;
+import static reactivefeign.TestUtils.MAPPER;
 import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
+import static reactivefeign.TestUtils.readJsonFromFile;
 
 /**
  * @author Sergii Karpenko
@@ -77,12 +80,12 @@ abstract public class SmokeTest {
     wireMockRule.stubFor(get(urlEqualTo("/icecream/flavors"))
         .willReturn(aResponse().withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(TestUtils.MAPPER.writeValueAsString(Flavor.values()))));
+            .withBody(MAPPER.writeValueAsString(Flavor.values()))));
 
     wireMockRule.stubFor(get(urlEqualTo("/icecream/mixins"))
         .willReturn(aResponse().withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(TestUtils.MAPPER.writeValueAsString(Mixin.values()))));
+            .withBody(MAPPER.writeValueAsString(Mixin.values()))));
 
     Flux<Flavor> flavors = client.getAvailableFlavors();
     Flux<Mixin> mixins = client.getAvailableMixins();
@@ -103,7 +106,7 @@ abstract public class SmokeTest {
     wireMockRule.stubFor(get(urlEqualTo("/icecream/orders/1"))
         .willReturn(aResponse().withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(TestUtils.MAPPER.writeValueAsString(orderExpected))));
+            .withBody(MAPPER.writeValueAsString(orderExpected))));
 
     Mono<IceCreamOrder> order = client.findOrder(1);
 
@@ -168,10 +171,10 @@ abstract public class SmokeTest {
     Bill billExpected = Bill.makeBill(order);
 
     wireMockRule.stubFor(post(urlEqualTo("/icecream/orders"))
-        .withRequestBody(equalTo(TestUtils.MAPPER.writeValueAsString(order)))
+        .withRequestBody(equalTo(MAPPER.writeValueAsString(order)))
         .willReturn(aResponse().withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(TestUtils.MAPPER.writeValueAsString(billExpected))));
+            .withBody(MAPPER.writeValueAsString(billExpected))));
 
     Mono<Bill> bill = client.makeOrder(order);
     StepVerifier.create(bill)
@@ -185,7 +188,7 @@ abstract public class SmokeTest {
     Bill bill = Bill.makeBill(new OrderGenerator().generate(30));
 
     wireMockRule.stubFor(post(urlEqualTo("/icecream/bills/pay"))
-            .withRequestBody(equalTo(TestUtils.MAPPER.writeValueAsString(bill)))
+            .withRequestBody(equalTo(MAPPER.writeValueAsString(bill)))
             .willReturn(aResponse().withStatus(200)
                     .withHeader("Content-Type", "application/json")));
 
@@ -194,4 +197,27 @@ abstract public class SmokeTest {
         .expectNextCount(0)
         .verifyComplete();
   }
+
+  @Test
+  public void shouldParseGenericJson() throws IOException {
+
+    Map<String, Object> request = MAPPER.readValue(readJsonFromFile("/request.json"), Map.class);
+    String requestJson = MAPPER.writeValueAsString(request);
+    String responseJson = readJsonFromFile("/response.json");
+    Map<String, Object> response = MAPPER.readValue(responseJson, Map.class);
+
+
+    wireMockRule.stubFor(post(urlEqualTo("/genericJson"))
+            .withRequestBody(equalTo(requestJson))
+            .willReturn(aResponse().withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(responseJson)));
+
+    Mono<Map<String, Object>> result = client.genericJson(request);
+    StepVerifier.create(result)
+            .expectNext(response)
+            .verifyComplete();
+  }
+
+
 }

@@ -26,7 +26,7 @@ public class RealSingleRequestBenchmarks extends RealRequestBenchmarks{
    * How fast can we execute get commands synchronously in parallel using Feign?
    */
   @Benchmark
-  public String query_feign() {
+  public String feign() {
     return feign.justGet();
   }
 
@@ -34,7 +34,7 @@ public class RealSingleRequestBenchmarks extends RealRequestBenchmarks{
    * How fast can we execute get commands in parallel using reactive web client based Feign?
    */
   @Benchmark
-  public String query_webClientFeign() {
+  public String webClient() {
     return webClientFeign.justGet().block();
   }
 
@@ -42,7 +42,7 @@ public class RealSingleRequestBenchmarks extends RealRequestBenchmarks{
    * How fast can we execute get commands in parallel using reactive Jetty based Feign?
    */
   @Benchmark
-  public String query_jettyFeign() {
+  public String jetty() {
     return jettyFeign.justGet().block();
   }
 

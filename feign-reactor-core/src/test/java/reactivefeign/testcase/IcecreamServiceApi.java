@@ -23,6 +23,8 @@ import reactivefeign.testcase.domain.Mixin;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
+
 /**
  * API of an iceream web service.
  *
@@ -57,6 +59,9 @@ public interface IcecreamServiceApi {
   @RequestLine("GET /ping")
   @Headers("Content-Type: application/json")
   Mono<Void> ping();
+
+  @RequestLine("POST /genericJson")
+  Mono<Map<String, Object>> genericJson(Map<String, Object> payload);
 
   default Mono<IceCreamOrder> findFirstOrder() {
     return findOrder(1);

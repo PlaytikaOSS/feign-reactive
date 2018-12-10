@@ -63,7 +63,7 @@
         <spring-webflux.version>5.1.3.RELEASE</spring-webflux.version>
         <spring-web.version>5.1.3.RELEASE</spring-web.version>
         <reactor-netty.version>0.8.3.RELEASE</reactor-netty.version>
-        <netty-all.version>4.1.29.Final</netty-all.version>
+        <netty-all.version>4.1.32.Final</netty-all.version>
         <jackson.version>2.9.7</jackson.version>
 
         <!--Cloud-->
@@ -119,6 +119,7 @@
         <gpg.defaultKeyring>false</gpg.defaultKeyring>
         <gpg.useagent>true</gpg.useagent>
         <gpg.lockMode>never</gpg.lockMode>
+
     </properties>
     <profiles>
         <profile>
@@ -472,10 +473,17 @@
     </dependencyManagement>
 
     <repositories>
+        <!--used for io.kptfh.reactivejson:json-reactor-->
         <repository>
             <id>bintray-kptfh-feign-reactive</id>
             <name>bintray</name>
             <url>https://dl.bintray.com/kptfh/json-reactive</url>
+        </repository>
+
+        <repository>
+            <id>spring-snapshots</id>
+            <name>Spring Snapshots</name>
+            <url>http://repo.spring.io/snapshot</url>
         </repository>
     </repositories>
 
