@@ -12,6 +12,7 @@ import io.reactivex.netty.protocol.http.server.HttpServerResponse;
 import io.reactivex.netty.protocol.http.server.RequestHandler;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.webclient.WebReactiveFeign;
 
@@ -25,7 +26,10 @@ import static reactivefeign.benchmarks.BenchmarkUtils.readJsonFromFileAsBytes;
 abstract public class RealRequestBenchmarks {
 
     public static final int SERVER_PORT = 8766;
+    public static final String SERVER_URL = "http://localhost:" + SERVER_PORT;
     private HttpServer<ByteBuf, ByteBuf> server;
+
+    protected WebClient webClient;
 
     protected FeignReactorTestInterface webClientFeign;
 
@@ -58,14 +62,16 @@ abstract public class RealRequestBenchmarks {
         });
         server.start();
 
+        webClient = WebClient.create();
+
         webClientFeign = WebReactiveFeign.<FeignReactorTestInterface>builder()
-                .target(FeignReactorTestInterface.class, "http://localhost:" + SERVER_PORT);
+                .target(FeignReactorTestInterface.class, SERVER_URL);
 
         jettyHttpClient = new HttpClient();
         jettyHttpClient.setMaxConnectionsPerDestination(10000);
         jettyHttpClient.start();
         jettyFeign = JettyReactiveFeign.<FeignReactorTestInterface>builder(jettyHttpClient)
-                .target(FeignReactorTestInterface.class, "http://localhost:" + SERVER_PORT);
+                .target(FeignReactorTestInterface.class, SERVER_URL);
 
         feign = Feign.builder()
                 .encoder((o, type, requestTemplate) -> {
@@ -81,7 +87,7 @@ abstract public class RealRequestBenchmarks {
                                 : objectMapper.readValue(
                                 response.body().asInputStream(),
                                 (Class)((ParameterizedType)type).getRawType()))
-                .target(FeignTestInterface.class, "http://localhost:" + SERVER_PORT);
+                .target(FeignTestInterface.class, SERVER_URL);
     }
 
     protected void tearDown() throws Exception {

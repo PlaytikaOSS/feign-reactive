@@ -24,7 +24,7 @@ public class RealParallelRequestBenchmarksTest extends RealRequestBenchmarks{
     }
 
     @Test
-    public void testWebClient() throws ExecutionException, InterruptedException {
+    public void testFeignEmptyPayload() throws ExecutionException, InterruptedException {
         for (int i = 0; i < 100; i++) benchmarks.feignEmptyPayload();
     }
 
@@ -34,8 +34,13 @@ public class RealParallelRequestBenchmarksTest extends RealRequestBenchmarks{
     }
 
     @Test
-    public void testJettyWithPayload(){
-        for (int i = 0; i < 100; i++) benchmarks.jetty();
+    public void testFeignWebClientWithPayload(){
+        for (int i = 0; i < 100; i++) benchmarks.feignWebClient();
+    }
+
+    @Test
+    public void testFeignJettyWithPayload(){
+        for (int i = 0; i < 100; i++) benchmarks.feignJetty();
     }
 
     @Test

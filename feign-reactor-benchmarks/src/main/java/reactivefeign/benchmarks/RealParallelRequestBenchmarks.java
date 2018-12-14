@@ -6,8 +6,11 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import reactor.core.publisher.Mono;
 
+import java.util.Map;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -70,6 +73,21 @@ public class RealParallelRequestBenchmarks extends RealRequestBenchmarks{
   //WITH PAYLOAD
 
   @Benchmark
+  public void webClient() {
+
+    Mono.zip(IntStream.range(0, CALLS_NUMBER)
+                    .mapToObj(i -> webClient
+                            .method(HttpMethod.POST)
+                            .uri(SERVER_URL+"/postWithPayload")
+                            .body(Mono.just(requestPayload), Map.class)
+                            .header(HttpHeaders.CONTENT_TYPE,"application/json")
+                            .retrieve()
+                            .bodyToMono(Map.class))
+                    .collect(Collectors.toList()),
+            values -> values).block();
+  }
+
+  @Benchmark
   public void feign() throws ExecutionException, InterruptedException {
 
     CompletableFuture[] bonusesCompletableFutures = IntStream.range(0, CALLS_NUMBER)
@@ -83,7 +101,7 @@ public class RealParallelRequestBenchmarks extends RealRequestBenchmarks{
    * How fast can we execute get commands synchronously using reactive web client based Feign?
    */
   @Benchmark
-  public void webClient() {
+  public void feignWebClient() {
 
     Mono.zip(IntStream.range(0, CALLS_NUMBER)
                     .mapToObj(i -> webClientFeign.postWithPayload(Mono.just(requestPayload)))
@@ -92,7 +110,7 @@ public class RealParallelRequestBenchmarks extends RealRequestBenchmarks{
   }
 
   @Benchmark
-  public void jetty() {
+  public void feignJetty() {
     Mono.zip(IntStream.range(0, CALLS_NUMBER)
                     .mapToObj(i -> jettyFeign.postWithPayload(Mono.just(requestPayload)))
                     .collect(Collectors.toList()),
