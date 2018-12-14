@@ -13,9 +13,11 @@
  */
 package reactivefeign;
 
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import org.apache.http.HttpStatus;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.DelegatingReactiveHttpResponse;
@@ -33,11 +35,15 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
  */
 abstract public class ResponseMapperTest {
 
-  @ClassRule
-  public static WireMockClassRule wireMockRule = new WireMockClassRule(
+  @Rule
+  public WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig().dynamicPort());
 
   abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder();
+
+  protected WireMockConfiguration wireMockConfig(){
+    return WireMockConfiguration.wireMockConfig();
+  }
 
   @Test
   public void shouldInterceptErrorResponseAndDecodeError() {

@@ -13,11 +13,13 @@
  */
 package reactivefeign;
 
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.RetryableException;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactor.test.StepVerifier;
@@ -32,11 +34,15 @@ import static reactivefeign.client.statushandler.ReactiveStatusHandlers.throwOnS
  */
 public abstract class StatusHandlerTest {
 
-  @ClassRule
-  public static WireMockClassRule wireMockRule = new WireMockClassRule(
+  @Rule
+  public WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig().dynamicPort());
 
   abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder();
+
+  protected WireMockConfiguration wireMockConfig(){
+    return WireMockConfiguration.wireMockConfig();
+  }
 
   @Before
   public void resetServers() {

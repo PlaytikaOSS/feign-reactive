@@ -17,6 +17,8 @@
 package reactivefeign.allfeatures;
 
 import org.awaitility.Duration;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.ServerConnector;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -26,11 +28,13 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.web.embedded.jetty.JettyReactiveWebServerFactory;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
 import org.springframework.boot.web.reactive.server.ReactiveWebServerFactory;
 import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.test.context.junit4.SpringRunner;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -48,9 +52,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.waitAtMost;
 import static reactivefeign.ReactivityTest.*;
+import static reactivefeign.TestUtils.toLowerCaseKeys;
 import static reactor.core.publisher.Flux.empty;
 import static reactor.core.publisher.Mono.fromFuture;
 import static reactor.core.publisher.Mono.just;
@@ -64,7 +70,7 @@ import static reactor.core.publisher.Mono.just;
 @RunWith(SpringRunner.class)
 @SpringBootTest(
 		properties = {"spring.main.web-application-type=reactive"},
-		classes = {AllFeaturesController.class },
+		classes = {AllFeaturesController.class, AllFeaturesTest.TestConfiguration.class },
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract public class AllFeaturesTest {
 
@@ -194,11 +200,11 @@ abstract public class AllFeaturesTest {
 				put("headerKey2", "headerValue2");
 			}
 		};
-		Map<String, String> returned = client.mirrorHeaders(777, headersMap).block();
+		Map<String, String> returned = toLowerCaseKeys(client.mirrorHeaders(777, headersMap).block());
 
-		assertThat(returned).containsEntry("Method-Header", "777");
-		assertThat(returned).containsAllEntriesOf(headersMap);
-		assertThat(returned).containsKey("Accept");
+		assertThat(returned).containsEntry("method-header", "777");
+		assertThat(returned).containsAllEntriesOf(toLowerCaseKeys(headersMap));
+		assertThat(returned).containsKey("accept");
 	}
 
 	@Test
@@ -210,7 +216,7 @@ abstract public class AllFeaturesTest {
 	}
 
 	@Test
-	public void shouldReturnAllPassedMuliMapHeaders() {
+	public void shouldReturnAllPassedMultiMapHeaders() {
 		Map<String, List<String>> headersMap = new HashMap<String, List<String>>() {
 			{
 				put("headerKey1", asList("headerValue1", "headerValue2"));
@@ -218,7 +224,7 @@ abstract public class AllFeaturesTest {
 		};
 		Map<String, List<String>> returned = client.mirrorMultiMapHeaders(headersMap).block();
 
-		assertThat(returned).containsAllEntriesOf(headersMap);
+		assertThat(toLowerCaseKeys(returned)).containsAllEntriesOf(toLowerCaseKeys(headersMap));
 	}
 
 	@Test
@@ -402,6 +408,7 @@ abstract public class AllFeaturesTest {
 	}
 
 	@Configuration
+	@Profile("netty")
 	public static class TestConfiguration{
 
 		@Bean

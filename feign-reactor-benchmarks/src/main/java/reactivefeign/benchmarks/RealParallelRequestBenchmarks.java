@@ -117,6 +117,14 @@ public class RealParallelRequestBenchmarks extends RealRequestBenchmarks{
             values -> values).block();
   }
 
+  @Benchmark
+  public void feignJettyH2c() {
+    Mono.zip(IntStream.range(0, CALLS_NUMBER)
+                    .mapToObj(i -> jettyFeignH2c.postWithPayload(Mono.just(requestPayload)))
+                    .collect(Collectors.toList()),
+            values -> values).block();
+  }
+
   //used to run from IDE
   public static void main(String[] args) throws RunnerException {
     Options opt = new OptionsBuilder()

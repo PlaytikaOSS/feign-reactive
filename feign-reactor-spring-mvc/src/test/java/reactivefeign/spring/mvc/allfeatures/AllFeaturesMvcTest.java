@@ -21,6 +21,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.cloud.openfeign.support.SpringMvcContract;
+import org.springframework.test.context.ActiveProfiles;
 import reactivefeign.allfeatures.AllFeaturesApi;
 import reactivefeign.allfeatures.AllFeaturesTest;
 import reactivefeign.jetty.JettyReactiveFeign;
@@ -32,6 +33,7 @@ import reactor.test.StepVerifier;
  * Tests ReactiveFeign built on Spring Mvc annotations.
  */
 @EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
+@ActiveProfiles("netty")
 public class AllFeaturesMvcTest extends AllFeaturesTest{
 
 	@Override

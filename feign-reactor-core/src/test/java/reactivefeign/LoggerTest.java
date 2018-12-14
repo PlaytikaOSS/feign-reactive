@@ -15,6 +15,7 @@
 package reactivefeign;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -25,6 +26,7 @@ import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.assertj.core.api.Condition;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
@@ -50,13 +52,18 @@ import static org.mockito.Mockito.*;
 abstract public class LoggerTest {
 
   public static final String LOGGER_NAME = LoggerReactiveHttpClient.class.getName();
-  @ClassRule
-  public static WireMockClassRule wireMockRule = new WireMockClassRule(
+
+  @Rule
+  public WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig()
           .asynchronousResponseEnabled(true)
           .dynamicPort());
 
   abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder();
+
+  protected WireMockConfiguration wireMockConfig(){
+    return WireMockConfiguration.wireMockConfig();
+  }
 
   @Test
   public void shouldLogMono() throws Exception {
@@ -232,8 +239,8 @@ abstract public class LoggerTest {
             .hasFieldOrPropertyWithValue("level", level)
             .extracting("message")
             .extractingResultOf("getFormattedMessage")
-            .have(new Condition<>(o -> ((String) o).contains(message1), "check message1"))
-            .have(new Condition<>(o -> ((String) o).contains(message2), "check message2"));;
+            .have(new Condition<>(o -> ((String) o).toLowerCase().contains(message1.toLowerCase()), "check message1"))
+            .have(new Condition<>(o -> ((String) o).toLowerCase().contains(message2.toLowerCase()), "check message2"));;
   }
 
   public Appender createAppender(String name) {

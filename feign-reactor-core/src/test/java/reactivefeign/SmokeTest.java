@@ -14,6 +14,7 @@
 package reactivefeign;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -46,16 +47,15 @@ import static reactivefeign.TestUtils.readJsonFromFile;
 
 abstract public class SmokeTest {
 
-  @ClassRule
-  public static WireMockClassRule wireMockRule = new WireMockClassRule(
+  @Rule
+  public WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig().dynamicPort());
 
-  @Before
-  public void resetServers() {
-    wireMockRule.resetAll();
-  }
-
   abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder();
+
+  protected WireMockConfiguration wireMockConfig(){
+    return WireMockConfiguration.wireMockConfig();
+  }
 
   private IcecreamServiceApi client;
 

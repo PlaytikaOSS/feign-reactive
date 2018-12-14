@@ -44,6 +44,11 @@ public class RealParallelRequestBenchmarksTest extends RealRequestBenchmarks{
     }
 
     @Test
+    public void testFeignJettyH2cWithPayload(){
+        for (int i = 0; i < 100; i++) benchmarks.feignJettyH2c();
+    }
+
+    @Test
     public void testFeignWithPayload() throws ExecutionException, InterruptedException {
         for (int i = 0; i < 100; i++) benchmarks.feign();
     }

@@ -15,10 +15,12 @@ package reactivefeign;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.RetryableException;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.publisher.RetryPublisherHttpClient;
 import reactivefeign.testcase.IcecreamServiceApi;
@@ -44,11 +46,15 @@ import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
  */
 public abstract class RetryingTest {
 
-  @ClassRule
-  public static WireMockClassRule wireMockRule = new WireMockClassRule(
+  @Rule
+  public WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig().dynamicPort());
 
   abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder();
+
+  protected WireMockConfiguration wireMockConfig(){
+    return WireMockConfiguration.wireMockConfig();
+  }
 
   @Before
   public void resetServers() {

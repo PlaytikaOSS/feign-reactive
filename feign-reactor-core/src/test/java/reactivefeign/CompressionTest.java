@@ -15,8 +15,10 @@ package reactivefeign;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.common.Gzip;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.Bill;
@@ -38,11 +40,15 @@ import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
 
 abstract public class CompressionTest {
 
-  @ClassRule
-  public static WireMockClassRule wireMockRule = new WireMockClassRule(
+  @Rule
+  public WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig().dynamicPort());
 
   abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder(boolean tryUseCompression);
+
+  protected WireMockConfiguration wireMockConfig(){
+    return WireMockConfiguration.wireMockConfig();
+  }
 
   @Test
   public void testCompression() throws JsonProcessingException {

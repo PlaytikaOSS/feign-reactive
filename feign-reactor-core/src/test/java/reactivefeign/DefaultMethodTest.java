@@ -14,11 +14,13 @@
 package reactivefeign;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.RequestLine;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.IceCreamOrder;
@@ -38,20 +40,19 @@ import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
  */
 abstract public class DefaultMethodTest {
 
-  @ClassRule
-  public static WireMockClassRule wireMockRule = new WireMockClassRule(
+  @Rule
+  public WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig().dynamicPort());
-
-  @Before
-  public void resetServers() {
-    wireMockRule.resetAll();
-  }
 
   abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder();
 
   abstract protected <API> ReactiveFeign.Builder<API> builder(Class<API> apiClass);
 
   abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long connectTimeoutInMillis);
+
+  protected WireMockConfiguration wireMockConfig(){
+    return WireMockConfiguration.wireMockConfig();
+  }
 
   @Test
   public void shouldProcessDefaultMethodOnProxy() throws JsonProcessingException {

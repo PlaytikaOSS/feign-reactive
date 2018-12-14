@@ -19,6 +19,8 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Predicate;
 
 /**
@@ -48,5 +50,11 @@ public class TestUtils {
     is.read(data);
     is.close();
     return new String(data);
+  }
+
+  public static <V> Map<String, V> toLowerCaseKeys(Map<String, V> map){
+    Map<String, V> mapNormalized = new HashMap<>(map.size());
+    map.forEach((s, o) -> mapNormalized.put(s.toLowerCase(), o));
+    return mapNormalized;
   }
 }

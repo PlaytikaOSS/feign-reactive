@@ -16,14 +16,27 @@
 
 package reactivefeign.jetty.allfeatures;
 
+import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.ServerConnector;
+import org.junit.Ignore;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
+import org.springframework.boot.web.embedded.jetty.JettyReactiveWebServerFactory;
+import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
+import org.springframework.boot.web.reactive.server.ReactiveWebServerFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.allfeatures.AllFeaturesFeign;
 import reactivefeign.allfeatures.AllFeaturesFeignTest;
-import reactivefeign.jetty.JettyReactiveFeign;
+import reactivefeign.jetty.JettyHttp2ReactiveFeign;
+
+import static java.util.Collections.singleton;
 
 /**
  * @author Sergii Karpenko
@@ -31,11 +44,31 @@ import reactivefeign.jetty.JettyReactiveFeign;
  * Tests ReactiveFeign in conjunction with WebFlux rest controller.
  */
 @EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
-@ActiveProfiles("netty")
+@ContextConfiguration(classes={AllFeaturesTest.TestConfiguration.class})
+@ActiveProfiles("jetty-h2c")
 public class AllFeaturesTest extends AllFeaturesFeignTest {
 
 	@Override
 	protected ReactiveFeign.Builder<AllFeaturesFeign> builder() {
-		return JettyReactiveFeign.builder();
+		return JettyHttp2ReactiveFeign.builder();
+	}
+
+	@Configuration
+	@Profile("jetty-h2c")
+	public static class TestConfiguration{
+
+		@Bean
+		public ReactiveWebServerFactory reactiveWebServerFactory(){
+			JettyReactiveWebServerFactory jettyReactiveWebServerFactory = new JettyReactiveWebServerFactory();
+			jettyReactiveWebServerFactory.setServerCustomizers(singleton(server -> {
+						ServerConnector sc = (ServerConnector) server
+								.getConnectors()[0];
+						sc.addConnectionFactory(
+								new HTTP2CServerConnectionFactory(new HttpConfiguration())
+						);
+					}));
+			return jettyReactiveWebServerFactory;
+		}
+
 	}
 }
