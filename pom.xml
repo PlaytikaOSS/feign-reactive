@@ -84,6 +84,7 @@
         <!-- Tests -->
         <spring-boot-starter-webflux.version>2.1.1.RELEASE</spring-boot-starter-webflux.version>
         <spring-boot-starter.version>2.1.1.RELEASE</spring-boot-starter.version>
+        <spring-cloud-contract-wiremock.version>2.0.2.RELEASE</spring-cloud-contract-wiremock.version>
         <junit.version>4.12</junit.version>
         <assertj.version>3.9.0</assertj.version>
         <wiremock.version>2.19.0</wiremock.version>
@@ -398,6 +399,13 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-test</artifactId>
                 <version>${spring-boot-starter.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-contract-wiremock</artifactId>
+                <version>${spring-cloud-contract-wiremock.version}</version>
                 <scope>test</scope>
             </dependency>
 
