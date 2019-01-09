@@ -5,10 +5,8 @@
 version: 2
 jobs:
   build:
-    machine:
-      image: circleci/openjdk:11.0.1
-             
-#    working_directory: ~/repo
+    docker:
+      - image: circleci/openjdk:11-browsers
 
     environment:
       # Customize the JVM maximum heap limit
@@ -21,7 +19,7 @@ jobs:
       - checkout
       - run:
           name: Run build with tests
-          command:  if [[ -z "$GIT_USER_EMAIL" ]]; then  mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install -U -P sonar -nsu --batch-mode -Dmaven.test.redirectTestOutputToFile=true -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn ;fi
+          command:  if [[ -z "$GIT_USER_EMAIL" ]]; then  mvn clean  install -Dmaven.test.redirectTestOutputToFile=true;fi
       - run:
            name: Save test results
            command: |
