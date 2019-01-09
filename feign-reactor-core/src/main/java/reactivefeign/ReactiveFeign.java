@@ -141,13 +141,11 @@ public class ReactiveFeign {
             new ReactiveInvocationHandler.Factory();
     protected boolean decode404 = false;
 
-    private Function<Flux<Throwable>, Flux<Throwable>> retryFunction;
+    private ReactiveRetryPolicy retryPolicy;
 
     protected Builder(){
       contract(new Contract.Default());
     }
-
-    abstract public Builder<T> options(ReactiveOptions options);
 
     protected Builder<T> clientFactory(ReactiveHttpClientFactory clientFactory) {
       this.clientFactory = clientFactory;
@@ -185,13 +183,9 @@ public class ReactiveFeign {
     }
 
     @Override
-    public Builder<T> retryWhen(Function<Flux<Throwable>, Flux<Throwable>> retryFunction) {
-      this.retryFunction = retryFunction;
-      return this;
-    }
-
     public Builder<T> retryWhen(ReactiveRetryPolicy retryPolicy) {
-      return retryWhen(retryPolicy.toRetryFunction());
+      this.retryPolicy = retryPolicy;
+      return this;
     }
 
     @Override
@@ -239,8 +233,8 @@ public class ReactiveFeign {
           }
 
           reactivefeign.publisher.PublisherHttpClient publisherClient = toPublisher(reactiveClient, methodMetadata);
-          if (retryFunction != null) {
-            publisherClient = retry(publisherClient, methodMetadata, retryFunction);
+          if (retryPolicy != null) {
+            publisherClient = retry(publisherClient, methodMetadata, retryPolicy.toRetryFunction());
           }
 
           return publisherClient;

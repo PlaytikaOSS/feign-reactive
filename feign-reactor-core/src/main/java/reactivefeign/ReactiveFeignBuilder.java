@@ -59,7 +59,9 @@ public interface ReactiveFeignBuilder<T> {
      */
     ReactiveFeignBuilder<T> responseMapper(BiFunction<MethodMetadata, ReactiveHttpResponse, ReactiveHttpResponse> responseMapper);
 
-    ReactiveFeignBuilder<T> retryWhen(Function<Flux<Throwable>, Flux<Throwable>> retryFunction);
+    ReactiveFeignBuilder<T> retryWhen(ReactiveRetryPolicy retryPolicy);
+
+    ReactiveFeignBuilder<T> options(ReactiveOptions reactiveOptions);
 
     /**
      * Defines target and builds client.

@@ -14,6 +14,7 @@
 package reactivefeign.resttemplate;
 
 import reactivefeign.ReactiveFeign;
+import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
 import reactivefeign.resttemplate.client.RestTemplateReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
@@ -24,7 +25,7 @@ import reactivefeign.testcase.IcecreamServiceApi;
 public class ReadTimeoutTest extends reactivefeign.ReadTimeoutTest {
 
   @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
+  protected ReactiveFeignBuilder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
     return RestTemplateFakeReactiveFeign.<IcecreamServiceApi>builder().options(
             new RestTemplateReactiveOptions.Builder().setReadTimeoutMillis(readTimeoutInMillis).build()
     );

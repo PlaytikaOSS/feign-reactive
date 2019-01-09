@@ -22,8 +22,8 @@ public class JettyReactiveOptions extends ReactiveOptions {
 
   private final Long requestTimeoutMillis;
 
-  private JettyReactiveOptions(Long connectTimeoutMillis, Long requestTimeoutMillis, Boolean tryUseCompression) {
-    super(connectTimeoutMillis, tryUseCompression);
+  private JettyReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis, Long requestTimeoutMillis, Boolean tryUseCompression) {
+    super(useHttp2, connectTimeoutMillis, tryUseCompression);
 
     this.requestTimeoutMillis = requestTimeoutMillis;
   }
@@ -47,7 +47,7 @@ public class JettyReactiveOptions extends ReactiveOptions {
     }
 
     public JettyReactiveOptions build() {
-      return new JettyReactiveOptions(connectTimeoutMillis, requestTimeoutMillis, tryUseCompression);
+      return new JettyReactiveOptions(useHttp2, connectTimeoutMillis, requestTimeoutMillis, acceptCompressed);
     }
   }
 }

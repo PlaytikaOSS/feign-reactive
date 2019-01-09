@@ -62,7 +62,6 @@ public class Java11ReactiveHttpClient implements ReactiveHttpClient {
 	private final JsonFactory jsonFactory;
 	private final ObjectWriter bodyWriter;
 	private final ObjectReader responseReader;
-	private HttpClient.Version version;
 	private long requestTimeout = -1;
 	private boolean tryUseCompression = false;
 
@@ -96,11 +95,6 @@ public class Java11ReactiveHttpClient implements ReactiveHttpClient {
 		this.responseReader = responseReader;
 	}
 
-	public Java11ReactiveHttpClient setVersion(HttpClient.Version version){
-		this.version = version;
-		return this;
-	}
-
 	public Java11ReactiveHttpClient setRequestTimeout(long timeoutInMillis){
 		this.requestTimeout = timeoutInMillis;
 		return this;
@@ -114,7 +108,6 @@ public class Java11ReactiveHttpClient implements ReactiveHttpClient {
 	@Override
 	public Mono<ReactiveHttpResponse> executeRequest(ReactiveHttpRequest request) {
 		HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(request.uri())
-				.version(version)
 				.method(request.method().toUpperCase(), provideBody(request));
 		setUpHeaders(request, requestBuilder);
 
@@ -132,7 +125,7 @@ public class Java11ReactiveHttpClient implements ReactiveHttpClient {
 
         return Mono.fromFuture(response)
                 .<ReactiveHttpResponse>map(resp -> {
-                	if(!resp.version().equals(version)){
+                	if(!resp.version().equals(httpClient.version())){
                 		throw new IllegalArgumentException("Incorrect response version:"+resp.version());
 					}
                 	return new Java11ReactiveHttpResponse(resp, bodySubscriber.content(),

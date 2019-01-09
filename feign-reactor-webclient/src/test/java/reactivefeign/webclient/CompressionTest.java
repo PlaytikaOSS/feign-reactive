@@ -24,6 +24,6 @@ public class CompressionTest extends reactivefeign.CompressionTest {
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder(boolean tryUseCompression) {
     return WebReactiveFeign.<IcecreamServiceApi>builder().options(
-            new WebReactiveOptions.Builder().setTryUseCompression(tryUseCompression).build());
+            new WebReactiveOptions.Builder().setAcceptCompressed(tryUseCompression).build());
   }
 }

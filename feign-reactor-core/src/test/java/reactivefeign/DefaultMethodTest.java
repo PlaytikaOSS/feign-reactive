@@ -41,6 +41,10 @@ abstract public class DefaultMethodTest {
   public WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig().dynamicPort());
 
+  @Rule
+  public WireMockClassRule wireMockRule2 = new WireMockClassRule(
+          wireMockConfig().dynamicPort());
+
   abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder();
 
   abstract protected <API> ReactiveFeignBuilder<API> builder(Class<API> apiClass);
@@ -112,7 +116,7 @@ abstract public class DefaultMethodTest {
     Assertions.assertThat(client).isEqualTo(clientWithSameTarget);
 
     IcecreamServiceApi clientWithOtherPort = builder()
-        .target(IcecreamServiceApi.class, "http://localhost:" + (wireMockRule.port() + 1));
+        .target(IcecreamServiceApi.class, "http://localhost:" + (wireMockRule2.port()));
     Assertions.assertThat(client).isNotEqualTo(clientWithOtherPort);
 
     OtherApi clientWithOtherInterface = builder(OtherApi.class)

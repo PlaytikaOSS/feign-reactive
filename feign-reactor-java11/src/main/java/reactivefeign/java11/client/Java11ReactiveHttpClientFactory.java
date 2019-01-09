@@ -14,27 +14,31 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
+import static reactivefeign.ReactiveOptions.useHttp2;
+
 public class Java11ReactiveHttpClientFactory implements ReactiveHttpClientFactory {
 
     private final HttpClient httpClient;
     private final JsonFactory jsonFactory;
     private final ObjectMapper objectMapper;
     private final Java11ReactiveOptions options;
-    private final HttpClient.Version version;
 
     public Java11ReactiveHttpClientFactory(
             HttpClient httpClient, JsonFactory jsonFactory, ObjectMapper objectMapper,
-            Java11ReactiveOptions options, HttpClient.Version version) {
+            Java11ReactiveOptions options) {
         this.httpClient = httpClient;
         this.jsonFactory = jsonFactory;
         this.objectMapper = objectMapper;
         this.options = options;
-        this.version = version;
+
+        if(useHttp2(options) && HttpClient.Version.HTTP_2 != httpClient.version()){
+            throw new IllegalArgumentException("Set correct version to httpClient");
+        }
     }
 
     @Override
     public void target(Target target) {
-        if(version == HttpClient.Version.HTTP_2){
+        if(httpClient.version() == HttpClient.Version.HTTP_2){
             //preliminary upgrade to h2s and setup TCP connection
             upgradeToH2c(target);
         }
@@ -53,10 +57,6 @@ public class Java11ReactiveHttpClientFactory implements ReactiveHttpClientFactor
             }
         }
 
-        if(version != null){
-            reactiveHttpClient.setVersion(version);
-        }
-
         return reactiveHttpClient;
     }
 
@@ -65,7 +65,7 @@ public class Java11ReactiveHttpClientFactory implements ReactiveHttpClientFactor
             httpClient.send(HttpRequest.newBuilder()
                     .method("options", HttpRequest.BodyPublishers.noBody())
                     .uri(URI.create(target.url()))
-                    .version(version).build(),
+                    .build(),
                     HttpResponse.BodyHandlers.discarding());
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);

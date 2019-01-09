@@ -18,12 +18,18 @@ package reactivefeign;
  */
 public class ReactiveOptions {
 
+  private final Boolean useHttp2;
   private final Long connectTimeoutMillis;
-  private final Boolean tryUseCompression;
+  private final Boolean acceptCompressed;
 
-  protected ReactiveOptions(Long connectTimeoutMillis, Boolean tryUseCompression) {
+  protected ReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis, Boolean acceptCompressed) {
+    this.useHttp2 = useHttp2;
     this.connectTimeoutMillis = connectTimeoutMillis;
-    this.tryUseCompression = tryUseCompression;
+    this.acceptCompressed = acceptCompressed;
+  }
+
+  public Boolean getUseHttp2() {
+    return useHttp2;
   }
 
   public Long getConnectTimeoutMillis() {
@@ -31,26 +37,37 @@ public class ReactiveOptions {
   }
 
   public Boolean isTryUseCompression() {
-    return tryUseCompression;
+    return acceptCompressed;
   }
 
   public boolean isEmpty() {
-    return connectTimeoutMillis == null && tryUseCompression == null;
+    return useHttp2 == null && connectTimeoutMillis == null && acceptCompressed == null;
   }
 
+  public static boolean useHttp2(ReactiveOptions options){
+    return options != null && options.getUseHttp2() != null && options.getUseHttp2();
+  }
+
+
   abstract public static class Builder {
+    protected Boolean useHttp2;
     protected Long connectTimeoutMillis;
-    protected Boolean tryUseCompression;
+    protected Boolean acceptCompressed;
 
     public Builder() {}
+
+    public Builder setUseHttp2(boolean useHttp2) {
+      this.useHttp2 = useHttp2;
+      return this;
+    }
 
     public Builder setConnectTimeoutMillis(long connectTimeoutMillis) {
       this.connectTimeoutMillis = connectTimeoutMillis;
       return this;
     }
 
-    public Builder setTryUseCompression(boolean tryUseCompression) {
-      this.tryUseCompression = tryUseCompression;
+    public Builder setAcceptCompressed(boolean acceptCompressed) {
+      this.acceptCompressed = acceptCompressed;
       return this;
     }
 

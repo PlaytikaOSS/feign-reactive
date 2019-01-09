@@ -177,7 +177,7 @@ public class LoadBalancingReactiveHttpClientTest {
         TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder()
                 .enableLoadBalancer(retryHandler)
                 .disableHystrix()
-                .retryWhen(retry(retryOnSame).toRetryFunction())
+                .retryWhen(retry(retryOnSame))
                 .target(TestMonoInterface.class, "http://" + serviceName);
 
         String result = client.getMono().block();

@@ -59,6 +59,10 @@ abstract public class LoggerTest {
 
   abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder();
 
+  protected String appenderPrefix(){
+    return "";
+  }
+
   protected WireMockConfiguration wireMockConfig(){
     return WireMockConfiguration.wireMockConfig();
   }
@@ -243,7 +247,7 @@ abstract public class LoggerTest {
 
   public Appender createAppender(String name) {
     Appender appender = Mockito.mock(Appender.class);
-    when(appender.getName()).thenReturn(name);
+    when(appender.getName()).thenReturn(appenderPrefix()+name);
     when(appender.isStarted()).thenReturn(true);
     getLoggerConfig().addAppender(appender, Level.ALL, null);
     return appender;

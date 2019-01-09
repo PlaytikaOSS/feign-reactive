@@ -12,6 +12,8 @@ import feign.Target;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactivefeign.ReactiveFeignBuilder;
+import reactivefeign.ReactiveOptions;
+import reactivefeign.ReactiveRetryPolicy;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
@@ -20,7 +22,6 @@ import reactivefeign.cloud.publisher.RibbonPublisherClient;
 import reactivefeign.methodhandler.MethodHandlerFactory;
 import reactivefeign.publisher.PublisherClientFactory;
 import reactivefeign.publisher.PublisherHttpClient;
-import reactor.core.publisher.Flux;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -107,6 +108,12 @@ public class CloudReactiveFeign {
         }
 
         @Override
+        public ReactiveFeignBuilder<T> options(ReactiveOptions options) {
+            builder = builder.options(options);
+            return this;
+        }
+
+        @Override
         public ReactiveFeignBuilder<T> addRequestInterceptor(ReactiveHttpRequestInterceptor requestInterceptor) {
             builder = builder.addRequestInterceptor(requestInterceptor);
             return this;
@@ -131,8 +138,8 @@ public class CloudReactiveFeign {
         }
 
         @Override
-        public ReactiveFeignBuilder<T> retryWhen(Function<Flux<Throwable>, Flux<Throwable>> retryFunction) {
-            builder =  builder.retryWhen(retryFunction);
+        public ReactiveFeignBuilder<T> retryWhen(ReactiveRetryPolicy retryPolicy) {
+            builder =  builder.retryWhen(retryPolicy);
             return this;
         }
 

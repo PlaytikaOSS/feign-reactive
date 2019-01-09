@@ -23,6 +23,8 @@ import reactivefeign.java11.client.Java11ReactiveHttpClientFactory;
 import java.net.http.HttpClient;
 import java.time.Duration;
 
+import static reactivefeign.ReactiveOptions.useHttp2;
+
 /**
  * Reactive Java 11 client based implementation of reactive Feign
  *
@@ -56,17 +58,11 @@ public final class Java11ReactiveFeign {
         protected JsonFactory jsonFactory;
         private ObjectMapper objectMapper;
         protected Java11ReactiveOptions options;
-        protected HttpClient.Version version = HttpClient.Version.HTTP_1_1;
 
         protected Builder(HttpClient.Builder httpClientBuilder, JsonFactory jsonFactory, ObjectMapper objectMapper) {
             setHttpClient(httpClientBuilder, jsonFactory, objectMapper);
             this.jsonFactory = jsonFactory;
             this.objectMapper = objectMapper;
-        }
-
-        public Builder<T> version(HttpClient.Version version) {
-            this.version = version;
-            return this;
         }
 
         @Override
@@ -86,9 +82,12 @@ public final class Java11ReactiveFeign {
         protected void setHttpClient(HttpClient.Builder httpClientBuilder, JsonFactory jsonFactory, ObjectMapper objectMapper){
             this.httpClientBuilder = httpClientBuilder;
 
+            this.httpClientBuilder = httpClientBuilder.version(
+                    useHttp2(this.options) ? HttpClient.Version.HTTP_2 : HttpClient.Version.HTTP_1_1);
+
             HttpClient httpClient = httpClientBuilder.build();
 
-            clientFactory(new Java11ReactiveHttpClientFactory(httpClient, jsonFactory, objectMapper, options, version));
+            clientFactory(new Java11ReactiveHttpClientFactory(httpClient, jsonFactory, objectMapper, options));
         }
     }
 }

@@ -17,9 +17,13 @@ import com.fasterxml.jackson.core.async_.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.http2.client.HTTP2Client;
+import org.eclipse.jetty.http2.client.http.HttpClientTransportOverHTTP2;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.jetty.client.JettyReactiveHttpClient;
+
+import java.util.function.Function;
 
 /**
  * Reactive Jetty client based implementation of reactive Feign
@@ -31,54 +35,79 @@ public final class JettyReactiveFeign {
     private JettyReactiveFeign(){}
 
     public static <T> Builder<T> builder() {
-        try {
-            HttpClient httpClient = new HttpClient();
-            httpClient.start();
-            return builder(httpClient);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+
+        return builder(useHttp2 -> {
+            try {
+                if(useHttp2){
+                    HTTP2Client h2Client = new HTTP2Client();
+                    h2Client.setSelectors(1);
+                    HttpClientTransportOverHTTP2 transport = new HttpClientTransportOverHTTP2(h2Client);
+
+                    HttpClient httpClient = new HttpClient(transport, null);
+                    httpClient.start();
+                    return httpClient;
+                } else {
+                    HttpClient httpClient = new HttpClient();
+                    httpClient.start();
+                    return httpClient;
+                }
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     public static <T> Builder<T> builder(HttpClient httpClient) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        return builder(httpClient, new JsonFactory(), objectMapper);
+        return builder(useHttp2 -> httpClient);
     }
 
-    public static <T> Builder<T> builder(HttpClient httpClient, JsonFactory jsonFactory, ObjectMapper objectMapper) {
-        return new Builder<>(httpClient, jsonFactory, objectMapper);
+    public static <T> Builder<T> builder(Function<Boolean, HttpClient> httpClientFactory) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        return new Builder<>(httpClientFactory, new JsonFactory(), objectMapper);
+    }
+
+    public static <T> Builder<T> builder(Function<Boolean, HttpClient> httpClientFactory,
+                                         JsonFactory jsonFactory, ObjectMapper objectMapper) {
+        return new Builder<>(httpClientFactory, jsonFactory, objectMapper);
     }
 
     public static class Builder<T> extends ReactiveFeign.Builder<T> {
 
-        protected HttpClient httpClient;
+        protected Function<Boolean, HttpClient> httpClientFactory;
         protected JsonFactory jsonFactory;
         private ObjectMapper objectMapper;
         protected JettyReactiveOptions options;
 
-        protected Builder(HttpClient httpClient, JsonFactory jsonFactory, ObjectMapper objectMapper) {
-            setHttpClient(httpClient, jsonFactory, objectMapper);
+        protected Builder(Function<Boolean, HttpClient> httpClientFactory, JsonFactory jsonFactory, ObjectMapper objectMapper) {
             this.jsonFactory = jsonFactory;
             this.objectMapper = objectMapper;
+            setHttpClient(httpClientFactory);
         }
 
         @Override
         public Builder<T> options(ReactiveOptions options) {
             this.options = (JettyReactiveOptions)options;
 
-            if (this.options.getConnectTimeoutMillis() != null) {
-                httpClient.setConnectTimeout(options.getConnectTimeoutMillis());
-            }
-            if (this.options.getRequestTimeoutMillis() != null) {
-                setHttpClient(httpClient, jsonFactory, objectMapper);
-            }
+            setHttpClient(httpClientFactory);
 
             return this;
         }
 
-        protected void setHttpClient(HttpClient httpClient, JsonFactory jsonFactory, ObjectMapper objectMapper){
-            this.httpClient = httpClient;
+        protected void setHttpClient(Function<Boolean, HttpClient> httpClientFactory){
+            this.httpClientFactory = httpClientFactory;
+
+            boolean useHttp2 = ReactiveOptions.useHttp2(options);
+            HttpClient httpClient = httpClientFactory.apply(useHttp2);
+
+            if(useHttp2 && !(httpClient.getTransport() instanceof HttpClientTransportOverHTTP2)){
+                throw new IllegalArgumentException("HttpClient should use HttpClientTransportOverHTTP2");
+            }
+
+            if (this.options != null && this.options.getConnectTimeoutMillis() != null) {
+                httpClient.setConnectTimeout(options.getConnectTimeoutMillis());
+            }
+
             clientFactory(methodMetadata -> {
                 JettyReactiveHttpClient jettyClient = JettyReactiveHttpClient.jettyClient(methodMetadata, httpClient, jsonFactory, objectMapper);
                 if (options != null && options.getRequestTimeoutMillis() != null) {

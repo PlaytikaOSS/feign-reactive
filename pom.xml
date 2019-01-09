@@ -13,11 +13,10 @@
         <module>feign-reactor-cloud</module>
         <module>feign-reactor-rx2</module>
         <module>feign-reactor-jetty</module>
-        <module>feign-reactor-jetty-http2</module>
         <module>feign-reactor-java11</module>
-        <module>feign-reactor-java11-http2</module>
         <module>feign-reactor-benchmarks</module>
-        <module>feign-reactor-spring-mvc</module>
+        <module>feign-reactor-spring-mvc-test</module>
+        <module>feign-reactor-spring-configuration</module>
     </modules>
 
     <name>feign-reactive</name>
@@ -86,6 +85,7 @@
         <!-- Tests -->
         <spring-boot-starter-webflux.version>2.1.1.RELEASE</spring-boot-starter-webflux.version>
         <spring-boot-starter.version>2.1.1.RELEASE</spring-boot-starter.version>
+        <spring-boot-autoconfigure.version>2.1.1.RELEASE</spring-boot-autoconfigure.version>
         <spring-cloud-contract-wiremock.version>2.0.2.RELEASE</spring-cloud-contract-wiremock.version>
         <junit.version>4.12</junit.version>
         <assertj.version>3.9.0</assertj.version>
@@ -232,17 +232,7 @@
             </dependency>
             <dependency>
                 <groupId>com.playtika.reactivefeign</groupId>
-                <artifactId>feign-reactor-jetty-http2</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.playtika.reactivefeign</groupId>
                 <artifactId>feign-reactor-java11</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.playtika.reactivefeign</groupId>
-                <artifactId>feign-reactor-java11-http2</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -334,6 +324,12 @@
             </dependency>
 
             <dependency>
+                <groupId>com.netflix.ribbon</groupId>
+                <artifactId>ribbon</artifactId>
+                <version>${ribbon-version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>io.reactivex</groupId>
                 <artifactId>rxjava</artifactId>
                 <version>${rxjava.version}</version>
@@ -393,7 +389,7 @@
 
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-starter-openfeign</artifactId>
+                <artifactId>spring-cloud-openfeign-core</artifactId>
                 <exclusions>
                     <exclusion>
                         <artifactId>spring-boot-starter-logging</artifactId>
@@ -401,6 +397,25 @@
                     </exclusion>
                 </exclusions>
                 <version>2.0.2.RELEASE</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-commons</artifactId>
+                <version>2.0.2.RELEASE</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-context</artifactId>
+                <version>2.0.2.RELEASE</version>
+            </dependency>
+
+            <!--autoconfigure-->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-autoconfigure</artifactId>
+                <version>${spring-boot-autoconfigure.version}</version>
             </dependency>
 
             <!--Test-->

@@ -23,10 +23,10 @@ import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactivefeign.java11.Java11Http2ReactiveFeign;
 import reactivefeign.java11.Java11ReactiveFeign;
-import reactivefeign.jetty.JettyHttp2ReactiveFeign;
+import reactivefeign.java11.Java11ReactiveOptions;
 import reactivefeign.jetty.JettyReactiveFeign;
+import reactivefeign.jetty.JettyReactiveOptions;
 import reactivefeign.webclient.WebReactiveFeign;
 import reactor.core.publisher.Mono;
 
@@ -106,7 +106,8 @@ abstract public class RealRequestBenchmarks {
 
         jettyH2cClient = new HttpClient(transport, null);
         jettyH2cClient.start();
-        jettyFeignH2c = JettyHttp2ReactiveFeign.<FeignReactorTestInterface>builder(jettyH2cClient)
+        jettyFeignH2c = JettyReactiveFeign.<FeignReactorTestInterface>builder()
+                .options(new JettyReactiveOptions.Builder().setUseHttp2(true).build())
                 .target(FeignReactorTestInterface.class, SERVER_H2C_URL);
         //to settle TCP connection
         jettyFeignH2c.postWithPayload(Mono.just(Collections.emptyMap())).block();
@@ -114,7 +115,8 @@ abstract public class RealRequestBenchmarks {
         java11Feign = Java11ReactiveFeign.<FeignReactorTestInterface>builder()
                 .target(FeignReactorTestInterface.class, SERVER_URL);
 
-        java11FeignH2c = Java11Http2ReactiveFeign.<FeignReactorTestInterface>builder()
+        java11FeignH2c = Java11ReactiveFeign.<FeignReactorTestInterface>builder()
+                .options(new Java11ReactiveOptions.Builder().setUseHttp2(true).build())
                 .target(FeignReactorTestInterface.class, SERVER_H2C_URL);
         //to settle TCP connection
         java11FeignH2c.postWithPayload(Mono.just(Collections.emptyMap())).block();
