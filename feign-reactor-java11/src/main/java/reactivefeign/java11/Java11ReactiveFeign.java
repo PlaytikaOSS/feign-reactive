@@ -72,8 +72,8 @@ public class Java11ReactiveFeign {
             this.options = (Java11ReactiveOptions)options;
 
             if (this.options.getConnectTimeoutMillis() != null) {
-//                this.httpClientBuilder = httpClientBuilder.connectTimeout(
-//                        Duration.ofMillis(options.getConnectTimeoutMillis()));
+                this.httpClientBuilder = httpClientBuilder.connectTimeout(
+                        Duration.ofMillis(options.getConnectTimeoutMillis()));
                 setHttpClient(httpClientBuilder, jsonFactory, objectMapper);
             }
             if (this.options.getRequestTimeoutMillis() != null) {
