@@ -4,13 +4,17 @@ import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixObservableCommand;
-import reactivefeign.ReactiveFeign;
-import reactivefeign.testcase.IcecreamServiceApi;
+import reactivefeign.webclient.WebReactiveFeign;
 
 public class BuilderUtils {
 
-    static ReactiveFeign.Builder<IcecreamServiceApi> builderWithExecutionTimeoutDisabled() {
-        return CloudReactiveFeign.<IcecreamServiceApi>builder().setHystrixCommandSetterFactory(
+    static <T> CloudReactiveFeign.Builder<T> cloudBuilder(){
+        return CloudReactiveFeign.builder(WebReactiveFeign.builder());
+    }
+
+    static <T> CloudReactiveFeign.Builder<T> cloudBuilderWithExecutionTimeoutDisabled() {
+        return CloudReactiveFeign.<T>builder(WebReactiveFeign.builder())
+                .setHystrixCommandSetterFactory(
                 (target, methodMetadata) -> {
                     String groupKey = target.name();
                     HystrixCommandKey commandKey = HystrixCommandKey.Factory.asKey(methodMetadata.configKey());

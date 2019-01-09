@@ -67,7 +67,7 @@ public class HystrixReactiveHttpClientTest {
                         .withHeader("Content-Type", "application/json")
                         .withBody(body));
 
-        TestMonoInterface client = CloudReactiveFeign.<LoadBalancingReactiveHttpClientTest.TestMonoInterface>builder()
+        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder()
                 .setHystrixCommandSetterFactory(getSetterFactory(testNo))
                 .target(TestMonoInterface.class, "http://localhost:" + server.port());
 
@@ -84,7 +84,7 @@ public class HystrixReactiveHttpClientTest {
                         .withHeader("Content-Type", "application/json")
                         .withBody(body));
 
-        TestMonoInterface client = CloudReactiveFeign.<LoadBalancingReactiveHttpClientTest.TestMonoInterface>builder()
+        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder()
                 .setHystrixCommandSetterFactory(getSetterFactory(testNo))
                 .setFallback(() -> Mono.just(FALLBACK))
                 .target(TestMonoInterface.class, "http://localhost:" + server.port());
@@ -103,7 +103,7 @@ public class HystrixReactiveHttpClientTest {
                         .withHeader("Content-Type", "application/json")
                         .withBody(body));
 
-        TestMonoInterface client = CloudReactiveFeign.<TestMonoInterface>builder()
+        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder()
                 .setHystrixCommandSetterFactory(getSetterFactory(testNo))
                 .setFallbackFactory(throwable -> () -> {throw new RuntimeException();})
                 .target(TestMonoInterface.class, "http://localhost:" + server.port());
@@ -125,7 +125,7 @@ public class HystrixReactiveHttpClientTest {
                         .withHeader("Content-Type", "application/json")
                         .withBody(SUCCESS));
 
-        TestMonoInterface client = CloudReactiveFeign.<TestMonoInterface>builder()
+        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder()
                 .setHystrixCommandSetterFactory(getSetterFactory(testNo))
                 .target(TestMonoInterface.class, "http://localhost:" + server.port());
 
@@ -185,7 +185,7 @@ public class HystrixReactiveHttpClientTest {
                         .withHeader("Content-Type", "application/json")
                         .withBody("success!")));
 
-        TestMonoInterface client = CloudReactiveFeign.<TestMonoInterface>builder()
+        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder()
                 .target(TestMonoInterface.class, "http://localhost:" + server.port());
 
         client.getMono().block();

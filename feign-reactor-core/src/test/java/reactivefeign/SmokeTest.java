@@ -52,7 +52,7 @@ abstract public class SmokeTest {
   @Rule
   public WireMockClassRule wireMockRule = new WireMockClassRule(wireMockConfig());
 
-  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder();
+  abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder();
 
   protected WireMockConfiguration wireMockConfig(){
     return WireMockConfiguration.wireMockConfig().dynamicPort();

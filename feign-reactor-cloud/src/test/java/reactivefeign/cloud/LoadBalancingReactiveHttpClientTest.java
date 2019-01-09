@@ -5,10 +5,6 @@ import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.netflix.client.*;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.DefaultClientConfigImpl;
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixCommandKey;
-import com.netflix.hystrix.HystrixCommandProperties;
-import com.netflix.hystrix.HystrixObservableCommand;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
@@ -70,7 +66,7 @@ public class LoadBalancingReactiveHttpClientTest {
         mockSuccessMono(server1, body);
         mockSuccessMono(server2, body);
 
-        TestMonoInterface client = CloudReactiveFeign.<TestMonoInterface>builder()
+        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder()
                 .enableLoadBalancer()
                 .disableHystrix()
                 .target(TestMonoInterface.class, "http://" + serviceName);
@@ -92,7 +88,7 @@ public class LoadBalancingReactiveHttpClientTest {
         mockSuccessFlux(server1, body);
         mockSuccessFlux(server2, body);
 
-        TestFluxInterface client = CloudReactiveFeign.<TestFluxInterface>builder()
+        TestFluxInterface client = BuilderUtils.<TestFluxInterface>cloudBuilder()
                 .enableLoadBalancer()
                 .disableHystrix()
                 .target(TestFluxInterface.class, "http://" + serviceName);
@@ -178,10 +174,10 @@ public class LoadBalancingReactiveHttpClientTest {
         RetryHandler retryHandler = new RequestSpecificRetryHandler(true, true,
                 new DefaultLoadBalancerRetryHandler(0, retryOnNext, true), null);
 
-        TestMonoInterface client = CloudReactiveFeign.<TestMonoInterface>builder()
-                .retryWhen(retry(retryOnSame))
+        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder()
                 .enableLoadBalancer(retryHandler)
                 .disableHystrix()
+                .retryWhen(retry(retryOnSame).toRetryFunction())
                 .target(TestMonoInterface.class, "http://" + serviceName);
 
         String result = client.getMono().block();
@@ -212,7 +208,7 @@ public class LoadBalancingReactiveHttpClientTest {
         RetryHandler retryHandler = new RequestSpecificRetryHandler(true, true,
                 new DefaultLoadBalancerRetryHandler(retryOnSame, retryOnNext, true), null);
 
-        TestMonoInterface client = CloudReactiveFeign.<TestMonoInterface>builder()
+        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder()
                 .enableLoadBalancer(retryHandler)
                 .disableHystrix()
                 .target(TestMonoInterface.class, "http://" + serviceName);

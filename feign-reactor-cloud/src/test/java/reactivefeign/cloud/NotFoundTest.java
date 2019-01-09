@@ -13,9 +13,8 @@
  */
 package reactivefeign.cloud;
 
-import reactivefeign.ReactiveFeign;
+import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.testcase.IcecreamServiceApi;
-import reactivefeign.webclient.WebReactiveFeign;
 
 /**
  * @author Sergii Karpenko
@@ -23,7 +22,7 @@ import reactivefeign.webclient.WebReactiveFeign;
 public class NotFoundTest extends reactivefeign.NotFoundTest {
 
   @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
-    return CloudReactiveFeign.builder();
+  protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
+    return BuilderUtils.cloudBuilderWithExecutionTimeoutDisabled();
   }
 }

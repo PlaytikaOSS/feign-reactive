@@ -31,7 +31,7 @@ abstract public class ContractTest {
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
 
-  abstract protected <T> ReactiveFeign.Builder<T> builder();
+  abstract protected <T> ReactiveFeignBuilder<T> builder();
 
   @Test
   public void shouldFailOnBrokenContract() {

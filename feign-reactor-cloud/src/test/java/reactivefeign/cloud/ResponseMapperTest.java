@@ -13,12 +13,12 @@
  */
 package reactivefeign.cloud;
 
-import reactivefeign.ReactiveFeign;
+import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 import java.util.function.Predicate;
 
-import static reactivefeign.cloud.BuilderUtils.builderWithExecutionTimeoutDisabled;
+import static reactivefeign.cloud.BuilderUtils.cloudBuilderWithExecutionTimeoutDisabled;
 
 /**
  * @author Sergii Karpenko
@@ -26,8 +26,8 @@ import static reactivefeign.cloud.BuilderUtils.builderWithExecutionTimeoutDisabl
 public class ResponseMapperTest extends reactivefeign.ResponseMapperTest {
 
   @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
-    return builderWithExecutionTimeoutDisabled();
+  protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
+    return cloudBuilderWithExecutionTimeoutDisabled();
   }
 
   @Override

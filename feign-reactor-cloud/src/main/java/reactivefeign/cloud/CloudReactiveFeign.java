@@ -11,10 +11,7 @@ import feign.MethodMetadata;
 import feign.Target;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactivefeign.ReactiveFeign;
-import reactivefeign.ReactiveOptions;
-import reactivefeign.ReactiveRetryPolicy;
+import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
@@ -23,7 +20,7 @@ import reactivefeign.cloud.publisher.RibbonPublisherClient;
 import reactivefeign.methodhandler.MethodHandlerFactory;
 import reactivefeign.publisher.PublisherClientFactory;
 import reactivefeign.publisher.PublisherHttpClient;
-import reactivefeign.webclient.WebReactiveFeign;
+import reactor.core.publisher.Flux;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -42,27 +39,20 @@ public class CloudReactiveFeign {
 
     private static final Logger logger = LoggerFactory.getLogger(CloudReactiveFeign.class);
 
-    public static <T> Builder<T> builder() {
-        return new Builder<>();
+    public static <T> Builder<T> builder(ReactiveFeignBuilder<T> builder) {
+        return new Builder<>(builder);
     }
 
-    public static <T> Builder<T> builder(WebClient webClient) {
-        return new Builder<>(webClient);
-    }
+    public static class Builder<T> implements ReactiveFeignBuilder<T> {
 
-    public static class Builder<T> extends WebReactiveFeign.Builder<T> {
-
+        private ReactiveFeignBuilder<T> builder;
         private boolean hystrixEnabled = true;
         private SetterFactory commandSetterFactory = new DefaultSetterFactory();
         private Function<Throwable, ? extends T> fallbackFactory;
         private Function<String, LoadBalancerCommand<Object>> loadBalancerCommandFactory = s -> null;
 
-        protected Builder() {
-            super();
-        }
-
-        protected Builder(WebClient webClient) {
-            super(webClient);
+        protected Builder(ReactiveFeignBuilder<T> builder) {
+            this.builder = builder;
         }
 
         public Builder<T> disableHystrix() {
@@ -111,8 +101,49 @@ public class CloudReactiveFeign {
         }
 
         @Override
-        protected MethodHandlerFactory buildReactiveMethodHandlerFactory() {
-            MethodHandlerFactory methodHandlerFactory = super.buildReactiveMethodHandlerFactory();
+        public ReactiveFeignBuilder<T> contract(Contract contract) {
+            builder = builder.contract(contract);
+            return this;
+        }
+
+        @Override
+        public ReactiveFeignBuilder<T> requestInterceptor(ReactiveHttpRequestInterceptor requestInterceptor) {
+            builder = builder.requestInterceptor(requestInterceptor);
+            return this;
+        }
+
+        @Override
+        public ReactiveFeignBuilder<T> decode404() {
+            builder = builder.decode404();
+            return this;
+        }
+
+        @Override
+        public ReactiveFeignBuilder<T> statusHandler(ReactiveStatusHandler statusHandler) {
+            builder = builder.statusHandler(statusHandler);
+            return this;
+        }
+
+        @Override
+        public ReactiveFeignBuilder<T> responseMapper(BiFunction<MethodMetadata, ReactiveHttpResponse, ReactiveHttpResponse> responseMapper) {
+            builder =  builder.responseMapper(responseMapper);
+            return this;
+        }
+
+        @Override
+        public ReactiveFeignBuilder<T> retryWhen(Function<Flux<Throwable>, Flux<Throwable>> retryFunction) {
+            builder =  builder.retryWhen(retryFunction);
+            return this;
+        }
+
+        @Override
+        public Contract contract() {
+            return builder.contract();
+        }
+
+        @Override
+        public MethodHandlerFactory buildReactiveMethodHandlerFactory(PublisherClientFactory reactiveClientFactory) {
+            MethodHandlerFactory methodHandlerFactory = builder.buildReactiveMethodHandlerFactory(reactiveClientFactory);
             return hystrixEnabled
                     ? new HystrixMethodHandlerFactory(
 					methodHandlerFactory,
@@ -122,8 +153,8 @@ public class CloudReactiveFeign {
         }
 
         @Override
-        protected PublisherClientFactory buildReactiveClientFactory() {
-            PublisherClientFactory publisherClientFactory = super.buildReactiveClientFactory();
+        public PublisherClientFactory buildReactiveClientFactory() {
+            PublisherClientFactory publisherClientFactory = builder.buildReactiveClientFactory();
             return new PublisherClientFactory(){
 
                 private Target target;
@@ -152,48 +183,6 @@ public class CloudReactiveFeign {
             }
         }
 
-        @Override
-        public Builder<T> contract(final Contract contract) {
-            super.contract(contract);
-            return this;
-        }
-
-        @Override
-        public Builder<T> requestInterceptor(ReactiveHttpRequestInterceptor requestInterceptor) {
-            super.requestInterceptor(requestInterceptor);
-            return this;
-        }
-
-        @Override
-        public Builder<T> decode404() {
-            super.decode404();
-            return this;
-        }
-
-        @Override
-        public Builder<T> statusHandler(ReactiveStatusHandler statusHandler) {
-            super.statusHandler(statusHandler);
-            return this;
-        }
-
-        @Override
-        public ReactiveFeign.Builder<T> responseMapper(
-                BiFunction<MethodMetadata, ReactiveHttpResponse, ReactiveHttpResponse> responseMapper) {
-            super.responseMapper(responseMapper);
-            return this;
-        }
-
-        @Override
-        public Builder<T> retryWhen(ReactiveRetryPolicy retryPolicy){
-            super.retryWhen(retryPolicy);
-            return this;
-        }
-
-        @Override
-        public Builder<T> options(final ReactiveOptions options) {
-            super.options(options);
-            return this;
-        }
     }
 
     public interface SetterFactory {

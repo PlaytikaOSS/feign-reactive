@@ -18,8 +18,6 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.RequestLine;
 import org.assertj.core.api.Assertions;
-import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
@@ -32,7 +30,6 @@ import reactor.test.StepVerifier;
 import java.util.stream.Stream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
 
 /**
@@ -44,11 +41,11 @@ abstract public class DefaultMethodTest {
   public WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig().dynamicPort());
 
-  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder();
+  abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder();
 
-  abstract protected <API> ReactiveFeign.Builder<API> builder(Class<API> apiClass);
+  abstract protected <API> ReactiveFeignBuilder<API> builder(Class<API> apiClass);
 
-  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long connectTimeoutInMillis);
+  abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder(long connectTimeoutInMillis);
 
   protected WireMockConfiguration wireMockConfig(){
     return WireMockConfiguration.wireMockConfig();

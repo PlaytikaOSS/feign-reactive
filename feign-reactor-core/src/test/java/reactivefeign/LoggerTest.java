@@ -25,7 +25,6 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.assertj.core.api.Condition;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -41,7 +40,6 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -59,7 +57,7 @@ abstract public class LoggerTest {
           .asynchronousResponseEnabled(true)
           .dynamicPort());
 
-  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder();
+  abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder();
 
   protected WireMockConfiguration wireMockConfig(){
     return WireMockConfiguration.wireMockConfig();

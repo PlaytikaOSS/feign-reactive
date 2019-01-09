@@ -19,7 +19,6 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.RetryableException;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.publisher.RetryPublisherHttpClient;
@@ -32,7 +31,6 @@ import reactor.test.StepVerifier;
 import java.util.Arrays;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
 import static org.apache.http.HttpHeaders.RETRY_AFTER;
 import static org.apache.http.HttpStatus.SC_OK;
@@ -50,7 +48,7 @@ public abstract class RetryingTest {
   public WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig().dynamicPort());
 
-  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder();
+  abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder();
 
   protected WireMockConfiguration wireMockConfig(){
     return WireMockConfiguration.wireMockConfig();
@@ -74,7 +72,7 @@ public abstract class RetryingTest {
             .withBody(orderStr));
 
     IcecreamServiceApi client = builder()
-        .retryWhen(ReactiveRetryers.retryWithBackoff(3, 0))
+        .retryWhen(ReactiveRetryers.retryWithBackoff(3, 0).toRetryFunction())
         .target(IcecreamServiceApi.class,
             "http://localhost:" + wireMockRule.port());
 
@@ -97,7 +95,7 @@ public abstract class RetryingTest {
             .withBody(mixinsStr));
 
     IcecreamServiceApi client = builder()
-        .retryWhen(ReactiveRetryers.retryWithBackoff(3, 0))
+        .retryWhen(ReactiveRetryers.retryWithBackoff(3, 0).toRetryFunction())
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.getAvailableMixins())
@@ -118,7 +116,7 @@ public abstract class RetryingTest {
             .withBody(orderStr));
 
     IcecreamServiceApi client = builder()
-        .retryWhen(ReactiveRetryers.retryWithBackoff(3, 0))
+        .retryWhen(ReactiveRetryers.retryWithBackoff(3, 0).toRetryFunction())
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findOrder(1))
@@ -158,7 +156,7 @@ public abstract class RetryingTest {
         .willReturn(aResponse().withStatus(503).withHeader(RETRY_AFTER, "1")));
 
     IcecreamServiceApi client = builder()
-        .retryWhen(ReactiveRetryers.retry(3))
+        .retryWhen(ReactiveRetryers.retry(3).toRetryFunction())
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findOrder(1))
@@ -177,7 +175,7 @@ public abstract class RetryingTest {
         .willReturn(aResponse().withStatus(503).withHeader(RETRY_AFTER, "1")));
 
     IcecreamServiceApi client = builder()
-        .retryWhen(ReactiveRetryers.retryWithBackoff(7, 5))
+        .retryWhen(ReactiveRetryers.retryWithBackoff(7, 5).toRetryFunction())
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findOrder(1))

@@ -35,7 +35,7 @@ abstract public class ConnectionTimeoutTest {
   private Socket socket;
   private int port;
 
-  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long connectTimeoutInMillis);
+  abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder(long connectTimeoutInMillis);
 
   @Before
   public void before() throws IOException {

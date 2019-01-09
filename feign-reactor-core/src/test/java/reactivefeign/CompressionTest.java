@@ -17,7 +17,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.common.Gzip;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
@@ -28,7 +27,6 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
 
 /**
@@ -44,7 +42,7 @@ abstract public class CompressionTest {
   public WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig().dynamicPort());
 
-  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder(boolean tryUseCompression);
+  abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder(boolean tryUseCompression);
 
   protected WireMockConfiguration wireMockConfig(){
     return WireMockConfiguration.wireMockConfig();

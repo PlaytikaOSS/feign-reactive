@@ -28,6 +28,7 @@ import reactivefeign.utils.Pair;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.util.Collections.singletonList;
+import static reactivefeign.client.ReactiveHttpRequestInterceptors.addHeaders;
 import static reactivefeign.rx2.TestUtils.equalsComparingFieldByFieldRecursivelyRx;
 
 /**
@@ -73,7 +74,7 @@ public class RequestInterceptorTest {
             .assertError(FeignException.class);
 
     IcecreamServiceApi clientWithAuth = builder()
-        .addHeaders(singletonList(new Pair<>("Authorization", "Bearer mytoken123")))
+        .requestInterceptor(addHeaders(singletonList(new Pair<>("Authorization", "Bearer mytoken123"))))
         .target(IcecreamServiceApi.class,
             "http://localhost:" + wireMockRule.port());
 

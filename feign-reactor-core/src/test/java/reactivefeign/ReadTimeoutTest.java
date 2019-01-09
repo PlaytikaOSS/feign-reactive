@@ -15,7 +15,6 @@ package reactivefeign;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.client.ReadTimeoutException;
@@ -23,7 +22,6 @@ import reactivefeign.testcase.IcecreamServiceApi;
 import reactor.test.StepVerifier;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
 /**
  * @author Sergii Karpenko
@@ -34,7 +32,7 @@ abstract public class ReadTimeoutTest {
   public WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig().dynamicPort());
 
-  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long readTimeoutInMillis);
+  abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder(long readTimeoutInMillis);
 
   protected WireMockConfiguration wireMockConfig(){
     return WireMockConfiguration.wireMockConfig();

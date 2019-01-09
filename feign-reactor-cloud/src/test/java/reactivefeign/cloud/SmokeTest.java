@@ -14,8 +14,9 @@
 package reactivefeign.cloud;
 
 import org.springframework.core.codec.DecodingException;
-import reactivefeign.ReactiveFeign;
+import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.testcase.IcecreamServiceApi;
+import reactivefeign.webclient.WebReactiveFeign;
 
 import java.util.function.Predicate;
 
@@ -25,8 +26,8 @@ import java.util.function.Predicate;
 public class SmokeTest extends reactivefeign.SmokeTest {
 
   @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
-    return CloudReactiveFeign.builder();
+  protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
+    return BuilderUtils.cloudBuilderWithExecutionTimeoutDisabled();
   }
 
   @Override

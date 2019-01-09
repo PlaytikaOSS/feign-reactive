@@ -18,7 +18,6 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.FeignException;
 import org.apache.http.HttpStatus;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
@@ -30,9 +29,9 @@ import reactor.test.StepVerifier;
 import java.util.function.Predicate;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.util.Collections.singletonList;
 import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
+import static reactivefeign.client.ReactiveHttpRequestInterceptors.addHeaders;
 
 /**
  * @author Sergii Karpenko
@@ -43,7 +42,7 @@ abstract public class RequestInterceptorTest {
   public WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig().dynamicPort());
 
-  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder();
+  abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder();
 
   protected WireMockConfiguration wireMockConfig(){
     return WireMockConfiguration.wireMockConfig();
@@ -78,7 +77,7 @@ abstract public class RequestInterceptorTest {
         .verify();
 
     IcecreamServiceApi clientWithAuth = builder()
-        .addHeaders(singletonList(new Pair<>("Authorization", "Bearer mytoken123")))
+        .requestInterceptor(addHeaders(singletonList(new Pair<>("Authorization", "Bearer mytoken123"))))
         .target(IcecreamServiceApi.class,
             "http://localhost:" + wireMockRule.port());
 

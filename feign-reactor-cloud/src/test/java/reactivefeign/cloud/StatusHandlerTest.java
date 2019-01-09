@@ -17,13 +17,11 @@ import com.netflix.hystrix.exception.HystrixRuntimeException;
 import feign.RetryableException;
 import org.apache.http.HttpStatus;
 import org.junit.Test;
-import reactivefeign.ReactiveFeign;
+import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.testcase.IcecreamServiceApi;
-import reactivefeign.webclient.WebReactiveFeign;
 import reactor.test.StepVerifier;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static reactivefeign.client.statushandler.CompositeStatusHandler.compose;
 import static reactivefeign.client.statushandler.ReactiveStatusHandlers.throwOnStatus;
 
@@ -33,8 +31,8 @@ import static reactivefeign.client.statushandler.ReactiveStatusHandlers.throwOnS
 public class StatusHandlerTest extends reactivefeign.StatusHandlerTest {
 
   @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
-    return CloudReactiveFeign.builder();
+  protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
+    return BuilderUtils.cloudBuilderWithExecutionTimeoutDisabled();
   }
 
   @Override

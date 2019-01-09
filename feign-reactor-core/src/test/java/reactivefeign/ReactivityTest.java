@@ -44,7 +44,7 @@ abstract public class ReactivityTest {
                   .asynchronousResponseEnabled(true)
                   .dynamicPort());
 
-  abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder();
+  abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder();
 
   protected WireMockConfiguration wireMockConfig(){
     return WireMockConfiguration.wireMockConfig();

@@ -5,7 +5,6 @@ import feign.MethodMetadata;
 import io.reactivex.*;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.ReactiveRetryPolicy;
 import reactivefeign.client.ReactiveHttpClient;
@@ -13,11 +12,11 @@ import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.methodhandler.MethodHandlerFactory;
 import reactivefeign.publisher.FluxPublisherHttpClient;
 import reactivefeign.publisher.MonoPublisherHttpClient;
+import reactivefeign.publisher.PublisherClientFactory;
 import reactivefeign.publisher.PublisherHttpClient;
 import reactivefeign.rx2.client.statushandler.Rx2ReactiveStatusHandler;
 import reactivefeign.rx2.client.statushandler.Rx2StatusHandler;
 import reactivefeign.rx2.methodhandler.Rx2MethodHandlerFactory;
-import reactivefeign.utils.Pair;
 import reactivefeign.webclient.WebReactiveFeign;
 import reactivefeign.webclient.client.WebReactiveHttpClient;
 import reactor.core.publisher.Flux;
@@ -25,7 +24,6 @@ import reactor.core.publisher.Mono;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.List;
 
 import static feign.Util.resolveLastTypeParameter;
 import static java.util.Optional.ofNullable;
@@ -66,20 +64,13 @@ public class Rx2ReactiveFeign {
         }
 
         @Override
-        protected MethodHandlerFactory buildReactiveMethodHandlerFactory() {
-            return new Rx2MethodHandlerFactory(buildReactiveClientFactory(),
-                    backpressureStrategy);
+        public MethodHandlerFactory buildReactiveMethodHandlerFactory(PublisherClientFactory publisherClientFactory) {
+            return new Rx2MethodHandlerFactory(publisherClientFactory, backpressureStrategy);
         }
 
         @Override
         public Builder<T> contract(final Contract contract) {
             this.contract = new Rx2Contract(contract);
-            return this;
-        }
-
-        @Override
-        public ReactiveFeign.Builder<T> addHeaders(List<Pair<String, String>> headers) {
-            super.addHeaders(headers);
             return this;
         }
 

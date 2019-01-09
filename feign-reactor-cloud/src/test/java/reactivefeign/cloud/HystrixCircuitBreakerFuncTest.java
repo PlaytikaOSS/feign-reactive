@@ -8,11 +8,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
-import org.springframework.boot.web.reactive.server.ReactiveWebServerFactory;
 import org.springframework.cloud.contract.wiremock.AutoConfigureWireMock;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.test.context.junit4.SpringRunner;
 import reactor.core.publisher.Mono;
 
@@ -24,12 +20,12 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        classes = {HystrixCircuitBreakerFuncTest.class, HystrixCircuitBreakerFuncTest.TestConfig.class},
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,
+        classes = {HystrixCircuitBreakerFuncTest.class},
         properties = {
-                "wiremock.port=${wiremock.server.port}",
                 "hystrix.command.default.circuitBreaker.requestVolumeThreshold=3",
-                "hystrix.command.default.circuitBreaker.enabled=false"
+                "hystrix.command.default.circuitBreaker.enabled=false",
+                "hystrix.command.default.execution.timeout.enabled=false"
         })
 @AutoConfigureWireMock
 @EnableAutoConfiguration
@@ -39,7 +35,7 @@ public class HystrixCircuitBreakerFuncTest {
     private static final String CIRCUIT_IS_OPEN = "short-circuited";
     private static final String NO_FALLBACK = "and no fallback available";
 
-    @Value("${wiremock.port}")
+    @Value("${wiremock.server.port}")
     private int WIREMOCK_PORT;
     @Value("${hystrix.command.default.circuitBreaker.requestVolumeThreshold}")
     private int HYSTRIX_VOLUME_THRESHOLD;
@@ -55,7 +51,7 @@ public class HystrixCircuitBreakerFuncTest {
         int callsNo = HYSTRIX_VOLUME_THRESHOLD + 10;
         mockResponseServiceUnavailable();
 
-        TestCaller testCaller = CloudReactiveFeign.<TestCaller>builder()
+        TestCaller testCaller = BuilderUtils.<TestCaller>cloudBuilder()
                 .setFallback(() -> Mono.just(FALLBACK))
                 .target(TestCaller.class, "http://localhost:" + WIREMOCK_PORT);
 
@@ -76,7 +72,7 @@ public class HystrixCircuitBreakerFuncTest {
         int callsNo = HYSTRIX_VOLUME_THRESHOLD + 10;
         mockResponseServiceUnavailable();
 
-        TestCaller testCaller = CloudReactiveFeign.<TestCaller>builder()
+        TestCaller testCaller = BuilderUtils.<TestCaller>cloudBuilder()
                 .target(TestCaller.class, "http://localhost:" + WIREMOCK_PORT);
 
         //check that circuit breaker DOESN'T open on volume threshold
@@ -108,13 +104,5 @@ public class HystrixCircuitBreakerFuncTest {
     interface TestCaller {
         @RequestLine("GET " + TEST_URL)
         Mono<String> call();
-    }
-
-    @Configuration
-    static class TestConfig {
-        @Bean
-        public ReactiveWebServerFactory reactiveWebServerFactory() {
-            return new NettyReactiveWebServerFactory();
-        }
     }
 }

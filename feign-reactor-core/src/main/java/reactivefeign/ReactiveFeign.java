@@ -25,7 +25,6 @@ import reactivefeign.client.statushandler.ReactiveStatusHandlers;
 import reactivefeign.methodhandler.DefaultMethodHandler;
 import reactivefeign.methodhandler.MethodHandler;
 import reactivefeign.methodhandler.MethodHandlerFactory;
-import reactivefeign.methodhandler.ReactiveMethodHandlerFactory;
 import reactivefeign.publisher.*;
 import reactivefeign.utils.Pair;
 import reactor.core.publisher.Flux;
@@ -62,19 +61,22 @@ import static reactivefeign.utils.MultiValueMapUtils.addOrdered;
  */
 public class ReactiveFeign {
 
-  private final ParseHandlersByName targetToHandlersByName;
-  private final InvocationHandlerFactory factory;
+  private final Contract contract;
+  private final MethodHandlerFactory methodHandlerFactory;
+  private final InvocationHandlerFactory invocationHandlerFactory;
 
   protected ReactiveFeign(
-          final ParseHandlersByName targetToHandlersByName,
-          final InvocationHandlerFactory factory) {
-    this.targetToHandlersByName = targetToHandlersByName;
-    this.factory = factory;
+          final Contract contract,
+          final MethodHandlerFactory methodHandlerFactory,
+          final InvocationHandlerFactory invocationHandlerFactory) {
+    this.contract = contract;
+    this.methodHandlerFactory = methodHandlerFactory;
+    this.invocationHandlerFactory = invocationHandlerFactory;
   }
 
   @SuppressWarnings("unchecked")
   public <T> T newInstance(Target<T> target) {
-    final Map<String, MethodHandler> nameToHandler = targetToHandlersByName.apply(target);
+    final Map<String, MethodHandler> nameToHandler = targetToHandlersByName(target);
     final Map<Method, InvocationHandlerFactory.MethodHandler> methodToHandler = new LinkedHashMap<>();
     final List<DefaultMethodHandler> defaultMethodHandlers = new LinkedList<>();
 
@@ -89,7 +91,7 @@ public class ReactiveFeign {
       }
     }
 
-    final InvocationHandler handler = factory.create(target, methodToHandler);
+    final InvocationHandler handler = invocationHandlerFactory.create(target, methodToHandler);
     T proxy = (T) Proxy.newProxyInstance(target.type().getClassLoader(),
             new Class<?>[] {target.type()}, handler);
 
@@ -100,10 +102,39 @@ public class ReactiveFeign {
     return proxy;
   }
 
+  Map<String, MethodHandler> targetToHandlersByName(final Target target) {
+    Map<String, MethodMetadata> metadata = contract.parseAndValidatateMetadata(target.type())
+            .stream()
+            .collect(Collectors.toMap(
+                    MethodMetadata::configKey,
+                    md -> md
+            ));
+    Map<String, Method> configKeyToMethod = Stream.of(target.type().getMethods())
+            .collect(Collectors.toMap(
+                    method -> Feign.configKey(target.type(), method),
+                    method -> method
+            ));
+
+    final Map<String, MethodHandler> result = new LinkedHashMap<>();
+
+    methodHandlerFactory.target(target);
+
+    for (final Map.Entry<String, Method> entry : configKeyToMethod.entrySet()) {
+      String configKey = entry.getKey();
+      MethodMetadata md = metadata.get(configKey);
+      MethodHandler methodHandler = md != null
+              ? methodHandlerFactory.create(md)
+              : methodHandlerFactory.createDefault(entry.getValue());  //isDefault(entry.getValue())
+      result.put(configKey, methodHandler);
+    }
+
+    return result;
+  }
+
   /**
    * ReactiveFeign builder.
    */
-  public abstract static class Builder<T> {
+  public abstract static class Builder<T> implements ReactiveFeignBuilder<T>{
     protected Contract contract;
     protected ReactiveHttpClientFactory clientFactory;
     protected ReactiveHttpRequestInterceptor requestInterceptor;
@@ -113,7 +144,6 @@ public class ReactiveFeign {
     protected InvocationHandlerFactory invocationHandlerFactory =
             new ReactiveInvocationHandler.Factory();
     protected boolean decode404 = false;
-    protected Target<T> target;
 
     private Function<Flux<Throwable>, Flux<Throwable>> retryFunction;
 
@@ -128,62 +158,37 @@ public class ReactiveFeign {
       return this;
     }
 
-    /**
-     * Sets contract. Provided contract will be wrapped in {@link ReactiveContract}
-     *
-     * @param contract contract.
-     * @return this builder
-     */
+    @Override
     public Builder<T> contract(final Contract contract) {
       this.contract = new ReactiveContract(contract);
       return this;
     }
 
-    public Builder<T> addHeaders(List<Pair<String, String>> headers) {
-      return requestInterceptor(request -> {
-        headers.forEach(header -> addOrdered(request.headers(), header.left, header.right));
-        return request;
-      });
-    }
-
+    @Override
     public Builder<T> requestInterceptor(ReactiveHttpRequestInterceptor requestInterceptor) {
       this.requestInterceptor = requestInterceptor;
       return this;
     }
 
-    /**
-     * This flag indicates that the reactive feign client should process responses with 404 status,
-     * specifically returning empty {@link Mono} or {@link Flux} instead of throwing
-     * {@link FeignException}.
-     * <p>
-     * <p>
-     * This flag only works with 404, as opposed to all or arbitrary status codes. This was an
-     * explicit decision: 404 - empty is safe, common and doesn't complicate redirection, retry or
-     * fallback policy.
-     *
-     * @return this builder
-     */
+    @Override
     public Builder<T> decode404() {
       this.decode404 = true;
       return this;
     }
 
+    @Override
     public Builder<T> statusHandler(ReactiveStatusHandler statusHandler) {
       this.statusHandler = statusHandler;
       return this;
     }
 
-    /**
-     * The most common way to introduce custom logic on handling http response
-     *
-     * @param responseMapper
-     * @return
-     */
+    @Override
     public Builder<T> responseMapper(BiFunction<MethodMetadata, ReactiveHttpResponse, ReactiveHttpResponse> responseMapper) {
       this.responseMapper = responseMapper;
       return this;
     }
 
+    @Override
     public Builder<T> retryWhen(Function<Flux<Throwable>, Flux<Throwable>> retryFunction) {
       this.retryFunction = retryFunction;
       return this;
@@ -193,39 +198,18 @@ public class ReactiveFeign {
       return retryWhen(retryPolicy.toRetryFunction());
     }
 
-    /**
-     * Defines target and builds client.
-     *
-     * @param apiType API interface
-     * @param url base URL
-     * @return built client
-     */
-    public T target(final Class<T> apiType, final String url) {
-      return target(new Target.HardCodedTarget<>(apiType, url));
+    @Override
+    public Contract contract(){
+      return contract;
     }
 
-    /**
-     * Defines target and builds client.
-     *
-     * @param target target instance
-     * @return built client
-     */
-    public T target(final Target<T> target) {
-      this.target = target;
-      return build().newInstance(target);
+    @Override
+    public InvocationHandlerFactory invocationHandlerFactory(){
+      return invocationHandlerFactory;
     }
 
-    protected ReactiveFeign build() {
-      final ParseHandlersByName handlersByName = new ParseHandlersByName(
-              contract, buildReactiveMethodHandlerFactory());
-      return new ReactiveFeign(handlersByName, invocationHandlerFactory);
-    }
-
-    protected MethodHandlerFactory buildReactiveMethodHandlerFactory() {
-      return new ReactiveMethodHandlerFactory(buildReactiveClientFactory());
-    }
-
-    protected PublisherClientFactory buildReactiveClientFactory() {
+    @Override
+    public PublisherClientFactory buildReactiveClientFactory() {
       return new PublisherClientFactory(){
 
         @Override
@@ -296,42 +280,4 @@ public class ReactiveFeign {
     }
   }
 
-  public static final class ParseHandlersByName {
-    private final Contract contract;
-    private final MethodHandlerFactory factory;
-
-    ParseHandlersByName(final Contract contract, final MethodHandlerFactory factory) {
-      this.contract = contract;
-      this.factory = factory;
-    }
-
-    Map<String, MethodHandler> apply(final Target target) {
-      Map<String, MethodMetadata> metadata = contract.parseAndValidatateMetadata(target.type())
-              .stream()
-              .collect(Collectors.toMap(
-                      MethodMetadata::configKey,
-                      md -> md
-              ));
-      Map<String, Method> configKeyToMethod = Stream.of(target.type().getMethods())
-              .collect(Collectors.toMap(
-                      method -> Feign.configKey(target.type(), method),
-                      method -> method
-              ));
-
-      final Map<String, MethodHandler> result = new LinkedHashMap<>();
-
-      factory.target(target);
-
-      for (final Map.Entry<String, Method> entry : configKeyToMethod.entrySet()) {
-        String configKey = entry.getKey();
-        MethodMetadata md = metadata.get(configKey);
-        MethodHandler methodHandler = md != null
-                ? factory.create(md)
-                : factory.createDefault(entry.getValue());  //isDefault(entry.getValue())
-        result.put(configKey, methodHandler);
-      }
-
-      return result;
-    }
-  }
 }
