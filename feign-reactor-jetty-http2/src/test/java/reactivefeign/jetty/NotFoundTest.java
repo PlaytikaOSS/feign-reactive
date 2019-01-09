@@ -24,7 +24,7 @@ public class NotFoundTest extends reactivefeign.NotFoundTest {
 
   @Override
   protected WireMockConfiguration wireMockConfig(){
-    return JettyHttp2cServerConfig.wireMockConfig();
+    return Http2cServerConfig.wireMockConfig();
   }
 
   @Override

@@ -31,7 +31,7 @@ import static org.assertj.core.api.Assertions.assertThat;
                 "hystrix.command.default.circuitBreaker.requestVolumeThreshold=3",
                 "hystrix.command.default.circuitBreaker.enabled=false"
         })
-@AutoConfigureWireMock(port = 8899)
+@AutoConfigureWireMock
 @EnableAutoConfiguration
 public class HystrixCircuitBreakerFuncTest {
     private static final String TEST_URL = "/call";

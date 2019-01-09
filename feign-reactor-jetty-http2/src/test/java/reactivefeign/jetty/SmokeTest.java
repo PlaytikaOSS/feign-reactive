@@ -14,13 +14,7 @@
 package reactivefeign.jetty;
 
 import com.fasterxml.jackson.core.io.JsonEOFException;
-import com.github.tomakehurst.wiremock.common.JettySettings;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.jetty9.JettyHttpServer;
-import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
-import org.eclipse.jetty.io.NetworkTrafficListener;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.ServerConnector;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
 
@@ -33,7 +27,7 @@ public class SmokeTest extends reactivefeign.SmokeTest {
 
   @Override
   protected WireMockConfiguration wireMockConfig(){
-    return JettyHttp2cServerConfig.wireMockConfig();
+    return Http2cServerConfig.wireMockConfig();
   }
 
   @Override

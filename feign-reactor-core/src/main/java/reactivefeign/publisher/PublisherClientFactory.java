@@ -14,12 +14,16 @@
 package reactivefeign.publisher;
 
 import feign.MethodMetadata;
-
-import java.util.function.Function;
+import feign.Target;
 
 /**
  * @author Sergii Karpenko
  */
 
-public interface PublisherClientFactory extends Function<MethodMetadata, PublisherHttpClient> {
+public interface PublisherClientFactory {
+
+    void target(Target target);
+
+    PublisherHttpClient create(MethodMetadata methodMetadata);
+
 }

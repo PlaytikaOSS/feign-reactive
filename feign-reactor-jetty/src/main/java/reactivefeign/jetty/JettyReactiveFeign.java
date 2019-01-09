@@ -21,9 +21,6 @@ import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.jetty.client.JettyReactiveHttpClient;
 
-import java.util.Optional;
-import java.util.stream.Stream;
-
 /**
  * Reactive Jetty client based implementation of reactive Feign
  *

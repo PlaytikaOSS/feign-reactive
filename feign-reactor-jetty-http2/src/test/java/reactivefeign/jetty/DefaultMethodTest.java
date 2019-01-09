@@ -24,7 +24,7 @@ public class DefaultMethodTest extends reactivefeign.DefaultMethodTest {
 
   @Override
   protected WireMockConfiguration wireMockConfig(){
-    return JettyHttp2cServerConfig.wireMockConfig();
+    return Http2cServerConfig.wireMockConfig();
   }
 
   @Override

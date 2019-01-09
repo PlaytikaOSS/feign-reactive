@@ -21,7 +21,9 @@ import java.lang.reflect.Method;
 
 public interface MethodHandlerFactory {
 
-  MethodHandler create(final Target target, final MethodMetadata metadata);
+  void target(final Target target);
+
+  MethodHandler create(final MethodMetadata metadata);
 
   MethodHandler createDefault(Method method);
 }

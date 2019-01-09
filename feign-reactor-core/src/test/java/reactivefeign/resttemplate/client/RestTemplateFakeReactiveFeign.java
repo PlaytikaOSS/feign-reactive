@@ -30,7 +30,6 @@ public class RestTemplateFakeReactiveFeign {
 
   public static <T> ReactiveFeign.Builder<T> builder() {
     return new ReactiveFeign.Builder<T>(){
-
       {
         clientFactory(methodMetadata -> new RestTemplateFakeReactiveHttpClient(
                 methodMetadata, new RestTemplate(), false));
@@ -50,7 +49,7 @@ public class RestTemplateFakeReactiveFeign {
           requestFactory.setReadTimeout(restTemplateOptions.getReadTimeoutMillis().intValue());
         }
 
-        this.clientFactory(methodMetadata -> {
+        this.clientFactory((methodMetadata) -> {
           boolean acceptGzip = ofNullable(options.isTryUseCompression()).orElse(false);
           return new RestTemplateFakeReactiveHttpClient(
                   methodMetadata, new RestTemplate(requestFactory), acceptGzip);

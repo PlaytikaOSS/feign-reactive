@@ -124,11 +124,23 @@ public class CloudReactiveFeign {
         @Override
         protected PublisherClientFactory buildReactiveClientFactory() {
             PublisherClientFactory publisherClientFactory = super.buildReactiveClientFactory();
-            return methodMetadata -> {
-                PublisherHttpClient publisherClient = publisherClientFactory.apply(methodMetadata);
-                String serviceName = extractServiceName(target.url());
-                return new RibbonPublisherClient(loadBalancerCommandFactory.apply(serviceName),
-                        publisherClient, returnPublisherType(methodMetadata));
+            return new PublisherClientFactory(){
+
+                private Target target;
+
+                @Override
+                public void target(Target target) {
+                    this.target = target;
+                    publisherClientFactory.target(target);
+                }
+
+                @Override
+                public PublisherHttpClient create(MethodMetadata methodMetadata) {
+                    PublisherHttpClient publisherClient = publisherClientFactory.create(methodMetadata);
+                    String serviceName = extractServiceName(target.url());
+                    return new RibbonPublisherClient(loadBalancerCommandFactory.apply(serviceName),
+                            publisherClient, returnPublisherType(methodMetadata));
+                }
             };
         }
 

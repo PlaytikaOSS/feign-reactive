@@ -17,6 +17,7 @@ public class HystrixMethodHandlerFactory implements MethodHandlerFactory {
     private final MethodHandlerFactory methodHandlerFactory;
     private final CloudReactiveFeign.SetterFactory commandSetterFactory;
     private final Function<Throwable, Object> fallbackFactory;
+    private Target target;
 
     public HystrixMethodHandlerFactory(MethodHandlerFactory methodHandlerFactory,
                                        CloudReactiveFeign.SetterFactory commandSetterFactory,
@@ -27,10 +28,16 @@ public class HystrixMethodHandlerFactory implements MethodHandlerFactory {
     }
 
     @Override
-    public MethodHandler create(final Target target, final MethodMetadata metadata) {
+    public void target(Target target) {
+        this.target = target;
+        methodHandlerFactory.target(target);
+    }
+
+    @Override
+    public MethodHandler create(final MethodMetadata metadata) {
         return new HystrixMethodHandler(
                 target, metadata,
-                methodHandlerFactory.create(target, metadata),
+                methodHandlerFactory.create(metadata),
                 commandSetterFactory,
                 fallbackFactory);
     }

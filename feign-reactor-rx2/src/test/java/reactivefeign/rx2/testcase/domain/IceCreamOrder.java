@@ -16,6 +16,8 @@ package reactivefeign.rx2.testcase.domain;
 import java.time.Instant;
 import java.util.*;
 
+import static java.time.temporal.ChronoUnit.MICROS;
+
 /**
  * Give me some ice-cream! :p
  */
@@ -30,7 +32,7 @@ public class IceCreamOrder {
   IceCreamOrder() {}
 
   IceCreamOrder(int id) {
-    this(id, Instant.now());
+    this(id, Instant.now().truncatedTo(MICROS));
   }
 
   IceCreamOrder(int id, final Instant orderTimestamp) {

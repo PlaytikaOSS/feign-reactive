@@ -16,6 +16,7 @@ package reactivefeign;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -30,6 +31,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -48,13 +50,16 @@ import static reactivefeign.TestUtils.readJsonFromFile;
 abstract public class SmokeTest {
 
   @Rule
-  public WireMockClassRule wireMockRule = new WireMockClassRule(
-      wireMockConfig().dynamicPort());
+  public WireMockClassRule wireMockRule = new WireMockClassRule(wireMockConfig());
 
   abstract protected ReactiveFeign.Builder<IcecreamServiceApi> builder();
 
   protected WireMockConfiguration wireMockConfig(){
-    return WireMockConfiguration.wireMockConfig();
+    return WireMockConfiguration.wireMockConfig().dynamicPort();
+  }
+
+  protected int wireMockPort(){
+    return wireMockRule.port();
   }
 
   private IcecreamServiceApi client;
@@ -68,7 +73,7 @@ abstract public class SmokeTest {
 
   @Before
   public void setUp() {
-    String targetUrl = "http://localhost:" + wireMockRule.port();
+    String targetUrl = "http://localhost:" + wireMockPort();
     client = builder()
         .decode404()
         .target(IcecreamServiceApi.class, targetUrl);
@@ -177,9 +182,10 @@ abstract public class SmokeTest {
             .withBody(MAPPER.writeValueAsString(billExpected))));
 
     Mono<Bill> bill = client.makeOrder(order);
+
     StepVerifier.create(bill)
-        .expectNextMatches(equalsComparingFieldByFieldRecursively(billExpected))
-        .verifyComplete();
+            .expectNextMatches(equalsComparingFieldByFieldRecursively(billExpected))
+            .verifyComplete();
   }
 
   @Test

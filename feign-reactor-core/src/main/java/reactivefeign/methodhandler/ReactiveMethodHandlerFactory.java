@@ -15,16 +15,23 @@ import static reactivefeign.utils.FeignUtils.returnPublisherType;
 public class ReactiveMethodHandlerFactory implements MethodHandlerFactory {
 
 	private final PublisherClientFactory publisherClientFactory;
+	private Target target;
 
 	public ReactiveMethodHandlerFactory(final PublisherClientFactory publisherClientFactory) {
 		this.publisherClientFactory = checkNotNull(publisherClientFactory, "client must not be null");
 	}
 
 	@Override
-	public MethodHandler create(Target target, MethodMetadata metadata) {
+	public void target(Target target) {
+		this.target = target;
+		publisherClientFactory.target(target);
+	}
+
+	@Override
+	public MethodHandler create(MethodMetadata metadata) {
 
 		MethodHandler methodHandler = new PublisherClientMethodHandler(
-				target, metadata, publisherClientFactory.apply(metadata));
+				target, metadata, publisherClientFactory.create(metadata));
 
 		Type returnPublisherType = returnPublisherType(metadata);
 		if(returnPublisherType == Mono.class){

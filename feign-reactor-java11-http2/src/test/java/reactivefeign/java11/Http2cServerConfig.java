@@ -1,17 +1,15 @@
-package reactivefeign.jetty;
+package reactivefeign.java11;
 
 import com.github.tomakehurst.wiremock.common.JettySettings;
-import com.github.tomakehurst.wiremock.core.Options;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.http.AdminRequestHandler;
-import com.github.tomakehurst.wiremock.http.StubRequestHandler;
 import com.github.tomakehurst.wiremock.jetty9.JettyHttpServer;
 import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
 import org.eclipse.jetty.io.NetworkTrafficListener;
 import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
 import org.eclipse.jetty.server.ServerConnector;
 
-public class JettyHttp2cServerConfig {
+public class Http2cServerConfig {
 
     public static WireMockConfiguration wireMockConfig(){
         return WireMockConfiguration.wireMockConfig()
@@ -31,6 +29,7 @@ public class JettyHttp2cServerConfig {
                                         jettySettings,
                                         port,
                                         listener,
+                                        new HttpConnectionFactory(httpConfig),
                                         new HTTP2CServerConnectionFactory(httpConfig)
                                 );
                             }

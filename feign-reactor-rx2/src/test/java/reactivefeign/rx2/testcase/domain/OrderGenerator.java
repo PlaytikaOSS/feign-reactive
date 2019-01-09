@@ -21,6 +21,8 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static java.time.temporal.ChronoUnit.MICROS;
+
 /**
  * Generator of random ice cream orders.
  */
@@ -45,7 +47,7 @@ public class OrderGenerator {
   }
 
   public Collection<IceCreamOrder> generateRange(int n) {
-    Instant now = Instant.now();
+    Instant now = Instant.now().truncatedTo(MICROS);
 
     List<Instant> orderTimestamps = IntStream.range(0, n)
         .mapToObj(minutes -> now.minus(minutes, ChronoUnit.MINUTES))

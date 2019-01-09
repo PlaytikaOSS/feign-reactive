@@ -16,6 +16,7 @@ public class Rx2MethodHandlerFactory implements MethodHandlerFactory {
 
     private final PublisherClientFactory publisherClientFactory;
     private final BackpressureStrategy backpressureStrategy;
+    private Target target;
 
     public Rx2MethodHandlerFactory(PublisherClientFactory publisherClientFactory,
                                    BackpressureStrategy backpressureStrategy) {
@@ -24,9 +25,14 @@ public class Rx2MethodHandlerFactory implements MethodHandlerFactory {
     }
 
     @Override
-    public MethodHandler create(final Target target, final MethodMetadata metadata) {
+    public void target(Target target) {
+        this.target = target;
+    }
+
+    @Override
+    public MethodHandler create(final MethodMetadata metadata) {
         MethodHandler methodHandler = new Rx2PublisherClientMethodHandler(
-                target, metadata, publisherClientFactory.apply(metadata),
+                target, metadata, publisherClientFactory.create(metadata),
                 backpressureStrategy);
 
         return new Rx2MethodHandler(methodHandler, returnPublisherType(metadata));

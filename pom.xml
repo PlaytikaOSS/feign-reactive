@@ -14,6 +14,8 @@
         <module>feign-reactor-rx2</module>
         <module>feign-reactor-jetty</module>
         <module>feign-reactor-jetty-http2</module>
+        <module>feign-reactor-java11</module>
+        <module>feign-reactor-java11-http2</module>
         <module>feign-reactor-benchmarks</module>
         <module>feign-reactor-spring-mvc</module>
     </modules>
@@ -47,8 +49,6 @@
 
     <properties>
         <java.version>1.8</java.version>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
@@ -102,11 +102,11 @@
         <jacoco-plugin.version>0.7.7.201606060606</jacoco-plugin.version>
         <coveralls-plugin.version>4.1.0</coveralls-plugin.version>
 
-        <maven-compiler-plugin.version>3.5.1</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>2.19.1</maven-surefire-plugin.version>
         <versions-maven-plugin.version>2.3</versions-maven-plugin.version>
         <nexus-staging-maven-plugin.version>1.6.3</nexus-staging-maven-plugin.version>
-        <maven.javadoc.plugin.version>2.10.4</maven.javadoc.plugin.version>
+        <maven.javadoc.plugin.version>3.0.1</maven.javadoc.plugin.version>
         <maven.source.plugin.version>3.0.1</maven.source.plugin.version>
 
         <!-- Sonar -->
@@ -233,6 +233,16 @@
             <dependency>
                 <groupId>com.playtika.reactivefeign</groupId>
                 <artifactId>feign-reactor-jetty-http2</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.playtika.reactivefeign</groupId>
+                <artifactId>feign-reactor-java11</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.playtika.reactivefeign</groupId>
+                <artifactId>feign-reactor-java11-http2</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -596,38 +606,22 @@
         </pluginManagement>
 
         <plugins>
+            <!-- Compile -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+
             <!-- Attach Javadoc to release -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>${maven.javadoc.plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>attach-javadocs</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <doclint>-Xdoclint:none</doclint>
-                    <failOnError>false</failOnError>
-                </configuration>
             </plugin>
 
             <!-- Attach sources to release -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>${maven.source.plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
             <!-- Jacoco Code Coverage -->
             <!--<plugin>-->

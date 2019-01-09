@@ -23,15 +23,18 @@ import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactivefeign.java11.Java11Http2ReactiveFeign;
+import reactivefeign.java11.Java11ReactiveFeign;
 import reactivefeign.jetty.JettyHttp2ReactiveFeign;
 import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.webclient.WebReactiveFeign;
+import reactor.core.publisher.Mono;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,13 +44,13 @@ import static reactivefeign.benchmarks.BenchmarkUtils.readJsonFromFileAsBytes;
 
 abstract public class RealRequestBenchmarks {
 
-    public static final String PATH_POST_WITH_PAYLOAD = "/postWithPayload";
+    public static final String PATH_WITH_PAYLOAD = "/withPayload";
     public static final int SERVER_PORT = 8766;
-    public static final String SERVER_URL = "http://localhost:" + SERVER_PORT;
     public static final int SERVER_H2C_PORT = 8767;
+    public static final String SERVER_URL = "http://localhost:" + SERVER_H2C_PORT;
     public static final String SERVER_H2C_URL = "http://localhost:" + SERVER_H2C_PORT;
 
-    private Server serverJetty;
+//    private HttpServer<ByteBuf, ByteBuf> serverRx;
     private Server serverJettyH2c;
 //    private WireMockServer serverWireMockH2c;
 
@@ -59,6 +62,10 @@ abstract public class RealRequestBenchmarks {
     protected FeignReactorTestInterface jettyFeign;
     protected HttpClient jettyH2cClient;
     protected FeignReactorTestInterface jettyFeignH2c;
+
+    protected FeignReactorTestInterface java11Feign;
+
+    protected FeignReactorTestInterface java11FeignH2c;
 
     protected FeignTestInterface feign;
 
@@ -73,8 +80,10 @@ abstract public class RealRequestBenchmarks {
         objectMapper = new ObjectMapper();
         requestPayload = objectMapper.readValue(readJsonFromFile("/request.json"), HashMap.class);
 
-        serverJetty = jetty(SERVER_PORT);
-        serverJetty.start();
+//        serverRx = rxNetty(SERVER_PORT);
+//        serverRx.start();
+
+        //H2C
         serverJettyH2c = jettyH2c(SERVER_H2C_PORT);
         serverJettyH2c.start();
 //        serverWireMockH2c = wireMockH2c(SERVER_H2C_PORT);
@@ -99,6 +108,16 @@ abstract public class RealRequestBenchmarks {
         jettyH2cClient.start();
         jettyFeignH2c = JettyHttp2ReactiveFeign.<FeignReactorTestInterface>builder(jettyH2cClient)
                 .target(FeignReactorTestInterface.class, SERVER_H2C_URL);
+        //to settle TCP connection
+        jettyFeignH2c.postWithPayload(Mono.just(Collections.emptyMap())).block();
+
+        java11Feign = Java11ReactiveFeign.<FeignReactorTestInterface>builder()
+                .target(FeignReactorTestInterface.class, SERVER_URL);
+
+        java11FeignH2c = Java11Http2ReactiveFeign.<FeignReactorTestInterface>builder()
+                .target(FeignReactorTestInterface.class, SERVER_H2C_URL);
+        //to settle TCP connection
+        java11FeignH2c.postWithPayload(Mono.just(Collections.emptyMap())).block();
 
         feign = Feign.builder()
                 .encoder((o, type, requestTemplate) -> {
@@ -118,7 +137,8 @@ abstract public class RealRequestBenchmarks {
     }
 
     protected void tearDown() throws Exception {
-        serverJetty.stop();
+//        serverRx.shutdown();
+        //H2C
         serverJettyH2c.stop();
 //        serverWireMockH2c.shutdown();
 
@@ -131,7 +151,7 @@ abstract public class RealRequestBenchmarks {
         return RxNetty.createHttpServer(port, new RequestHandler<ByteBuf, ByteBuf>() {
             public rx.Observable<Void> handle(HttpServerRequest<ByteBuf> request,
                                               HttpServerResponse<ByteBuf> response) {
-                if(request.getPath().equals(PATH_POST_WITH_PAYLOAD)){
+                if(request.getPath().equals(PATH_WITH_PAYLOAD)){
                     response.getHeaders().add("Content-Type", "application/json");
                     response.writeBytes(responseJson);
                 }
@@ -141,13 +161,14 @@ abstract public class RealRequestBenchmarks {
         });
     }
 
-    private Server jetty(int port){
-        Server serverJetty = new Server(port);
+    private Server jettyH2c(int port){
+        Server serverJetty = new Server();
+
         serverJetty.setHandler(new AbstractHandler(){
             @Override
-            public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+            public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException {
                 request.getInputStream().skip(Integer.MAX_VALUE);
-                if(target.equals(PATH_POST_WITH_PAYLOAD)){
+                if(target.equals(PATH_WITH_PAYLOAD)){
                     response.addHeader("Content-Type", "application/json");
                     response.getOutputStream().write(responseJson);
                     response.getOutputStream().flush();
@@ -155,20 +176,16 @@ abstract public class RealRequestBenchmarks {
                 baseRequest.setHandled(true);
             }
         });
-        return serverJetty;
-    }
 
-    private Server jettyH2c(int port){
-        Server serverJetty = jetty(port);
-        //remove default http connector
-        Connector connectorHttp = serverJetty.getConnectors()[0];
-        serverJetty.removeConnector(connectorHttp);
         //setup h2c
+        HttpConfiguration httpConfig = new HttpConfiguration();
         ServerConnector connectorH2c = new ServerConnector(serverJetty,
-                new HTTP2CServerConnectionFactory(new HttpConfiguration()),
-                new HttpConnectionFactory(new HttpConfiguration()));
+                new HttpConnectionFactory(httpConfig),
+                new HTTP2CServerConnectionFactory(httpConfig)
+                );
         connectorH2c.setPort(port);
         serverJetty.addConnector(connectorH2c);
+
         return serverJetty;
     }
 
@@ -180,14 +197,14 @@ abstract public class RealRequestBenchmarks {
         server.stubFor(get(urlEqualTo("/"))
                 .willReturn(aResponse().withStatus(200)));
 
-        server.stubFor(post(urlEqualTo(PATH_POST_WITH_PAYLOAD))
+        server.stubFor(post(urlEqualTo(PATH_WITH_PAYLOAD))
                 .willReturn(aResponse().withStatus(200)
                         .withHeader("Content-Type", "application/json")
                         .withBody(responseJson)));
         return server;
     }
 
-    public static WireMockConfiguration wireMockConfig(){
+    private WireMockConfiguration wireMockConfig(){
         return WireMockConfiguration.wireMockConfig()
                 .httpServerFactory((options, adminRequestHandler, stubRequestHandler) ->
                         new JettyHttpServer(options, adminRequestHandler, stubRequestHandler) {
@@ -205,6 +222,7 @@ abstract public class RealRequestBenchmarks {
                                         jettySettings,
                                         port,
                                         listener,
+                                        new HttpConnectionFactory(httpConfig),
                                         new HTTP2CServerConnectionFactory(httpConfig)
                                 );
                             }

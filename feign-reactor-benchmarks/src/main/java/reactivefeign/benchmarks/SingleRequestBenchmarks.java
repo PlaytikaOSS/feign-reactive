@@ -10,7 +10,7 @@ import java.util.concurrent.TimeUnit;
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.SECONDS)
 @State(Scope.Benchmark)
-public class RealSingleRequestBenchmarks extends RealRequestBenchmarks{
+public class SingleRequestBenchmarks extends RealRequestBenchmarks{
 
     @Setup
     public void setup() throws Exception {

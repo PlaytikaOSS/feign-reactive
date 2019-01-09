@@ -17,12 +17,13 @@ import feign.*;
 import feign.codec.ErrorDecoder;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpClient;
+import reactivefeign.client.ReactiveHttpClientFactory;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
 import reactivefeign.client.statushandler.ReactiveStatusHandlers;
-import reactivefeign.methodhandler.MethodHandler;
 import reactivefeign.methodhandler.DefaultMethodHandler;
+import reactivefeign.methodhandler.MethodHandler;
 import reactivefeign.methodhandler.MethodHandlerFactory;
 import reactivefeign.methodhandler.ReactiveMethodHandlerFactory;
 import reactivefeign.publisher.*;
@@ -104,7 +105,7 @@ public class ReactiveFeign {
    */
   public abstract static class Builder<T> {
     protected Contract contract;
-    protected Function<MethodMetadata, ReactiveHttpClient> clientFactory;
+    protected ReactiveHttpClientFactory clientFactory;
     protected ReactiveHttpRequestInterceptor requestInterceptor;
     protected BiFunction<MethodMetadata, ReactiveHttpResponse, ReactiveHttpResponse> responseMapper;
     protected ReactiveStatusHandler statusHandler =
@@ -122,7 +123,7 @@ public class ReactiveFeign {
 
     abstract public Builder<T> options(ReactiveOptions options);
 
-    protected Builder<T> clientFactory(Function<MethodMetadata, ReactiveHttpClient> clientFactory) {
+    protected Builder<T> clientFactory(ReactiveHttpClientFactory clientFactory) {
       this.clientFactory = clientFactory;
       return this;
     }
@@ -225,37 +226,45 @@ public class ReactiveFeign {
     }
 
     protected PublisherClientFactory buildReactiveClientFactory() {
-      return methodMetadata -> {
+      return new PublisherClientFactory(){
 
-        checkNotNull(clientFactory,
-                "clientFactory wasn't provided in ReactiveFeign builder");
-
-        ReactiveHttpClient reactiveClient = clientFactory.apply(methodMetadata);
-
-        if (requestInterceptor != null) {
-          reactiveClient = intercept(reactiveClient, requestInterceptor);
+        @Override
+        public void target(Target target) {
+          clientFactory.target(target);
         }
 
-        reactiveClient = log(reactiveClient, methodMetadata);
+        @Override
+        public PublisherHttpClient create(MethodMetadata methodMetadata) {
+          checkNotNull(clientFactory,
+                  "clientFactory wasn't provided in ReactiveFeign builder");
 
-        if (responseMapper != null) {
-          reactiveClient = mapResponse(reactiveClient, methodMetadata, responseMapper);
+          ReactiveHttpClient reactiveClient = clientFactory.create(methodMetadata);
+
+          if (requestInterceptor != null) {
+            reactiveClient = intercept(reactiveClient, requestInterceptor);
+          }
+
+          reactiveClient = log(reactiveClient, methodMetadata);
+
+          if (responseMapper != null) {
+            reactiveClient = mapResponse(reactiveClient, methodMetadata, responseMapper);
+          }
+
+          if (decode404) {
+            reactiveClient = mapResponse(reactiveClient, methodMetadata, ignore404());
+          }
+
+          if (statusHandler != null) {
+            reactiveClient = handleStatus(reactiveClient, methodMetadata, statusHandler);
+          }
+
+          reactivefeign.publisher.PublisherHttpClient publisherClient = toPublisher(reactiveClient, methodMetadata);
+          if (retryFunction != null) {
+            publisherClient = retry(publisherClient, methodMetadata, retryFunction);
+          }
+
+          return publisherClient;
         }
-
-        if (decode404) {
-          reactiveClient = mapResponse(reactiveClient, methodMetadata, ignore404());
-        }
-
-        if (statusHandler != null) {
-          reactiveClient = handleStatus(reactiveClient, methodMetadata, statusHandler);
-        }
-
-        reactivefeign.publisher.PublisherHttpClient publisherClient = toPublisher(reactiveClient, methodMetadata);
-        if (retryFunction != null) {
-          publisherClient = retry(publisherClient, methodMetadata, retryFunction);
-        }
-
-        return publisherClient;
       };
     }
 
@@ -311,11 +320,13 @@ public class ReactiveFeign {
 
       final Map<String, MethodHandler> result = new LinkedHashMap<>();
 
+      factory.target(target);
+
       for (final Map.Entry<String, Method> entry : configKeyToMethod.entrySet()) {
         String configKey = entry.getKey();
         MethodMetadata md = metadata.get(configKey);
         MethodHandler methodHandler = md != null
-                ? factory.create(target, md)
+                ? factory.create(md)
                 : factory.createDefault(entry.getValue());  //isDefault(entry.getValue())
         result.put(configKey, methodHandler);
       }

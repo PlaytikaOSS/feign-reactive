@@ -1,7 +1,6 @@
 package reactivefeign.rx2;
 
 import feign.Contract;
-import feign.InvocationHandlerFactory;
 import feign.MethodMetadata;
 import io.reactivex.*;
 import org.springframework.core.ParameterizedTypeReference;
