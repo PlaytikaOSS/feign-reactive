@@ -20,7 +20,9 @@ import java.util.Date;
 /**
  * @author Sergii Karpenko
  */
-public class ReactiveRetryers {
+public final class ReactiveRetryers {
+
+  private ReactiveRetryers(){}
 
   public static ReactiveRetryPolicy retry(int maxRetries) {
     return (error, attemptNo) -> attemptNo <= maxRetries ? 0 : -1;

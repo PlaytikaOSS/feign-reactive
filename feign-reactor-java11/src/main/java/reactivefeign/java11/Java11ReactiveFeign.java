@@ -28,7 +28,9 @@ import java.time.Duration;
  *
  * @author Sergii Karpenko
  */
-public class Java11ReactiveFeign {
+public final class Java11ReactiveFeign {
+
+    private Java11ReactiveFeign(){}
 
     public static <T> Builder<T> builder() {
         try {
@@ -74,11 +76,9 @@ public class Java11ReactiveFeign {
             if (this.options.getConnectTimeoutMillis() != null) {
                 this.httpClientBuilder = httpClientBuilder.connectTimeout(
                         Duration.ofMillis(options.getConnectTimeoutMillis()));
-                setHttpClient(httpClientBuilder, jsonFactory, objectMapper);
             }
-            if (this.options.getRequestTimeoutMillis() != null) {
-                setHttpClient(httpClientBuilder, jsonFactory, objectMapper);
-            }
+
+            setHttpClient(httpClientBuilder, jsonFactory, objectMapper);
 
             return this;
         }

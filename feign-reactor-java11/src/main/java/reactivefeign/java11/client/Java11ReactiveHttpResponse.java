@@ -7,7 +7,6 @@ import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivejson.ReactorObjectReader;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.FluxSink;
 import reactor.core.publisher.Mono;
 
 import java.io.ByteArrayOutputStream;
@@ -20,7 +19,7 @@ import java.util.concurrent.Flow;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Optional.ofNullable;
-import static reactivefeign.java11.client.Java11ReactiveHttpClient.CONTENT_TYPE_HEADER;
+import static reactivefeign.utils.HttpUtils.CONTENT_TYPE_HEADER;
 
 class Java11ReactiveHttpResponse implements ReactiveHttpResponse{
 

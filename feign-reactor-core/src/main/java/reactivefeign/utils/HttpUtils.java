@@ -15,7 +15,26 @@ package reactivefeign.utils;
 
 import static reactivefeign.utils.HttpUtils.StatusCodeFamily.*;
 
-public class HttpUtils {
+public final class HttpUtils {
+
+  private HttpUtils(){}
+
+  public static final String APPLICATION_OCTET_STREAM = "application/octet-stream";
+  public static final String TEXT = "text/plain";
+  public static final String TEXT_UTF_8 = TEXT+";charset=utf-8";
+
+  public static final String APPLICATION_JSON = "application/json";
+  public static final String APPLICATION_JSON_UTF_8 = APPLICATION_JSON+";charset=utf-8";
+  public static final String APPLICATION_STREAM_JSON = "application/stream+json";
+  public static final String APPLICATION_STREAM_JSON_UTF_8 = APPLICATION_STREAM_JSON+";charset=utf-8";
+
+
+  public static final byte[] NEWLINE_SEPARATOR = {'\n'};
+  public static final String CONTENT_TYPE_HEADER = "Content-Type";
+  public static final String CONTENT_ENCODING_HEADER = "Content-Encoding";
+  public static final String ACCEPT_HEADER = "Accept";
+  public static final String ACCEPT_ENCODING_HEADER = "Accept-Encoding";
+  public static final String GZIP = "gzip";
 
   public static StatusCodeFamily familyOf(final int statusCode) {
     switch (statusCode / 100) {

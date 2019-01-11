@@ -46,26 +46,16 @@ import static feign.Util.resolveLastTypeParameter;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static org.eclipse.jetty.http.HttpHeader.ACCEPT;
+import static org.eclipse.jetty.http.HttpHeader.ACCEPT_ENCODING;
 import static reactivefeign.jetty.utils.ProxyPostProcessor.postProcess;
 import static reactivefeign.utils.FeignUtils.getBodyActualType;
+import static reactivefeign.utils.HttpUtils.*;
 
 /**
  * Uses reactive Jetty client to execute http requests
  * @author Sergii Karpenko
  */
 public class JettyReactiveHttpClient implements ReactiveHttpClient {
-
-	public static final String APPLICATION_OCTET_STREAM = "application/octet-stream";
-	public static final String TEXT = "text/plain";
-	public static final String TEXT_UTF_8 = TEXT+";charset=utf-8";
-
-	public static final String APPLICATION_JSON = "application/json";
-	public static final String APPLICATION_JSON_UTF_8 = APPLICATION_JSON+";charset=utf-8";
-	public static final String APPLICATION_STREAM_JSON = "application/stream+json";
-	public static final String APPLICATION_STREAM_JSON_UTF_8 = APPLICATION_STREAM_JSON+";charset=utf-8";
-
-
-	private static final byte[] NEWLINE_SEPARATOR = {'\n'};
 
 	private final HttpClient httpClient;
 	private final Class bodyActualClass;
@@ -75,6 +65,7 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 	private final ObjectWriter bodyWriter;
 	private final ObjectReader responseReader;
 	private long requestTimeout = -1;
+	private boolean tryUseCompression;
 
 	public static JettyReactiveHttpClient jettyClient(
 			MethodMetadata methodMetadata,
@@ -111,12 +102,22 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 		return this;
 	}
 
+	public JettyReactiveHttpClient setTryUseCompression(boolean tryUseCompression){
+		this.tryUseCompression = tryUseCompression;
+		return this;
+	}
+
 	@Override
 	public Mono<ReactiveHttpResponse> executeRequest(ReactiveHttpRequest request) {
 		Request jettyRequest = httpClient.newRequest(request.uri()).method(request.method());
 		setUpHeaders(request, jettyRequest.getHeaders());
 		if(requestTimeout > 0){
 			jettyRequest.timeout(requestTimeout, TimeUnit.MILLISECONDS);
+		}
+		if(tryUseCompression){
+			jettyRequest.getHeaders().put(ACCEPT_ENCODING.asString(), singletonList(GZIP));
+		} else {
+			jettyRequest.getHeaders().remove(ACCEPT_ENCODING.asString());
 		}
 
 		ReactiveRequest.Builder requestBuilder = ReactiveRequest.newBuilder(jettyRequest);

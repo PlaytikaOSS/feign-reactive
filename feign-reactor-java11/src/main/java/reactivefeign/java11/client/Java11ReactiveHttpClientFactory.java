@@ -48,8 +48,8 @@ public class Java11ReactiveHttpClientFactory implements ReactiveHttpClientFactor
             if(options.getRequestTimeoutMillis() != null) {
                 reactiveHttpClient = reactiveHttpClient.setRequestTimeout(options.getRequestTimeoutMillis());
             }
-            if(options.isTryUseCompression() != null && options.isTryUseCompression()) {
-                reactiveHttpClient = reactiveHttpClient.setTryUseCompression();
+            if(options.isTryUseCompression() != null) {
+                reactiveHttpClient = reactiveHttpClient.setTryUseCompression(options.isTryUseCompression());
             }
         }
 

@@ -6,7 +6,9 @@ import java.util.List;
 
 import static reactivefeign.utils.MultiValueMapUtils.addOrdered;
 
-public class ReactiveHttpRequestInterceptors {
+public final class ReactiveHttpRequestInterceptors {
+
+    private ReactiveHttpRequestInterceptors(){}
 
     public static ReactiveHttpRequestInterceptor addHeaders(List<Pair<String, String>> headers){
         return request -> {

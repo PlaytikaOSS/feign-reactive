@@ -33,7 +33,9 @@ import static reactivefeign.utils.FeignUtils.returnPublisherType;
 /**
  * @author Sergii Karpenko
  */
-public class Rx2ReactiveFeign {
+public final class Rx2ReactiveFeign {
+
+    private Rx2ReactiveFeign(){}
 
     public static <T> Builder<T> builder() {
         return new Builder<>();

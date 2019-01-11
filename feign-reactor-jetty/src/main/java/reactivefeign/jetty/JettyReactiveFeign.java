@@ -26,7 +26,9 @@ import reactivefeign.jetty.client.JettyReactiveHttpClient;
  *
  * @author Sergii Karpenko
  */
-public class JettyReactiveFeign {
+public final class JettyReactiveFeign {
+
+    private JettyReactiveFeign(){}
 
     public static <T> Builder<T> builder() {
         try {
@@ -80,8 +82,10 @@ public class JettyReactiveFeign {
             clientFactory(methodMetadata -> {
                 JettyReactiveHttpClient jettyClient = JettyReactiveHttpClient.jettyClient(methodMetadata, httpClient, jsonFactory, objectMapper);
                 if (options != null && options.getRequestTimeoutMillis() != null) {
-
                     jettyClient = jettyClient.setRequestTimeout(options.getRequestTimeoutMillis());
+                }
+                if (options != null && options.isTryUseCompression() != null) {
+                    jettyClient = jettyClient.setTryUseCompression(options.isTryUseCompression());
                 }
                 return jettyClient;
             });

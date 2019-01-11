@@ -19,8 +19,9 @@ import reactivefeign.client.ReactiveHttpResponse;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
-public class Rx2StatusHandlers {
+public final class Rx2StatusHandlers {
 
+  private Rx2StatusHandlers(){}
 
   public static Rx2StatusHandler throwOnStatus(
           Predicate<Integer> statusPredicate,

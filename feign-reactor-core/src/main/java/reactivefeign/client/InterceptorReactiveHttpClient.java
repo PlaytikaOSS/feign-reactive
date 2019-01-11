@@ -18,11 +18,13 @@ package reactivefeign.client;
  *
  * @author Sergii Karpenko
  */
-public class InterceptorReactiveHttpClient {
+public final class InterceptorReactiveHttpClient {
 
-  public static ReactiveHttpClient intercept(ReactiveHttpClient reactiveHttpClient,
-											  ReactiveHttpRequestInterceptor interceptor) {
-    return request -> reactiveHttpClient.executeRequest(interceptor.apply(request));
-  }
+    private InterceptorReactiveHttpClient(){}
+
+    public static ReactiveHttpClient intercept(ReactiveHttpClient reactiveHttpClient,
+                                               ReactiveHttpRequestInterceptor interceptor) {
+        return request -> reactiveHttpClient.executeRequest(interceptor.apply(request));
+    }
 
 }

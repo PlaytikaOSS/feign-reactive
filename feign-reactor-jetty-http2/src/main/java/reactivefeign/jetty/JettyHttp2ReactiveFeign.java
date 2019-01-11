@@ -25,7 +25,9 @@ import org.eclipse.jetty.http2.client.http.HttpClientTransportOverHTTP2;
  *
  * @author Sergii Karpenko
  */
-public class JettyHttp2ReactiveFeign {
+public final class JettyHttp2ReactiveFeign {
+
+    private JettyHttp2ReactiveFeign(){}
 
     public static <T> JettyReactiveFeign.Builder<T> builder() {
         try {

@@ -24,7 +24,9 @@ import java.net.http.HttpClient;
  *
  * @author Sergii Karpenko
  */
-public class Java11Http2ReactiveFeign {
+public final class Java11Http2ReactiveFeign {
+
+    private Java11Http2ReactiveFeign(){}
 
     public static <T> Java11ReactiveFeign.Builder<T> builder() {
         try {

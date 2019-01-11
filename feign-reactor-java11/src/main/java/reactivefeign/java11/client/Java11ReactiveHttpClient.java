@@ -46,6 +46,7 @@ import static feign.Util.resolveLastTypeParameter;
 import static java.net.http.HttpResponse.BodyHandlers.fromSubscriber;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static reactivefeign.utils.FeignUtils.getBodyActualType;
+import static reactivefeign.utils.HttpUtils.*;
 import static reactor.adapter.JdkFlowAdapter.publisherToFlowPublisher;
 
 /**
@@ -53,23 +54,6 @@ import static reactor.adapter.JdkFlowAdapter.publisherToFlowPublisher;
  * @author Sergii Karpenko
  */
 public class Java11ReactiveHttpClient implements ReactiveHttpClient {
-
-	public static final String APPLICATION_OCTET_STREAM = "application/octet-stream";
-	public static final String TEXT = "text/plain";
-	public static final String TEXT_UTF_8 = TEXT+";charset=utf-8";
-
-	public static final String APPLICATION_JSON = "application/json";
-	public static final String APPLICATION_JSON_UTF_8 = APPLICATION_JSON+";charset=utf-8";
-	public static final String APPLICATION_STREAM_JSON = "application/stream+json";
-	public static final String APPLICATION_STREAM_JSON_UTF_8 = APPLICATION_STREAM_JSON+";charset=utf-8";
-
-
-    private static final byte[] NEWLINE_SEPARATOR = {'\n'};
-    public static final String CONTENT_TYPE_HEADER = "Content-Type";
-    public static final String ACCEPT_HEADER = "Accept";
-	public static final String ACCEPT_ENCODING = "Accept-Encoding";
-	public static final String GZIP = "gzip";
-
 
     private final HttpClient httpClient;
 	private final Class bodyActualClass;
@@ -122,8 +106,8 @@ public class Java11ReactiveHttpClient implements ReactiveHttpClient {
 		return this;
 	}
 
-	public Java11ReactiveHttpClient setTryUseCompression(){
-		this.tryUseCompression = true;
+	public Java11ReactiveHttpClient setTryUseCompression(boolean tryUseCompression){
+		this.tryUseCompression = tryUseCompression;
 		return this;
 	}
 
@@ -135,10 +119,10 @@ public class Java11ReactiveHttpClient implements ReactiveHttpClient {
 		setUpHeaders(request, requestBuilder);
 
 		if(requestTimeout > 0){
-			requestBuilder.timeout(Duration.ofMillis(requestTimeout));
+			requestBuilder = requestBuilder.timeout(Duration.ofMillis(requestTimeout));
 		}
 		if(tryUseCompression){
-			requestBuilder.setHeader(ACCEPT_ENCODING, "gzip, deflate, br");
+			requestBuilder = requestBuilder.setHeader(ACCEPT_ENCODING_HEADER, GZIP);
 		}
 
         Java11ReactiveHttpResponse.ReactiveBodySubscriber bodySubscriber = new Java11ReactiveHttpResponse.ReactiveBodySubscriber();
