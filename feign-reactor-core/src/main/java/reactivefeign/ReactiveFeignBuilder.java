@@ -28,7 +28,7 @@ public interface ReactiveFeignBuilder<T> {
      * @param requestInterceptor
      * @return
      */
-    ReactiveFeignBuilder<T> requestInterceptor(ReactiveHttpRequestInterceptor requestInterceptor);
+    ReactiveFeignBuilder<T> addRequestInterceptor(ReactiveHttpRequestInterceptor requestInterceptor);
 
     /**
      * This flag indicates that the reactive feign client should process responses with 404 status,

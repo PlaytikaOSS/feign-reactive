@@ -17,4 +17,14 @@ public final class ReactiveHttpRequestInterceptors {
         };
     }
 
+    public static ReactiveHttpRequestInterceptor composite(List<ReactiveHttpRequestInterceptor> interceptors){
+        return request -> {
+            ReactiveHttpRequest result = request;
+            for(ReactiveHttpRequestInterceptor interceptor : interceptors){
+                result = interceptor.apply(result);
+            }
+            return result;
+        };
+    }
+
 }

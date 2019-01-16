@@ -26,7 +26,6 @@ import reactivefeign.methodhandler.DefaultMethodHandler;
 import reactivefeign.methodhandler.MethodHandler;
 import reactivefeign.methodhandler.MethodHandlerFactory;
 import reactivefeign.publisher.*;
-import reactivefeign.utils.Pair;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -34,10 +33,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -47,11 +43,11 @@ import static feign.Util.checkNotNull;
 import static feign.Util.isDefault;
 import static reactivefeign.client.InterceptorReactiveHttpClient.intercept;
 import static reactivefeign.client.LoggerReactiveHttpClient.log;
+import static reactivefeign.client.ReactiveHttpRequestInterceptors.composite;
 import static reactivefeign.client.ResponseMappers.ignore404;
 import static reactivefeign.client.ResponseMappers.mapResponse;
 import static reactivefeign.client.StatusHandlerReactiveHttpClient.handleStatus;
 import static reactivefeign.utils.FeignUtils.returnPublisherType;
-import static reactivefeign.utils.MultiValueMapUtils.addOrdered;
 
 /**
  * Allows Feign interfaces to accept {@link Publisher} as body and return reactive {@link Mono} or
@@ -137,7 +133,7 @@ public class ReactiveFeign {
   public abstract static class Builder<T> implements ReactiveFeignBuilder<T>{
     protected Contract contract;
     protected ReactiveHttpClientFactory clientFactory;
-    protected ReactiveHttpRequestInterceptor requestInterceptor;
+    protected List<ReactiveHttpRequestInterceptor> requestInterceptors = new ArrayList<>();
     protected BiFunction<MethodMetadata, ReactiveHttpResponse, ReactiveHttpResponse> responseMapper;
     protected ReactiveStatusHandler statusHandler =
             ReactiveStatusHandlers.defaultFeign(new ErrorDecoder.Default());
@@ -165,8 +161,8 @@ public class ReactiveFeign {
     }
 
     @Override
-    public Builder<T> requestInterceptor(ReactiveHttpRequestInterceptor requestInterceptor) {
-      this.requestInterceptor = requestInterceptor;
+    public Builder<T> addRequestInterceptor(ReactiveHttpRequestInterceptor requestInterceptor) {
+      this.requestInterceptors.add(requestInterceptor);
       return this;
     }
 
@@ -224,8 +220,8 @@ public class ReactiveFeign {
 
           ReactiveHttpClient reactiveClient = clientFactory.create(methodMetadata);
 
-          if (requestInterceptor != null) {
-            reactiveClient = intercept(reactiveClient, requestInterceptor);
+          if (!requestInterceptors.isEmpty()) {
+            reactiveClient = intercept(reactiveClient, composite(requestInterceptors));
           }
 
           reactiveClient = log(reactiveClient, methodMetadata);

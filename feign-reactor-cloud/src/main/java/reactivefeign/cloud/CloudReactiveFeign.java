@@ -107,8 +107,8 @@ public class CloudReactiveFeign {
         }
 
         @Override
-        public ReactiveFeignBuilder<T> requestInterceptor(ReactiveHttpRequestInterceptor requestInterceptor) {
-            builder = builder.requestInterceptor(requestInterceptor);
+        public ReactiveFeignBuilder<T> addRequestInterceptor(ReactiveHttpRequestInterceptor requestInterceptor) {
+            builder = builder.addRequestInterceptor(requestInterceptor);
             return this;
         }
 

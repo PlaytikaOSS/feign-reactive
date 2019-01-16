@@ -77,8 +77,8 @@ public final class Rx2ReactiveFeign {
         }
 
         @Override
-        public Builder<T> requestInterceptor(ReactiveHttpRequestInterceptor requestInterceptor) {
-            super.requestInterceptor(requestInterceptor);
+        public Builder<T> addRequestInterceptor(ReactiveHttpRequestInterceptor requestInterceptor) {
+            super.addRequestInterceptor(requestInterceptor);
             return this;
         }
 

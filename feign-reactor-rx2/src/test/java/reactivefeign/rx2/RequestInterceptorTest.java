@@ -74,7 +74,7 @@ public class RequestInterceptorTest {
             .assertError(FeignException.class);
 
     IcecreamServiceApi clientWithAuth = builder()
-        .requestInterceptor(addHeaders(singletonList(new Pair<>("Authorization", "Bearer mytoken123"))))
+        .addRequestInterceptor(addHeaders(singletonList(new Pair<>("Authorization", "Bearer mytoken123"))))
         .target(IcecreamServiceApi.class,
             "http://localhost:" + wireMockRule.port());
 
