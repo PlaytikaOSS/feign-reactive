@@ -22,7 +22,7 @@ import reactor.core.publisher.Mono;
 
 import static reactivefeign.spring.config.AutoConfigurationTest.MOCK_SERVER_PORT_PROPERTY;
 
-@ReactiveFeignClient(name = "test-feign-client", url = "http://localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}")
+@ReactiveFeignClient(name = "test-feign-client", url = "localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}")
 public interface TestReactiveFeignClient {
 
 	String TEST_URL = "/testUrl";

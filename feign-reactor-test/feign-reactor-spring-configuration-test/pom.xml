@@ -4,14 +4,14 @@
 
     <parent>
         <groupId>com.playtika.reactivefeign</groupId>
-        <artifactId>feign-reactor</artifactId>
+        <artifactId>feign-reactor-test</artifactId>
         <version>1.0.14-SNAPSHOT</version>
     </parent>
 
-    <artifactId>feign-reactor-spring-mvc-test</artifactId>
+    <artifactId>feign-reactor-spring-configuration-test</artifactId>
 
     <dependencies>
-        <!-- Tests -->
+
         <!--Should be before spring-cloud-openfeign-core to use spring-boot:2.1.1-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -26,32 +26,11 @@
         </dependency>
 
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-openfeign-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-commons</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-context</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>com.playtika.reactivefeign</groupId>
-            <artifactId>feign-reactor-jetty</artifactId>
-            <scope>test</scope>
+            <artifactId>feign-reactor-spring-configuration</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.playtika.reactivefeign</groupId>
-            <artifactId>feign-reactor-core</artifactId>
-            <scope>test</scope>
-        </dependency>
+        <!-- Tests -->
 
         <dependency>
             <groupId>org.springframework</groupId>
@@ -77,13 +56,6 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>com.playtika.reactivefeign</groupId>
-            <artifactId>feign-reactor-core</artifactId>
-            <version>1.0.14-SNAPSHOT</version>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>

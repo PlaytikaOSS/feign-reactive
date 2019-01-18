@@ -15,8 +15,8 @@
         <module>feign-reactor-jetty</module>
         <module>feign-reactor-java11</module>
         <module>feign-reactor-benchmarks</module>
-        <module>feign-reactor-spring-mvc-test</module>
         <module>feign-reactor-spring-configuration</module>
+        <module>feign-reactor-test</module>
     </modules>
 
     <name>feign-reactive</name>
@@ -239,6 +239,18 @@
                 <groupId>com.playtika.reactivefeign</groupId>
                 <artifactId>feign-reactor-cloud</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.playtika.reactivefeign</groupId>
+                <artifactId>feign-reactor-spring-configuration</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.playtika.reactivefeign</groupId>
+                <artifactId>feign-reactor-core</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>io.github.openfeign</groupId>

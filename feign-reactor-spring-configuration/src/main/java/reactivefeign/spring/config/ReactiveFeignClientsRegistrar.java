@@ -252,17 +252,17 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 	}
 
 	static String getUrl(String url) {
-//		if (StringUtils.hasText(url) && !(url.startsWith("#{") && url.contains("}"))) {
-//			if (!url.contains("://")) {
-//				url = "http://" + url;
-//			}
-//			try {
-//				new URL(url);
-//			}
-//			catch (MalformedURLException e) {
-//				throw new IllegalArgumentException(url + " is malformed", e);
-//			}
-//		}
+		if (StringUtils.hasText(url) && !(url.startsWith("#{") && url.contains("}"))) {
+			if (!url.contains("://")) {
+				url = "http://" + url;
+			}
+			try {
+				new URL(url);
+			}
+			catch (MalformedURLException e) {
+				throw new IllegalArgumentException(url + " is malformed", e);
+			}
+		}
 		return url;
 	}
 
