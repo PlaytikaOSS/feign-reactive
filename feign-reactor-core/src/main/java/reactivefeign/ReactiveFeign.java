@@ -149,7 +149,7 @@ public class ReactiveFeign {
     protected boolean decode404 = false;
 
     private ReactiveRetryPolicy retryPolicy;
-    protected Function<Throwable, ? extends T> fallbackFactory;
+    protected FallbackFactory fallbackFactory;
 
     protected Builder(){
       contract(new Contract.Default());
@@ -202,7 +202,7 @@ public class ReactiveFeign {
     }
 
     @Override
-    public Builder<T> fallbackFactory(Function<Throwable, ? extends T> fallbackFactory) {
+    public Builder<T> fallbackFactory(FallbackFactory<T> fallbackFactory) {
       this.fallbackFactory = fallbackFactory;
       return this;
     }

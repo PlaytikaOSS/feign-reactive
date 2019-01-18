@@ -45,7 +45,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
-@ContextConfiguration(classes={ReactiveFeignAutoConfiguration.class})
+@ContextConfiguration(classes = ReactiveFeignAutoConfiguration.class)
 public class AutoConfigurationTest {
 
 	static final String MOCK_SERVER_PORT_PROPERTY = "mock.server.port";

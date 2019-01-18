@@ -11,6 +11,7 @@ import feign.MethodMetadata;
 import feign.Target;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactivefeign.FallbackFactory;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.ReactiveRetryPolicy;
@@ -72,7 +73,7 @@ public class CloudReactiveFeign {
         }
 
         @Override
-        public Builder<T> fallbackFactory(Function<Throwable, ? extends T> fallbackFactory) {
+        public Builder<T> fallbackFactory(FallbackFactory<T> fallbackFactory) {
             this.fallbackFactory = fallbackFactory;
             return this;
         }

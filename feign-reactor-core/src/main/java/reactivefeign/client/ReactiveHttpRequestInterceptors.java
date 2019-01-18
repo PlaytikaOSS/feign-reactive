@@ -2,6 +2,7 @@ package reactivefeign.client;
 
 import reactivefeign.utils.Pair;
 
+import java.util.Collections;
 import java.util.List;
 
 import static reactivefeign.utils.MultiValueMapUtils.addOrdered;
@@ -9,6 +10,10 @@ import static reactivefeign.utils.MultiValueMapUtils.addOrdered;
 public final class ReactiveHttpRequestInterceptors {
 
     private ReactiveHttpRequestInterceptors(){}
+
+    public static ReactiveHttpRequestInterceptor addHeader(String header, String value){
+        return addHeaders(Collections.singletonList(new Pair<>(header, value)));
+    }
 
     public static ReactiveHttpRequestInterceptor addHeaders(List<Pair<String, String>> headers){
         return request -> {

@@ -2,18 +2,22 @@ package reactivefeign.spring.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.client.actuator.HasFeatures;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactivefeign.ReactiveFeign;
+import reactivefeign.java11.Java11ReactiveFeign;
+import reactivefeign.java11.Java11ReactiveOptions;
+import reactivefeign.webclient.WebReactiveFeign;
+import reactivefeign.webclient.WebReactiveOptions;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @Configuration
 @ConditionalOnClass(ReactiveFeign.class)
-@EnableConfigurationProperties({ReactiveFeignClientProperties.class})
 public class ReactiveFeignAutoConfiguration {
 
     @Autowired(required = false)
@@ -31,24 +35,31 @@ public class ReactiveFeignAutoConfiguration {
         return context;
     }
 
-//    @Configuration
-//    @ConditionalOnClass(name = "feign.hystrix.HystrixFeign")
-//    protected static class HystrixFeignTargeterConfiguration {
-//        @Bean
-//        @ConditionalOnMissingBean
-//        public Targeter feignTargeter() {
-//            return new HystrixTargeter();
-//        }
-//    }
-//
-//    @Configuration
-//    @ConditionalOnMissingClass("feign.hystrix.HystrixFeign")
-//    protected static class DefaultFeignTargeterConfiguration {
-//        @Bean
-//        @ConditionalOnMissingBean
-//        public Targeter feignTargeter() {
-//            return new DefaultTargeter();
-//        }
-//    }
+    @Configuration
+    @ConditionalOnClass(WebReactiveFeign.class)
+    public class WebClientReactiveFeignClientPropertiesAutoConfiguration {
+
+        @Bean
+        @ConditionalOnMissingBean
+        @ConfigurationProperties("reactive.feign.client")
+        public ReactiveFeignClientProperties<WebReactiveOptions.Builder> webClientReactiveFeignClientProperties() {
+            return new ReactiveFeignClientProperties<>();
+        }
+
+    }
+
+    @Configuration
+    @ConditionalOnClass(Java11ReactiveFeign.class)
+    public class Java11ReactiveFeignClientPropertiesAutoConfiguration {
+
+        @Bean
+        @ConditionalOnMissingBean
+        @ConfigurationProperties("reactive.feign.client")
+        public ReactiveFeignClientProperties<Java11ReactiveOptions.Builder> java11ReactiveFeignClientProperties() {
+            return new ReactiveFeignClientProperties<>();
+        }
+
+    }
+
 
 }

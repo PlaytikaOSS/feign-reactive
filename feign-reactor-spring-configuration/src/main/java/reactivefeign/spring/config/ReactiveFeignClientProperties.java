@@ -1,7 +1,7 @@
 package reactivefeign.spring.config;
 
 import feign.Contract;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import reactivefeign.ReactiveOptions;
 import reactivefeign.ReactiveRetryPolicy;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
@@ -11,14 +11,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-@ConfigurationProperties("reactivefeign.client")
-public class ReactiveFeignClientProperties {
+public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
 
     private boolean defaultToProperties = true;
 
     private String defaultConfig = "default";
 
-    private Map<String, ReactiveFeignClientConfiguration> config = new HashMap<>();
+    private Map<String, ReactiveFeignClientConfiguration<O>> config = new HashMap<>();
 
     public boolean isDefaultToProperties() {
         return defaultToProperties;
@@ -36,11 +35,11 @@ public class ReactiveFeignClientProperties {
         this.defaultConfig = defaultConfig;
     }
 
-    public Map<String, ReactiveFeignClientConfiguration> getConfig() {
+    public Map<String, ReactiveFeignClientConfiguration<O>> getConfig() {
         return config;
     }
 
-    public void setConfig(Map<String, ReactiveFeignClientConfiguration> config) {
+    public void setConfig(Map<String, ReactiveFeignClientConfiguration<O>> config) {
         this.config = config;
     }
 
@@ -59,11 +58,9 @@ public class ReactiveFeignClientProperties {
         return Objects.hash(defaultToProperties, defaultConfig, config);
     }
 
-    public static class ReactiveFeignClientConfiguration {
+    public static class ReactiveFeignClientConfiguration<O extends ReactiveOptions.Builder> {
 
-        private Integer connectTimeout;
-
-        private Integer readTimeout;
+        private O options;
 
         private Class<ReactiveRetryPolicy> retryPolicy;
 
@@ -75,20 +72,12 @@ public class ReactiveFeignClientProperties {
 
         private Class<Contract> contract;
 
-        public Integer getConnectTimeout() {
-            return connectTimeout;
+        public O getOptions() {
+            return options;
         }
 
-        public void setConnectTimeout(Integer connectTimeout) {
-            this.connectTimeout = connectTimeout;
-        }
-
-        public Integer getReadTimeout() {
-            return readTimeout;
-        }
-
-        public void setReadTimeout(Integer readTimeout) {
-            this.readTimeout = readTimeout;
+        public void setOptions(O options) {
+            this.options = options;
         }
 
         public Class<ReactiveRetryPolicy> getRetryPolicy() {
@@ -136,8 +125,7 @@ public class ReactiveFeignClientProperties {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             ReactiveFeignClientConfiguration that = (ReactiveFeignClientConfiguration) o;
-            return Objects.equals(connectTimeout, that.connectTimeout) &&
-                    Objects.equals(readTimeout, that.readTimeout) &&
+            return Objects.equals(options, that.options) &&
                     Objects.equals(retryPolicy, that.retryPolicy) &&
                     Objects.equals(statusHandler, that.statusHandler) &&
                     Objects.equals(requestInterceptors, that.requestInterceptors) &&
@@ -147,7 +135,7 @@ public class ReactiveFeignClientProperties {
 
         @Override
         public int hashCode() {
-            return Objects.hash(connectTimeout, readTimeout, retryPolicy,
+            return Objects.hash(options, retryPolicy,
                     statusHandler, requestInterceptors, decode404, contract);
         }
     }

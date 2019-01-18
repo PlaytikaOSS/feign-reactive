@@ -50,6 +50,7 @@ public class ReactiveFeignClientsConfiguration {
 
 	@Bean
 	@Scope("prototype")
+	@ConditionalOnClass(WebReactiveFeign.class)
 	@ConditionalOnMissingBean(ignoredType = "reactivefeign.cloud.CloudReactiveFeign.Builder")
 	public ReactiveFeignBuilder reactiveFeignBuilder() {
 		return WebReactiveFeign.builder();

@@ -84,7 +84,6 @@ public @interface ReactiveFeignClient {
 	 * annotated by {@link ReactiveFeignClient}. The fallback factory must be a valid spring
 	 * bean.
 	 *
-	 * @see feign.hystrix.FallbackFactory for details.
 	 */
 	Class<?> fallbackFactory() default void.class;
 

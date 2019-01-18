@@ -22,18 +22,14 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
+import org.springframework.cloud.openfeign.FeignContext;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import reactivefeign.ReactiveFeign;
-import reactivefeign.ReactiveFeignBuilder;
-import reactivefeign.ReactiveOptions;
-import reactivefeign.ReactiveRetryPolicy;
+import reactivefeign.*;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
-//import reactivefeign.cloud.CloudReactiveFeign;
-import reactivefeign.webclient.WebReactiveOptions;
 
 import java.util.Map;
 import java.util.Objects;
@@ -75,11 +71,9 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 	}
 
 	protected ReactiveFeignBuilder reactiveFeign(ReactiveFeignContext context) {
-		// @formatter:off
 		ReactiveFeignBuilder builder = get(context, ReactiveFeignBuilder.class)
 				// required values
 				.contract(get(context, Contract.class));
-		// @formatter:on
 
 		configureReactiveFeign(context, builder);
 
@@ -89,13 +83,14 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 	protected void configureReactiveFeign(ReactiveFeignContext context, ReactiveFeignBuilder builder) {
 		ReactiveFeignClientProperties properties = applicationContext.getBean(ReactiveFeignClientProperties.class);
 		if (properties != null) {
+			Map<String, ReactiveFeignClientProperties.ReactiveFeignClientConfiguration<?>> config = properties.getConfig();
 			if (properties.isDefaultToProperties()) {
 				configureUsingConfiguration(context, builder);
-				configureUsingProperties(properties.getConfig().get(properties.getDefaultConfig()), builder);
-				configureUsingProperties(properties.getConfig().get(this.name), builder);
+				configureUsingProperties(config.get(properties.getDefaultConfig()), builder);
+				configureUsingProperties(config.get(this.name), builder);
 			} else {
-				configureUsingProperties(properties.getConfig().get(properties.getDefaultConfig()), builder);
-				configureUsingProperties(properties.getConfig().get(this.name), builder);
+				configureUsingProperties(config.get(properties.getDefaultConfig()), builder);
+				configureUsingProperties(config.get(this.name), builder);
 				configureUsingConfiguration(context, builder);
 			}
 		} else {
@@ -130,18 +125,15 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 		}
 	}
 
-	protected void configureUsingProperties(ReactiveFeignClientProperties.ReactiveFeignClientConfiguration config,
+	protected void configureUsingProperties(ReactiveFeignClientProperties.ReactiveFeignClientConfiguration<?> config,
 											ReactiveFeignBuilder builder) {
 		if (config == null) {
 			return;
 		}
 
-		if (config.getConnectTimeout() != null && config.getReadTimeout() != null) {
-			builder.options(new WebReactiveOptions.Builder()
-					.setReadTimeoutMillis(config.getReadTimeout())
-					.setConnectTimeoutMillis(config.getConnectTimeout())
-					.build()
-			);
+		ReactiveOptions.Builder optionsBuilder = config.getOptions();
+		if(optionsBuilder != null){
+			builder.options(optionsBuilder.build());
 		}
 
 		if (config.getRetryPolicy() != null) {
@@ -195,11 +187,7 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 	}
 
 	protected ReactiveFeignBuilder loadBalance(ReactiveFeignBuilder<?> builder, ReactiveFeignContext context) {
-//		if (!(builder instanceof CloudReactiveFeign.Builder)) {
-//			builder = CloudReactiveFeign.builder(builder);
-//		}
-//
-//		((CloudReactiveFeign.Builder) builder).enableLoadBalancer();
+
 
 		return builder;
 	}
@@ -235,7 +223,54 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 		}
 		url += cleanPath();
 
+		builder = fallback(context, builder);
+
 		return (T) builder.target(this.type, url);
+	}
+
+	private <T> ReactiveFeignBuilder fallback(ReactiveFeignContext context, ReactiveFeignBuilder builder) {
+		if(fallback != void.class){
+			Object fallbackInstance = getFromContext("fallback", getName(), context,
+					this.fallback, this.type);
+			builder = builder.fallback(fallbackInstance);
+		}
+		if(fallbackFactory != void.class){
+			FallbackFactory<? extends T> fallbackFactoryInstance = (FallbackFactory<? extends T>)
+					getFromContext("fallbackFactory", getName(), context, fallbackFactory, FallbackFactory.class);
+		/* We take a sample fallback from the fallback factory to check if it returns a fallback
+		that is compatible with the annotated feign interface. */
+			Object exampleFallback = fallbackFactoryInstance.apply(new RuntimeException());
+			Assert.notNull(exampleFallback,
+					String.format(
+							"Incompatible fallbackFactory instance for feign client %s. Factory may not produce null!",
+							getName()));
+			if (!this.type.isAssignableFrom(exampleFallback.getClass())) {
+				throw new IllegalStateException(
+						String.format(
+								"Incompatible fallbackFactory instance for feign client %s. Factory produces instances of '%s', but should produce instances of '%s'",
+								getName(), exampleFallback.getClass(), this.type));
+			}
+			builder = builder.fallbackFactory(fallbackFactoryInstance);
+		}
+		return builder;
+	}
+
+	private <T> T getFromContext(String fallbackMechanism, String feignClientName, ReactiveFeignContext context,
+								 Class<?> beanType, Class<T> targetType) {
+		Object fallbackInstance = context.getInstance(feignClientName, beanType);
+		if (fallbackInstance == null) {
+			throw new IllegalStateException(String.format(
+					"No " + fallbackMechanism + " instance of type %s found for feign client %s",
+					beanType, feignClientName));
+		}
+
+		if (!targetType.isAssignableFrom(beanType)) {
+			throw new IllegalStateException(
+					String.format(
+							"Incompatible " + fallbackMechanism + " instance. Fallback/fallbackFactory of type %s is not assignable to %s for feign client %s",
+							beanType, targetType, feignClientName));
+		}
+		return (T) fallbackInstance;
 	}
 
 	private String cleanPath() {
