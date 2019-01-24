@@ -14,11 +14,15 @@
 package reactivefeign.utils;
 
 import feign.MethodMetadata;
+import feign.Target;
 import org.reactivestreams.Publisher;
 
+import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 
+import static feign.Feign.configKey;
 import static feign.Util.resolveLastTypeParameter;
 import static java.util.Optional.ofNullable;
 
@@ -58,5 +62,12 @@ public class FeignUtils {
       }
     }).orElse(null);
   }
+
+  public static Method findMethodInTarget(Target target, MethodMetadata methodMetadata) {
+    return Arrays.stream(target.type().getMethods())
+            .filter(method -> configKey(target.type(), method).equals(methodMetadata.configKey()))
+            .findFirst().orElseThrow(IllegalArgumentException::new);
+  }
+
 
 }

@@ -1,7 +1,6 @@
 package reactivefeign.publisher;
 
 
-import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
@@ -21,7 +20,7 @@ public class MonoPublisherHttpClient implements PublisherHttpClient {
 	}
 
 	@Override
-	public Mono<?> executeRequest(ReactiveHttpRequest request) {
+	public Mono<Object> executeRequest(ReactiveHttpRequest request) {
 		Mono<ReactiveHttpResponse> response = reactiveHttpClient.executeRequest(request);
 		return response.flatMap(resp -> Mono.from(resp.body()));
 	}

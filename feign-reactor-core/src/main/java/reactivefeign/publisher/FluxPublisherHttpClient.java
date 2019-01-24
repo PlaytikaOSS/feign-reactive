@@ -21,7 +21,7 @@ public class FluxPublisherHttpClient implements PublisherHttpClient {
 	}
 
 	@Override
-	public Flux<?> executeRequest(ReactiveHttpRequest request) {
+	public Flux<Object> executeRequest(ReactiveHttpRequest request) {
 		Mono<ReactiveHttpResponse> response = reactiveHttpClient.executeRequest(request);
 		return response.flatMapMany(ReactiveHttpResponse::body);
 	}

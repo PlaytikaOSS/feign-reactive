@@ -12,7 +12,7 @@ import feign.RequestLine;
 import feign.RetryableException;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
-import reactivefeign.publisher.RetryPublisherHttpClient;
+import reactivefeign.publisher.retry.RetryPublisherHttpClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

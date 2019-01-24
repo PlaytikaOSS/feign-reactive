@@ -10,5 +10,5 @@ import java.lang.reflect.Type;
  */
 public interface PublisherHttpClient {
 
-	Publisher<?> executeRequest(ReactiveHttpRequest request);
+	Publisher<Object> executeRequest(ReactiveHttpRequest request);
 }

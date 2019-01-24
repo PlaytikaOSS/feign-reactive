@@ -25,7 +25,14 @@ import reactivefeign.client.statushandler.ReactiveStatusHandlers;
 import reactivefeign.methodhandler.DefaultMethodHandler;
 import reactivefeign.methodhandler.MethodHandler;
 import reactivefeign.methodhandler.MethodHandlerFactory;
-import reactivefeign.publisher.*;
+import reactivefeign.methodhandler.ReactiveMethodHandlerFactory;
+import reactivefeign.methodhandler.fallback.FallbackMethodHandlerFactory;
+import reactivefeign.publisher.FluxPublisherHttpClient;
+import reactivefeign.publisher.MonoPublisherHttpClient;
+import reactivefeign.publisher.PublisherClientFactory;
+import reactivefeign.publisher.PublisherHttpClient;
+import reactivefeign.publisher.retry.FluxRetryPublisherHttpClient;
+import reactivefeign.publisher.retry.MonoRetryPublisherHttpClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -142,6 +149,7 @@ public class ReactiveFeign {
     protected boolean decode404 = false;
 
     private ReactiveRetryPolicy retryPolicy;
+    protected Function<Throwable, ? extends T> fallbackFactory;
 
     protected Builder(){
       contract(new Contract.Default());
@@ -185,6 +193,17 @@ public class ReactiveFeign {
     @Override
     public Builder<T> retryWhen(ReactiveRetryPolicy retryPolicy) {
       this.retryPolicy = retryPolicy;
+      return this;
+    }
+
+    @Override
+    public Builder<T> fallback(T fallback) {
+      return fallbackFactory(throwable -> fallback);
+    }
+
+    @Override
+    public Builder<T> fallbackFactory(Function<Throwable, ? extends T> fallbackFactory) {
+      this.fallbackFactory = fallbackFactory;
       return this;
     }
 
@@ -240,6 +259,14 @@ public class ReactiveFeign {
           return publisherClient;
         }
       };
+    }
+
+    @Override
+    public MethodHandlerFactory buildReactiveMethodHandlerFactory(PublisherClientFactory reactiveClientFactory) {
+      MethodHandlerFactory methodHandlerFactory = new ReactiveMethodHandlerFactory(reactiveClientFactory);
+      return fallbackFactory != null
+              ? new FallbackMethodHandlerFactory(methodHandlerFactory, (Function<Throwable, Object>) fallbackFactory)
+              : methodHandlerFactory;
     }
 
     protected PublisherHttpClient retry(

@@ -86,7 +86,7 @@ public class HystrixReactiveHttpClientTest {
 
         TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder()
                 .setHystrixCommandSetterFactory(getSetterFactory(testNo))
-                .setFallback(() -> Mono.just(FALLBACK))
+                .fallback(() -> Mono.just(FALLBACK))
                 .target(TestMonoInterface.class, "http://localhost:" + server.port());
 
         String result = client.getMono().block();
@@ -105,7 +105,7 @@ public class HystrixReactiveHttpClientTest {
 
         TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder()
                 .setHystrixCommandSetterFactory(getSetterFactory(testNo))
-                .setFallbackFactory(throwable -> () -> {throw new RuntimeException();})
+                .fallbackFactory(throwable -> () -> {throw new RuntimeException();})
                 .target(TestMonoInterface.class, "http://localhost:" + server.port());
 
         StepVerifier.create(client.getMono())

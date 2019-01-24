@@ -33,14 +33,14 @@ public class RibbonPublisherClient implements PublisherHttpClient {
     }
 
     @Override
-    public Publisher<?> executeRequest(ReactiveHttpRequest request) {
+    public Publisher<Object> executeRequest(ReactiveHttpRequest request) {
 
         if (loadBalancerCommand != null) {
             Observable<?> observable = loadBalancerCommand.submit(server -> {
 
                 ReactiveHttpRequest lbRequest = loadBalanceRequest(request, server);
 
-                Publisher<Object> publisher = (Publisher<Object>)publisherClient.executeRequest(lbRequest);
+                Publisher<Object> publisher = publisherClient.executeRequest(lbRequest);
                 return RxReactiveStreams.toObservable(publisher);
             });
 

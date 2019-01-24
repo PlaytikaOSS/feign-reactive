@@ -11,13 +11,14 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package reactivefeign.publisher;
+package reactivefeign.publisher.retry;
 
 import feign.MethodMetadata;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpRequest;
+import reactivefeign.publisher.FluxPublisherHttpClient;
+import reactivefeign.publisher.PublisherHttpClient;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.util.function.Function;
 
@@ -26,17 +27,17 @@ import java.util.function.Function;
  *
  * @author Sergii Karpenko
  */
-public class MonoRetryPublisherHttpClient extends RetryPublisherHttpClient<MonoPublisherHttpClient> {
+public class FluxRetryPublisherHttpClient extends RetryPublisherHttpClient<FluxPublisherHttpClient> {
 
-  public MonoRetryPublisherHttpClient(
-          MonoPublisherHttpClient publisherClient, MethodMetadata methodMetadata,
+  public FluxRetryPublisherHttpClient(
+          FluxPublisherHttpClient publisherClient, MethodMetadata methodMetadata,
           Function<Flux<Throwable>, Flux<Throwable>> retryFunction) {
     super(publisherClient, methodMetadata, retryFunction);
   }
 
   @Override
-  public Publisher<?> executeRequest(ReactiveHttpRequest request) {
-    Mono<?> response = publisherClient.executeRequest(request);
+  public Publisher<Object> executeRequest(ReactiveHttpRequest request) {
+    Flux<Object> response = publisherClient.executeRequest(request);
     return response.retryWhen(retryFunction).onErrorMap(outOfRetries());
   }
 }

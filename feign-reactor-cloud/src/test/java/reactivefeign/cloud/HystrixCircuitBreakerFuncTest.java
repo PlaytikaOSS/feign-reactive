@@ -52,7 +52,7 @@ public class HystrixCircuitBreakerFuncTest {
         mockResponseServiceUnavailable();
 
         TestCaller testCaller = BuilderUtils.<TestCaller>cloudBuilder()
-                .setFallback(() -> Mono.just(FALLBACK))
+                .fallback(() -> Mono.just(FALLBACK))
                 .target(TestCaller.class, "http://localhost:" + WIREMOCK_PORT);
 
         //check that circuit breaker DOESN'T open on volume threshold

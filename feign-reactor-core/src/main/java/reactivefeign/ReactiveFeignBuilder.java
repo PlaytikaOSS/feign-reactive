@@ -1,6 +1,7 @@
 package reactivefeign;
 
 import feign.*;
+import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
@@ -12,6 +13,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public interface ReactiveFeignBuilder<T> {
 
@@ -62,6 +64,10 @@ public interface ReactiveFeignBuilder<T> {
     ReactiveFeignBuilder<T> retryWhen(ReactiveRetryPolicy retryPolicy);
 
     ReactiveFeignBuilder<T> options(ReactiveOptions reactiveOptions);
+
+    ReactiveFeignBuilder<T> fallback(T fallback);
+
+    ReactiveFeignBuilder<T> fallbackFactory(Function<Throwable, ? extends T> fallbackFactory);
 
     /**
      * Defines target and builds client.

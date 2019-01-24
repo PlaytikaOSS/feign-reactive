@@ -21,7 +21,7 @@ import feign.RetryableException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import reactivefeign.publisher.RetryPublisherHttpClient;
+import reactivefeign.publisher.retry.RetryPublisherHttpClient;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.Mixin;

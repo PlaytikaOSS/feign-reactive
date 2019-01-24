@@ -21,6 +21,7 @@ import java.util.function.Function;
 
 import static feign.Feign.configKey;
 import static feign.Util.checkNotNull;
+import static reactivefeign.utils.FeignUtils.findMethodInTarget;
 
 /**
  * @author Sergii Karpenko
@@ -41,9 +42,7 @@ public class HystrixMethodHandler implements MethodHandler {
         checkNotNull(target, "target must be not null");
 
         checkNotNull(methodMetadata, "methodMetadata must be not null");
-        method = Arrays.stream(target.type().getMethods())
-                .filter(method -> configKey(target.type(), method).equals(methodMetadata.configKey()))
-                .findFirst().orElseThrow(IllegalArgumentException::new);
+        method = findMethodInTarget(target, methodMetadata);
         method.setAccessible(true);
 
         returnPublisherType = ((ParameterizedType) methodMetadata.returnType()).getRawType();

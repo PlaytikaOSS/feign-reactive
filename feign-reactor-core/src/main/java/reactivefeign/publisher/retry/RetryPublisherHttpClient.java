@@ -11,11 +11,12 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package reactivefeign.publisher;
+package reactivefeign.publisher.retry;
 
 import feign.MethodMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactivefeign.publisher.PublisherHttpClient;
 import reactor.core.publisher.Flux;
 
 import java.util.function.Function;

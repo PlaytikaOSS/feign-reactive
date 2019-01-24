@@ -49,7 +49,7 @@ public class CloudReactiveFeign {
         private ReactiveFeignBuilder<T> builder;
         private boolean hystrixEnabled = true;
         private SetterFactory commandSetterFactory = new DefaultSetterFactory();
-        private Function<Throwable, ? extends T> fallbackFactory;
+        private Function<? extends Throwable, ? extends T> fallbackFactory;
         private Function<String, LoadBalancerCommand<Object>> loadBalancerCommandFactory = s -> null;
 
         protected Builder(ReactiveFeignBuilder<T> builder) {
@@ -66,11 +66,13 @@ public class CloudReactiveFeign {
             return this;
         }
 
-        public Builder<T> setFallback(T fallback) {
-            return setFallbackFactory(throwable -> fallback);
+        @Override
+        public Builder<T> fallback(T fallback) {
+            return fallbackFactory(throwable -> fallback);
         }
 
-        public Builder<T> setFallbackFactory(Function<Throwable, ? extends T> fallbackFactory) {
+        @Override
+        public Builder<T> fallbackFactory(Function<Throwable, ? extends T> fallbackFactory) {
             this.fallbackFactory = fallbackFactory;
             return this;
         }
