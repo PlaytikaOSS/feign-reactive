@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2015 the original author or authors.
+ * Copyright 2013-2016 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -12,22 +12,14 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
  */
 
 package reactivefeign.spring.config;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import reactivefeign.spring.config.ReactiveFeignClient;
-import reactor.core.publisher.Mono;
+import reactivefeign.ReactiveFeignBuilder;
 
-import static reactivefeign.spring.config.AutoConfigurationTest.MOCK_SERVER_PORT_PROPERTY;
-
-@ReactiveFeignClient(name = "test-feign-client")
-public interface TestReactiveFeignClient {
-
-	String TEST_URL = "/testUrl";
-
-	@GetMapping(path = TEST_URL)
-	Mono<String> testMethod();
-
+interface ReactiveFeignConfigurator {
+	ReactiveFeignBuilder configure(ReactiveFeignBuilder feign,
+					ReactiveFeignClientFactoryBean factory, ReactiveFeignContext context);
 }

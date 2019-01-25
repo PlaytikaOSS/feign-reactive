@@ -34,14 +34,18 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import java.util.stream.Stream;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Sergii Karpenko
@@ -50,77 +54,76 @@ import static java.util.Arrays.asList;
  */
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = AutoConfigurationTest.TestConfiguration.class,
+@SpringBootTest(classes = RibbonEnabledHystrixDisabledUsingPropertiesTest.TestConfiguration.class,
 		        webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@TestPropertySource("classpath:ribbon-enabled-hystrix-disabled.properties")
 @DirtiesContext
-public class AutoConfigurationTest {
+public class RibbonEnabledHystrixDisabledUsingPropertiesTest {
 
-	static final String TEST_FEIGN_CLIENT = "test-feign-client";
+	static final String FEIGN_CLIENT_TEST_RIBBON = "feign-client-test-ribbon";
 	private static final String TEST_URL = "/testUrl";
 	private static final String BODY_TEXT = "test";
 
-	private static WireMockServer mockHttpServer = new WireMockServer(wireMockConfig().dynamicPort());
+	private static WireMockServer mockHttpServer1 = new WireMockServer(wireMockConfig().dynamicPort());
+	private static WireMockServer mockHttpServer2 = new WireMockServer(wireMockConfig().dynamicPort());
 
 	@Autowired
 	TestReactiveFeignClient feignClient;
 
 	@Test
-	public void shouldMirrorIntegerStreamBody() {
-		mockHttpServer.stubFor(get(urlPathMatching(TEST_URL))
-				.willReturn(aResponse()
-						.withBody(BODY_TEXT)
-						.withStatus(200)));
+	public void shouldRetryAndNotFailOnDefaultHystrixTimeout() {
+		Stream.of(mockHttpServer1, mockHttpServer2).forEach(wireMockServer -> {
+			wireMockServer.stubFor(get(urlPathMatching(TEST_URL))
+					.willReturn(aResponse()
+							.withFixedDelay(700)
+							.withBody(BODY_TEXT)
+							.withStatus(200)));
+		});
 
 		Mono<String> result = feignClient.testMethod();
 
 		StepVerifier.create(result)
-				.expectNext(BODY_TEXT)
-				.verifyComplete();
-	}
-
-	@Test
-	public void shouldFailOnDefaultHystrixTimeout() {
-		mockHttpServer.stubFor(get(urlPathMatching(TEST_URL))
-				.willReturn(aResponse()
-						.withFixedDelay(2000)
-						.withBody(BODY_TEXT)
-						.withStatus(200)));
-
-		Mono<String> result = feignClient.testMethod();
-
-		StepVerifier.create(result)
-				.expectError(RuntimeException.class)
+				.expectError(ClientException.class)
 				.verify();
+
+		assertThat(mockHttpServer1.getAllServeEvents().size()).isEqualTo(1);
+		assertThat(mockHttpServer2.getAllServeEvents().size()).isEqualTo(1);
 	}
 
 	@BeforeClass
 	public static void setup() throws ClientException {
-		mockHttpServer.start();
+		mockHttpServer1.start();
+		mockHttpServer2.start();
 
 		DefaultClientConfigImpl clientConfig = new DefaultClientConfigImpl();
 		clientConfig.loadDefaultValues();
 		clientConfig.setProperty(CommonClientConfigKey.NFLoadBalancerClassName, BaseLoadBalancer.class.getName());
-		ILoadBalancer lb = ClientFactory.registerNamedLoadBalancerFromclientConfig(TEST_FEIGN_CLIENT, clientConfig);
-		lb.addServers(asList(new Server("localhost", mockHttpServer.port())));
+		ILoadBalancer lb = ClientFactory.registerNamedLoadBalancerFromclientConfig(FEIGN_CLIENT_TEST_RIBBON, clientConfig);
+		lb.addServers(asList(new Server("localhost", mockHttpServer1.port()), new Server("localhost", mockHttpServer2.port())));
+
 	}
 
 	@AfterClass
 	public static void teardown() {
-		mockHttpServer.stop();
+		mockHttpServer1.stop();
+		mockHttpServer2.stop();
 	}
 
 	@Before
 	public void reset(){
-		mockHttpServer.resetAll();
+		mockHttpServer1.resetAll();
+		mockHttpServer2.resetAll();
 	}
 
-	@ReactiveFeignClient(name = TEST_FEIGN_CLIENT)
+	@ReactiveFeignClient(name = FEIGN_CLIENT_TEST_RIBBON)
 	public interface TestReactiveFeignClient {
+
 		@GetMapping(path = TEST_URL)
 		Mono<String> testMethod();
+
 	}
 
-	@EnableReactiveFeignClients(clients = AutoConfigurationTest.TestReactiveFeignClient.class)
+	@EnableReactiveFeignClients(clients = RibbonEnabledHystrixDisabledUsingPropertiesTest.TestReactiveFeignClient.class)
 	@EnableAutoConfiguration
 	@Configuration
 	public static class TestConfiguration{}

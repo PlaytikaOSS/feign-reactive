@@ -22,7 +22,6 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
-import org.springframework.cloud.openfeign.FeignContext;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
@@ -33,6 +32,8 @@ import reactivefeign.client.statushandler.ReactiveStatusHandler;
 
 import java.util.Map;
 import java.util.Objects;
+
+import static java.util.Collections.emptyMap;
 
 /**
  *
@@ -75,12 +76,12 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 				// required values
 				.contract(get(context, Contract.class));
 
-		configureReactiveFeign(context, builder);
+		builder = configureReactiveFeign(context, builder);
 
 		return builder;
 	}
 
-	protected void configureReactiveFeign(ReactiveFeignContext context, ReactiveFeignBuilder builder) {
+	protected ReactiveFeignBuilder configureReactiveFeign(ReactiveFeignContext context, ReactiveFeignBuilder builder) {
 		ReactiveFeignClientProperties properties = applicationContext.getBean(ReactiveFeignClientProperties.class);
 		if (properties != null) {
 			Map<String, ReactiveFeignClientProperties.ReactiveFeignClientConfiguration<?>> config = properties.getConfig();
@@ -96,6 +97,11 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 		} else {
 			configureUsingConfiguration(context, builder);
 		}
+
+		for(ReactiveFeignConfigurator configurator : getAll(context, ReactiveFeignConfigurator.class).values()){
+			builder = configurator.configure(builder, this, context);
+		}
+		return builder;
 	}
 
 	protected void configureUsingConfiguration(ReactiveFeignContext context, ReactiveFeignBuilder builder) {
@@ -180,6 +186,11 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 					+ this.name);
 		}
 		return instance;
+	}
+
+	protected <T> Map<String, T> getAll(ReactiveFeignContext context, Class<T> type) {
+		Map<String, T> instances = context.getInstances(this.name, type);
+		return instances != null ? instances : emptyMap();
 	}
 
 	protected <T> T getOptional(ReactiveFeignContext context, Class<T> type) {

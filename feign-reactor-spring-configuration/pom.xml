@@ -51,6 +51,12 @@
 
         <dependency>
             <groupId>com.playtika.reactivefeign</groupId>
+            <artifactId>feign-reactor-jetty</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>com.playtika.reactivefeign</groupId>
             <artifactId>feign-reactor-cloud</artifactId>
             <optional>true</optional>
         </dependency>

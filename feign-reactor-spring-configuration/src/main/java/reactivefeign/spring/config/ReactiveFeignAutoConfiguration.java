@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Configuration;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.java11.Java11ReactiveFeign;
 import reactivefeign.java11.Java11ReactiveOptions;
+import reactivefeign.jetty.JettyReactiveFeign;
+import reactivefeign.jetty.JettyReactiveOptions;
 import reactivefeign.webclient.WebReactiveFeign;
 import reactivefeign.webclient.WebReactiveOptions;
 
@@ -56,6 +58,19 @@ public class ReactiveFeignAutoConfiguration {
         @ConditionalOnMissingBean
         @ConfigurationProperties("reactive.feign.client")
         public ReactiveFeignClientProperties<Java11ReactiveOptions.Builder> java11ReactiveFeignClientProperties() {
+            return new ReactiveFeignClientProperties<>();
+        }
+
+    }
+
+    @Configuration
+    @ConditionalOnClass(JettyReactiveFeign.class)
+    public class JettyReactiveFeignClientPropertiesAutoConfiguration {
+
+        @Bean
+        @ConditionalOnMissingBean
+        @ConfigurationProperties("reactive.feign.client")
+        public ReactiveFeignClientProperties<JettyReactiveOptions.Builder> jettyReactiveFeignClientProperties() {
             return new ReactiveFeignClientProperties<>();
         }
 

@@ -19,20 +19,23 @@ package reactivefeign.spring.config;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
 /**
@@ -41,23 +44,26 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
  * Tests ReactiveFeign built on Spring Mvc annotations.
  */
 
-@EnableReactiveFeignClients(clients = AutoConfigurationTest.TestReactiveFeignClient.class)
-
 @RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
-@ContextConfiguration(classes = ReactiveFeignAutoConfiguration.class)
+@SpringBootTest(classes = AutoConfigurationTest.TestConfiguration.class,
+		webEnvironment = SpringBootTest.WebEnvironment.NONE)
+@DirtiesContext
 public class AutoConfigurationTest {
 
 	static final String MOCK_SERVER_PORT_PROPERTY = "mock.server.port";
+	private static final String TEST_URL = "/testUrl";
 	private static final String BODY_TEXT = "test";
+	private static final String FALLBACK_TEXT = "test fallback";
 	private static WireMockServer mockHttpServer = new WireMockServer(wireMockConfig().dynamicPort());
 
 	@Autowired
 	TestReactiveFeignClient feignClient;
 
 	@Test
-	public void shouldMirrorIntegerStreamBody() {
+	public void shouldReturnBody() {
+		mockHttpServer.stubFor(WireMock.get(WireMock.urlPathMatching(TEST_URL))
+				.willReturn(WireMock.aResponse()
+						.withBody(BODY_TEXT)));
 		Mono<String> result = feignClient.testMethod();
 
 		StepVerifier.create(result)
@@ -65,12 +71,29 @@ public class AutoConfigurationTest {
 				.verifyComplete();
 	}
 
+	@Test
+	public void shouldReturnFallbackOnError() {
+		mockHttpServer.stubFor(get(urlPathMatching(TEST_URL))
+				.willReturn(aResponse()
+						.withStatus(598)));
+
+		Mono<String> result = feignClient.testMethod();
+
+		StepVerifier.create(result)
+				.expectNext(FALLBACK_TEXT)
+				.verifyComplete();
+	}
+
 	@BeforeClass
 	public static void setup() {
-		mockHttpServer.stubFor(WireMock.get(WireMock.urlPathMatching(TestReactiveFeignClient.TEST_URL)).willReturn(WireMock.aResponse().withBody(BODY_TEXT).withStatus(200)));
 		mockHttpServer.start();
 
 		System.setProperty(MOCK_SERVER_PORT_PROPERTY, Integer.toString(mockHttpServer.port()));
+	}
+
+	@Before
+	public void before(){
+		mockHttpServer.resetAll();
 	}
 
 	@AfterClass
@@ -78,13 +101,31 @@ public class AutoConfigurationTest {
 		mockHttpServer.stop();
 	}
 
-	@ReactiveFeignClient(name = "test-feign-client", url = "localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}")
+	@ReactiveFeignClient(name = "test-feign-client", url = "localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}",
+						fallback = TestFallback.class)
 	public interface TestReactiveFeignClient {
-
-		String TEST_URL = "/testUrl";
 
 		@GetMapping(path = TEST_URL)
 		Mono<String> testMethod();
 
+	}
+
+	public static class TestFallback implements TestReactiveFeignClient{
+
+		@Override
+		public Mono<String> testMethod() {
+			return Mono.just(FALLBACK_TEXT);
+		}
+	}
+
+	@EnableReactiveFeignClients(clients = AutoConfigurationTest.TestReactiveFeignClient.class)
+	@EnableAutoConfiguration
+	@Configuration
+	public static class TestConfiguration{
+
+		@Bean
+		public TestFallback reactiveFallback(){
+			return new TestFallback();
+		}
 	}
 }

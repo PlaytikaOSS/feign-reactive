@@ -17,7 +17,6 @@
 
 package reactivefeign.spring.config;
 
-import com.netflix.client.RetryHandler;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
 import feign.Contract;
@@ -26,6 +25,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import org.springframework.cloud.openfeign.support.SpringMvcContract;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -64,19 +64,16 @@ public class ReactiveFeignClientsConfiguration {
 
 		@Bean
 		@Scope("prototype")
-		@ConditionalOnMissingBean
-		public RetryHandler reactiveRetryHandler(){
-			//no retries
-			return RetryHandler.DEFAULT;
+		@ConditionalOnProperty(name = "reactive.feign.hystrix.enabled", matchIfMissing = true)
+		public ReactiveFeignHystrixConfigurator reactiveFeignHystrixConfigurator(){
+			return new ReactiveFeignHystrixConfigurator();
 		}
 
 		@Bean
 		@Scope("prototype")
-		@ConditionalOnMissingBean
-		@ConditionalOnProperty(name = "reactive.feign.hystrix.enabled", matchIfMissing = true)
-		public CloudReactiveFeign.SetterFactory reactiveCommandSetterFactory(){
-			//no retries
-			return new CloudReactiveFeign.DefaultSetterFactory();
+		@ConditionalOnProperty(name = "reactive.feign.ribbon.enabled", matchIfMissing = true)
+		public ReactiveFeignRibbonConfigurator reactiveFeignRibbonConfigurator(){
+			return new ReactiveFeignRibbonConfigurator();
 		}
 
 		@Bean
@@ -85,17 +82,15 @@ public class ReactiveFeignClientsConfiguration {
 		@ConditionalOnMissingBean
 		public CloudReactiveFeign.Builder reactiveFeignCloudBuilder(
 				ReactiveFeignBuilder reactiveFeignBuilder,
+				@Value("${reactive.feign.hystrix.enabled:true}")
+				boolean enableHystrix,
 				@Value("${reactive.feign.ribbon.enabled:true}")
-				boolean enableLoadBalancer,
-				RetryHandler reactiveRetryHandler,
-				CloudReactiveFeign.SetterFactory reactiveCommandSetterFactory) {
+				boolean enableLoadBalancer) {
 			CloudReactiveFeign.Builder cloudBuilder = CloudReactiveFeign.builder(reactiveFeignBuilder);
 			if(enableLoadBalancer){
-				cloudBuilder = cloudBuilder.enableLoadBalancer(reactiveRetryHandler);
+				cloudBuilder = cloudBuilder.enableLoadBalancer();
 			}
-			if(reactiveCommandSetterFactory != null){
-				cloudBuilder = cloudBuilder.setHystrixCommandSetterFactory(reactiveCommandSetterFactory);
-			} else {
+			if(!enableHystrix){
 				cloudBuilder = cloudBuilder.disableHystrix();
 			}
 			return cloudBuilder;

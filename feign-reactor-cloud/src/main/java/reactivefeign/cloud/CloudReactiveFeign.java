@@ -50,8 +50,8 @@ public class CloudReactiveFeign {
         private ReactiveFeignBuilder<T> builder;
         private boolean hystrixEnabled = true;
         private SetterFactory commandSetterFactory = new DefaultSetterFactory();
-        private Function<? extends Throwable, ? extends T> fallbackFactory;
-        private Function<String, LoadBalancerCommand<Object>> loadBalancerCommandFactory = s -> null;
+        private FallbackFactory<T> fallbackFactory;
+        private LoadBalancerCommandFactory loadBalancerCommandFactory = s -> null;
 
         protected Builder(ReactiveFeignBuilder<T> builder) {
             this.builder = builder;
@@ -64,17 +64,6 @@ public class CloudReactiveFeign {
 
         public Builder<T> setHystrixCommandSetterFactory(SetterFactory commandSetterFactory) {
             this.commandSetterFactory = commandSetterFactory;
-            return this;
-        }
-
-        @Override
-        public Builder<T> fallback(T fallback) {
-            return fallbackFactory(throwable -> fallback);
-        }
-
-        @Override
-        public Builder<T> fallbackFactory(FallbackFactory<T> fallbackFactory) {
-            this.fallbackFactory = fallbackFactory;
             return this;
         }
 
@@ -98,9 +87,19 @@ public class CloudReactiveFeign {
         }
 
 
-        public Builder<T> setLoadBalancerCommandFactory(
-                Function<String, LoadBalancerCommand<Object>> loadBalancerCommandFactory) {
+        public Builder<T> setLoadBalancerCommandFactory(LoadBalancerCommandFactory loadBalancerCommandFactory) {
             this.loadBalancerCommandFactory = loadBalancerCommandFactory;
+            return this;
+        }
+
+        @Override
+        public Builder<T> fallback(T fallback) {
+            return fallbackFactory(throwable -> fallback);
+        }
+
+        @Override
+        public Builder<T> fallbackFactory(FallbackFactory<T> fallbackFactory) {
+            this.fallbackFactory = fallbackFactory;
             return this;
         }
 
