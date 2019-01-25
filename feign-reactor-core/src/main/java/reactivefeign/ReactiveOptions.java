@@ -16,7 +16,7 @@ package reactivefeign;
 /**
  * @author Sergii Karpenko
  */
-public class ReactiveOptions {
+abstract public class ReactiveOptions {
 
   private final Boolean useHttp2;
   private final Long connectTimeoutMillis;

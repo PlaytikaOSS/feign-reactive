@@ -17,7 +17,6 @@
 package reactivefeign.spring.config;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;

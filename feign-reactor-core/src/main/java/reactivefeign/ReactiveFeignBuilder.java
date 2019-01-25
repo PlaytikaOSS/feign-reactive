@@ -99,9 +99,7 @@ public interface ReactiveFeignBuilder<T> {
         return new ReactiveInvocationHandler.Factory();
     }
 
-    default MethodHandlerFactory buildReactiveMethodHandlerFactory(PublisherClientFactory reactiveClientFactory) {
-        return new ReactiveMethodHandlerFactory(reactiveClientFactory);
-    }
+    MethodHandlerFactory buildReactiveMethodHandlerFactory(PublisherClientFactory reactiveClientFactory);
 
     PublisherClientFactory buildReactiveClientFactory();
 

@@ -24,30 +24,35 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReadTimeoutException;
+import reactivefeign.webclient.WebReactiveOptions;
 import reactor.core.publisher.Mono;
 
 import java.util.Collections;
+import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 import static reactivefeign.spring.config.AutoConfigurationTest.MOCK_SERVER_PORT_PROPERTY;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = ReactiveFeignClientUsingPropertiesTests.Application.class, webEnvironment = WebEnvironment.NONE)
-@TestPropertySource("classpath:reactive-feign-properties.properties")
+@SpringBootTest(classes = ReactiveFeignClientUsingConfigurationsTests.Application.class, webEnvironment = WebEnvironment.NONE)
 @DirtiesContext
-public class ReactiveFeignClientUsingPropertiesTests {
+public class ReactiveFeignClientUsingConfigurationsTests {
 
 	private static WireMockServer mockHttpServer = new WireMockServer(wireMockConfig().dynamicPort());
 
@@ -88,14 +93,16 @@ public class ReactiveFeignClientUsingPropertiesTests {
 		fail("it should timeout");
 	}
 
-	@ReactiveFeignClient(name = "foo", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}")
+	@ReactiveFeignClient(name = "foo", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}",
+							configuration = FooConfiguration.class)
 	protected interface FooClient {
 
 		@RequestMapping(method = RequestMethod.GET, value = "/foo")
 		Mono<String> foo();
 	}
 
-	@ReactiveFeignClient(name = "bar", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}")
+	@ReactiveFeignClient(name = "bar", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}",
+			configuration = BarConfiguration.class)
 	protected interface BarClient {
 
 		@RequestMapping(method = RequestMethod.GET, value = "/bar")
@@ -120,7 +127,43 @@ public class ReactiveFeignClientUsingPropertiesTests {
 
 	@Configuration
 	@EnableAutoConfiguration
-	@EnableReactiveFeignClients(clients = {FooClient.class, BarClient.class})
+	@EnableReactiveFeignClients(defaultConfiguration = DefaultConfiguration.class,
+			clients = {FooClient.class, BarClient.class})
 	protected static class Application {
+	}
+
+	@Configuration
+	protected static class DefaultConfiguration {
+		@Bean
+		public ReactiveOptions reactiveFeignOptions(){
+			return new WebReactiveOptions.Builder()
+					.setReadTimeoutMillis(5000)
+					.setConnectTimeoutMillis(5000)
+					.build();
+		}
+	}
+
+	@Configuration
+	protected static class FooConfiguration {
+		@Bean
+		public ReactiveHttpRequestInterceptor fooInterceptor(){
+			return new FooRequestInterceptor();
+		}
+		@Bean
+		public ReactiveHttpRequestInterceptor barInterceptor(){
+			return new BarRequestInterceptor();
+		}
+	}
+
+	@Configuration
+	protected static class BarConfiguration {
+		@Primary
+		@Bean
+		public ReactiveOptions options(){
+			return new WebReactiveOptions.Builder()
+					.setReadTimeoutMillis(500)
+					.setConnectTimeoutMillis(500)
+					.build();
+		}
 	}
 }

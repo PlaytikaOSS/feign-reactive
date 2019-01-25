@@ -29,6 +29,7 @@ import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDeta
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.bind.annotation.GetMapping;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -40,7 +41,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
  * Tests ReactiveFeign built on Spring Mvc annotations.
  */
 
-@EnableReactiveFeignClients
+@EnableReactiveFeignClients(clients = AutoConfigurationTest.TestReactiveFeignClient.class)
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
@@ -75,5 +76,15 @@ public class AutoConfigurationTest {
 	@AfterClass
 	public static void teardown() {
 		mockHttpServer.stop();
+	}
+
+	@ReactiveFeignClient(name = "test-feign-client", url = "localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}")
+	public interface TestReactiveFeignClient {
+
+		String TEST_URL = "/testUrl";
+
+		@GetMapping(path = TEST_URL)
+		Mono<String> testMethod();
+
 	}
 }
