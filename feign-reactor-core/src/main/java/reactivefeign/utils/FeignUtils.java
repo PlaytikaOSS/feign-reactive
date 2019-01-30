@@ -69,5 +69,11 @@ public class FeignUtils {
             .findFirst().orElseThrow(IllegalArgumentException::new);
   }
 
+  public static boolean requestWithBody(MethodMetadata methodMetadata){
+    return methodMetadata.bodyType() != null;
+  }
 
+  public static boolean responseWithBody(MethodMetadata methodMetadata){
+    return returnActualType(methodMetadata) != Void.class;
+  }
 }

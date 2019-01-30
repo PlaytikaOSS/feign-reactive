@@ -29,7 +29,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
-import reactivefeign.client.LoggerReactiveHttpClient;
+import reactivefeign.client.log.DefaultReactiveLogger;
+import reactivefeign.client.log.LoggerReactiveHttpClient;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.Bill;
 import reactivefeign.testcase.domain.IceCreamOrder;
@@ -49,7 +50,7 @@ import static org.mockito.Mockito.*;
  */
 abstract public class LoggerTest {
 
-  public static final String LOGGER_NAME = LoggerReactiveHttpClient.class.getName();
+  public static final String LOGGER_NAME = DefaultReactiveLogger.class.getName();
 
   @Rule
   public WireMockClassRule wireMockRule = new WireMockClassRule(

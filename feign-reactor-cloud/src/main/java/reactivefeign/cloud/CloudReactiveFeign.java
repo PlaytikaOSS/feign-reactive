@@ -17,6 +17,7 @@ import reactivefeign.ReactiveOptions;
 import reactivefeign.ReactiveRetryPolicy;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReactiveHttpResponse;
+import reactivefeign.client.log.ReactiveLoggerListener;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
 import reactivefeign.cloud.methodhandler.HystrixMethodHandlerFactory;
 import reactivefeign.cloud.publisher.RibbonPublisherClient;
@@ -118,6 +119,12 @@ public class CloudReactiveFeign {
         @Override
         public ReactiveFeignBuilder<T> addRequestInterceptor(ReactiveHttpRequestInterceptor requestInterceptor) {
             builder = builder.addRequestInterceptor(requestInterceptor);
+            return this;
+        }
+
+        @Override
+        public ReactiveFeignBuilder<T> addLoggerListener(ReactiveLoggerListener loggerListener) {
+            builder = builder.addLoggerListener(loggerListener);
             return this;
         }
 

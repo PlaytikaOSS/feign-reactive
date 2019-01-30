@@ -20,6 +20,8 @@ import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpClientFactory;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReactiveHttpResponse;
+import reactivefeign.client.log.DefaultReactiveLogger;
+import reactivefeign.client.log.ReactiveLoggerListener;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
 import reactivefeign.client.statushandler.ReactiveStatusHandlers;
 import reactivefeign.methodhandler.DefaultMethodHandler;
@@ -40,6 +42,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
+import java.time.Clock;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -49,11 +52,11 @@ import java.util.stream.Stream;
 import static feign.Util.checkNotNull;
 import static feign.Util.isDefault;
 import static reactivefeign.client.InterceptorReactiveHttpClient.intercept;
-import static reactivefeign.client.LoggerReactiveHttpClient.log;
 import static reactivefeign.client.ReactiveHttpRequestInterceptors.composite;
 import static reactivefeign.client.ResponseMappers.ignore404;
 import static reactivefeign.client.ResponseMappers.mapResponse;
 import static reactivefeign.client.StatusHandlerReactiveHttpClient.handleStatus;
+import static reactivefeign.client.log.LoggerReactiveHttpClient.log;
 import static reactivefeign.utils.FeignUtils.returnPublisherType;
 
 /**
@@ -144,6 +147,7 @@ public class ReactiveFeign {
     protected BiFunction<MethodMetadata, ReactiveHttpResponse, ReactiveHttpResponse> responseMapper;
     protected ReactiveStatusHandler statusHandler =
             ReactiveStatusHandlers.defaultFeign(new ErrorDecoder.Default());
+    protected List<ReactiveLoggerListener> loggerListeners = new ArrayList<>();
     protected InvocationHandlerFactory invocationHandlerFactory =
             new ReactiveInvocationHandler.Factory();
     protected boolean decode404 = false;
@@ -153,6 +157,7 @@ public class ReactiveFeign {
 
     protected Builder(){
       contract(new Contract.Default());
+      addLoggerListener(new DefaultReactiveLogger(Clock.systemUTC()));
     }
 
     protected Builder<T> clientFactory(ReactiveHttpClientFactory clientFactory) {
@@ -169,6 +174,12 @@ public class ReactiveFeign {
     @Override
     public Builder<T> addRequestInterceptor(ReactiveHttpRequestInterceptor requestInterceptor) {
       this.requestInterceptors.add(requestInterceptor);
+      return this;
+    }
+
+    @Override
+    public Builder<T> addLoggerListener(ReactiveLoggerListener loggerListener) {
+      this.loggerListeners.add(loggerListener);
       return this;
     }
 
@@ -237,7 +248,9 @@ public class ReactiveFeign {
             reactiveClient = intercept(reactiveClient, composite(requestInterceptors));
           }
 
-          reactiveClient = log(reactiveClient, methodMetadata);
+          for(ReactiveLoggerListener loggerListener : loggerListeners){
+            reactiveClient = log(reactiveClient, methodMetadata, loggerListener);
+          }
 
           if (responseMapper != null) {
             reactiveClient = mapResponse(reactiveClient, methodMetadata, responseMapper);

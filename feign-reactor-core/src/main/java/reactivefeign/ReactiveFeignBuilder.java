@@ -3,6 +3,7 @@ package reactivefeign;
 import feign.*;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReactiveHttpResponse;
+import reactivefeign.client.log.ReactiveLoggerListener;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
 import reactivefeign.methodhandler.MethodHandlerFactory;
 import reactivefeign.methodhandler.ReactiveMethodHandlerFactory;
@@ -28,6 +29,13 @@ public interface ReactiveFeignBuilder<T> {
      * @return
      */
     ReactiveFeignBuilder<T> addRequestInterceptor(ReactiveHttpRequestInterceptor requestInterceptor);
+
+    /**
+     * May be used to collect request execution metrics
+     * @param loggerListener
+     * @return
+     */
+    ReactiveFeignBuilder<T> addLoggerListener(ReactiveLoggerListener loggerListener);
 
     /**
      * This flag indicates that the reactive feign client should process responses with 404 status,

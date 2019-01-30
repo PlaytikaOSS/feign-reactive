@@ -33,7 +33,7 @@ import static reactivefeign.cloud.LoadBalancingReactiveHttpClientTest.TestMonoIn
  */
 public class HystrixReactiveHttpClientTest {
 
-    public static final int SLEEP_WINDOW = 100;
+    public static final int SLEEP_WINDOW = 500;
     public static final int VOLUME_THRESHOLD = 1;
     public static final String FALLBACK = "fallback";
     public static final String SUCCESS = "success!";
