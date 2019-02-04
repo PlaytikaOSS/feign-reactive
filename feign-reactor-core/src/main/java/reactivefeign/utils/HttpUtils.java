@@ -54,7 +54,7 @@ public final class HttpUtils {
   }
 
   public enum StatusCodeFamily {
-    INFORMATIONAL(false), SUCCESSFUL(false), REDIRECTION(false), CLIENT_ERROR(true), SERVER_ERROR(
+    INFORMATIONAL(true), SUCCESSFUL(false), REDIRECTION(true), CLIENT_ERROR(true), SERVER_ERROR(
         true), OTHER(false);
 
     private final boolean error;

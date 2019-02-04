@@ -27,17 +27,17 @@ import java.util.function.Function;
  *
  * @author Sergii Karpenko
  */
-public class FluxRetryPublisherHttpClient extends RetryPublisherHttpClient<FluxPublisherHttpClient> {
+public class FluxRetryPublisherHttpClient extends RetryPublisherHttpClient {
 
   public FluxRetryPublisherHttpClient(
-          FluxPublisherHttpClient publisherClient, MethodMetadata methodMetadata,
+          PublisherHttpClient publisherClient, MethodMetadata methodMetadata,
           Function<Flux<Throwable>, Flux<Throwable>> retryFunction) {
     super(publisherClient, methodMetadata, retryFunction);
   }
 
   @Override
   public Publisher<Object> executeRequest(ReactiveHttpRequest request) {
-    Flux<Object> response = publisherClient.executeRequest(request);
+    Flux<Object> response = (Flux<Object>)publisherClient.executeRequest(request);
     return response.retryWhen(retryFunction).onErrorMap(outOfRetries());
   }
 }

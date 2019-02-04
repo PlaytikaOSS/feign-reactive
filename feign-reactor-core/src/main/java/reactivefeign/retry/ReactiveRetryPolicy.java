@@ -1,4 +1,4 @@
-package reactivefeign;
+package reactivefeign.retry;
 
 import reactor.core.publisher.Flux;
 
@@ -10,4 +10,8 @@ import java.util.function.Function;
 public interface ReactiveRetryPolicy {
 
     Function<Flux<Throwable>, Flux<Throwable>> toRetryFunction();
+
+    interface Builder {
+        ReactiveRetryPolicy build();
+    }
 }

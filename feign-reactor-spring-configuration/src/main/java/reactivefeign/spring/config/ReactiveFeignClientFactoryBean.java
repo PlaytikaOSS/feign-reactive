@@ -17,8 +17,10 @@
 package reactivefeign.spring.config;
 
 import feign.Contract;
+import feign.codec.ErrorDecoder;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.NoSuchBeanDefinitionException;
@@ -26,9 +28,13 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.DataBinder;
 import reactivefeign.*;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
+import reactivefeign.client.log.ReactiveLoggerListener;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
+import reactivefeign.client.statushandler.ReactiveStatusHandlers;
+import reactivefeign.retry.ReactiveRetryPolicy;
 
 import java.util.Map;
 import java.util.Objects;
@@ -125,8 +131,19 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 		}
 
 		ReactiveStatusHandler statusHandler = getOptional(context, ReactiveStatusHandler.class);
+		if(statusHandler == null){
+			ErrorDecoder errorDecoder = getOptional(context, ErrorDecoder.class);
+			if(errorDecoder != null) {
+				statusHandler = ReactiveStatusHandlers.errorDecoder(errorDecoder);
+			}
+		}
 		if (statusHandler != null) {
 			builder.statusHandler(statusHandler);
+		}
+
+		ReactiveLoggerListener logger = getOptional(context, ReactiveLoggerListener.class);
+		if(logger != null){
+			builder.addLoggerListener(logger);
 		}
 
 		if (decode404) {
@@ -145,9 +162,18 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 			builder.options(optionsBuilder.build());
 		}
 
-		if (config.getRetryPolicy() != null) {
-			ReactiveRetryPolicy retryer = getOrInstantiate(config.getRetryPolicy());
-			builder.retryWhen(retryer);
+		if (config.getRetry() != null) {
+			ReactiveRetryPolicy retryPolicy = null;
+			if(config.getRetry().getPolicy() != null){
+				retryPolicy = getOrInstantiate(config.getRetry().getPolicy());
+			}
+			if(retryPolicy == null){
+				ReactiveRetryPolicy.Builder retryPolicyBuilder = getOrInstantiate(config.getRetry().getBuilder(), config.getRetry().getArgs());
+				retryPolicy = retryPolicyBuilder.build();
+			}
+			if(retryPolicy != null) {
+				builder.retryWhen(retryPolicy);
+			}
 		}
 
 		if (config.getRequestInterceptors() != null && !config.getRequestInterceptors().isEmpty()) {
@@ -161,6 +187,10 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 		if (config.getStatusHandler() != null) {
 			ReactiveStatusHandler errorDecoder = getOrInstantiate(config.getStatusHandler());
 			builder.statusHandler(errorDecoder);
+		}
+
+		if(config.getLogger() != null){
+			builder.addLoggerListener(getOrInstantiate(config.getLogger()));
 		}
 
 		if (config.getDecode404() != null) {
@@ -179,6 +209,21 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 			return applicationContext.getBean(tClass);
 		} catch (NoSuchBeanDefinitionException e) {
 			return BeanUtils.instantiateClass(tClass);
+		}
+	}
+
+	private <T> T getOrInstantiate(Class<T> tClass, Map args) {
+		try {
+			return applicationContext.getBean(tClass);
+		} catch (NoSuchBeanDefinitionException e) {
+			T bean = BeanUtils.instantiateClass(tClass);
+			if(args != null && !args.isEmpty()) {
+				DataBinder dataBinder = new DataBinder(bean);
+				dataBinder.bind(new MutablePropertyValues(args));
+				return (T) dataBinder.getTarget();
+			} else {
+				return bean;
+			}
 		}
 	}
 

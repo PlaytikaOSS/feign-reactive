@@ -2,7 +2,8 @@ package reactivefeign.spring.config;
 
 import feign.Contract;
 import reactivefeign.ReactiveOptions;
-import reactivefeign.ReactiveRetryPolicy;
+import reactivefeign.client.log.ReactiveLoggerListener;
+import reactivefeign.retry.ReactiveRetryPolicy;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
 
@@ -62,11 +63,13 @@ public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
 
         private O options;
 
-        private Class<ReactiveRetryPolicy> retryPolicy;
+        private RetryConfiguration retry;
 
         private Class<ReactiveStatusHandler> statusHandler;
 
         private List<Class<ReactiveHttpRequestInterceptor>> requestInterceptors;
+
+        private Class<ReactiveLoggerListener> logger;
 
         private Boolean decode404;
 
@@ -80,12 +83,12 @@ public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
             this.options = options;
         }
 
-        public Class<ReactiveRetryPolicy> getRetryPolicy() {
-            return retryPolicy;
+        public RetryConfiguration getRetry() {
+            return retry;
         }
 
-        public void setRetryPolicy(Class<ReactiveRetryPolicy> retryPolicy) {
-            this.retryPolicy = retryPolicy;
+        public void setRetry(RetryConfiguration retry) {
+            this.retry = retry;
         }
 
         public Class<ReactiveStatusHandler> getStatusHandler() {
@@ -102,6 +105,14 @@ public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
 
         public void setRequestInterceptors(List<Class<ReactiveHttpRequestInterceptor>> requestInterceptors) {
             this.requestInterceptors = requestInterceptors;
+        }
+
+        public Class<ReactiveLoggerListener> getLogger() {
+            return logger;
+        }
+
+        public void setLogger(Class<ReactiveLoggerListener> logger) {
+            this.logger = logger;
         }
 
         public Boolean getDecode404() {
@@ -126,17 +137,62 @@ public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
             if (o == null || getClass() != o.getClass()) return false;
             ReactiveFeignClientConfiguration that = (ReactiveFeignClientConfiguration) o;
             return Objects.equals(options, that.options) &&
-                    Objects.equals(retryPolicy, that.retryPolicy) &&
+                    Objects.equals(retry, that.retry) &&
                     Objects.equals(statusHandler, that.statusHandler) &&
                     Objects.equals(requestInterceptors, that.requestInterceptors) &&
                     Objects.equals(decode404, that.decode404) &&
-                    Objects.equals(contract, that.contract);
+                    Objects.equals(contract, that.contract) &&
+                    Objects.equals(logger, that.logger);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(options, retryPolicy,
-                    statusHandler, requestInterceptors, decode404, contract);
+            return Objects.hash(options, retry,
+                    statusHandler, requestInterceptors, decode404, contract, logger);
+        }
+    }
+
+    public static class RetryConfiguration {
+        private Class<ReactiveRetryPolicy> policy;
+        private Class<ReactiveRetryPolicy.Builder> builder;
+        private Map args;
+
+        public Class<ReactiveRetryPolicy> getPolicy() {
+            return policy;
+        }
+
+        public void setPolicy(Class<ReactiveRetryPolicy> policy) {
+            this.policy = policy;
+        }
+
+        public Class<ReactiveRetryPolicy.Builder> getBuilder() {
+            return builder;
+        }
+
+        public void setBuilder(Class<ReactiveRetryPolicy.Builder> builder) {
+            this.builder = builder;
+        }
+
+        public Map getArgs() {
+            return args;
+        }
+
+        public void setArgs(Map args) {
+            this.args = args;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            RetryConfiguration that = (RetryConfiguration) o;
+            return Objects.equals(policy, that.policy) &&
+                    Objects.equals(args, that.args);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(policy, args);
         }
     }
 

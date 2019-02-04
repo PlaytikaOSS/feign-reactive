@@ -32,9 +32,10 @@ All reactive feign client specific properties Spring read by  ``ReactiveFeignCli
 
 Here is the list of available properties:
 - `options` : reactive http client specific options. Check implementation of `ReactiveOptions.Builder` for each client.
-- `retryPolicy` : class that implements `ReactiveRetryPolicy`. Used to configure retry policy with backoff.      
+- `retry` : retry configuration (check `ReactiveFeignClientProperties.RetryConfiguration` for details)      
 - `statusHandler` : class that implements `ReactiveStatusHandler`. Is a replacement of regular feign `ErrorDecoder`.  
 - `requestInterceptors` : classes of `ReactiveHttpRequestInterceptor`. May be used to setup specific headers to request
+- `logger` : class of `ReactiveLoggerListener`
 - `decode404` : the same as in regular feign
 
 ## Configuration via configuration class
@@ -43,8 +44,14 @@ Here is the list of available properties:
 `@ReactiveFeignClient` annotation has `configuration` attribute for client specific configuration.
 
 Here is the list of bean classes that will be used by reactive feign client if they declared in configuration class:
-`ReactiveOptions.Builder`, `ReactiveRetryPolicy`, `List<Class<ReactiveHttpRequestInterceptor>>`, ``
+`ReactiveOptions.Builder`, `ReactiveRetryPolicy`, `List<Class<ReactiveHttpRequestInterceptor>>`, `ReactiveStatusHandler`,
+`feign.codec.ErrorDecoder`, `ReactiveLoggerListener`
 
+## Cloud specific configuration
+#### Ribbon
+`LoadBalancerCommandFactory` or `RetryHandler` beans defined in configuration will used to configure ribbon for corresponding client
+####Hystrix
+`CloudReactiveFeign.SetterFactory` bean defined in configuration will be used to configure hystrix for client
 
 ## Not all the same
 - Use `ReactiveRetryPolicy` as part of Reactive Feign configuration if you need to specify backoff period between retries.
@@ -53,4 +60,8 @@ Here is the list of bean classes that will be used by reactive feign client if t
 - Use `ReactiveOptions.Builder` as part of Reactive Feign configuration if you need to specify connect and read timeout.
   Each reactive http client has it's own set of properties that describes request timeouts.
   Ribbon request timeouts properties are ignored. 
+  
+- If you need to override default hystrix timeout the only way to do it is to specify it 
+in `CloudReactiveFeign.SetterFactory` bean in client configuration. `HystrixObservableCommand` has `SEMAPHORE` as default isolation strategy.
+And Spring does not provide ability to configure execution timeout for this strategy via properties.  
      

@@ -28,15 +28,15 @@ import static reactivefeign.utils.FeignUtils.methodTag;
  *
  * @author Sergii Karpenko
  */
-abstract public class RetryPublisherHttpClient<P extends PublisherHttpClient> implements PublisherHttpClient {
+abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
 
   private static final Logger logger = LoggerFactory.getLogger(RetryPublisherHttpClient.class);
 
   private final String feignMethodTag;
-  protected final P publisherClient;
+  protected final PublisherHttpClient publisherClient;
   protected final Function<Flux<Throwable>, Flux<?>> retryFunction;
 
-  protected RetryPublisherHttpClient(P publisherClient,
+  protected RetryPublisherHttpClient(PublisherHttpClient publisherClient,
                                    MethodMetadata methodMetadata,
                                    Function<Flux<Throwable>, Flux<Throwable>> retryFunction) {
     this.publisherClient = publisherClient;

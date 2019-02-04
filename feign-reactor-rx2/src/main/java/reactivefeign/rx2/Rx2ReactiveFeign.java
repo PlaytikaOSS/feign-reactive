@@ -6,7 +6,7 @@ import io.reactivex.*;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactivefeign.ReactiveOptions;
-import reactivefeign.ReactiveRetryPolicy;
+import reactivefeign.retry.ReactiveRetryPolicy;
 import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.methodhandler.MethodHandlerFactory;

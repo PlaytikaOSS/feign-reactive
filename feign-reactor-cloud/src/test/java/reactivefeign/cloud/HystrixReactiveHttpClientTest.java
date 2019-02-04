@@ -33,10 +33,11 @@ import static reactivefeign.cloud.LoadBalancingReactiveHttpClientTest.TestMonoIn
  */
 public class HystrixReactiveHttpClientTest {
 
-    public static final int SLEEP_WINDOW = 500;
+    public static final int SLEEP_WINDOW = 1000;
     public static final int VOLUME_THRESHOLD = 1;
     public static final String FALLBACK = "fallback";
     public static final String SUCCESS = "success!";
+    public static final int UPDATE_INTERVAL = 5;
     @ClassRule
     public static WireMockClassRule server = new WireMockClassRule(wireMockConfig().dynamicPort());
 
@@ -132,7 +133,11 @@ public class HystrixReactiveHttpClientTest {
         //check that circuit breaker get opened on volume threshold
         List<Object> results = IntStream.range(0, callsNo).mapToObj(i -> {
             try {
-                return client.getMono().block();
+                try {
+                    return client.getMono().block();
+                } finally {
+                    Thread.sleep(UPDATE_INTERVAL);
+                }
             } catch (Throwable t) {
                 return t;
             }
@@ -205,7 +210,8 @@ public class HystrixReactiveHttpClientTest {
                                 .withCircuitBreakerRequestVolumeThreshold(VOLUME_THRESHOLD)
                                 .withExecutionTimeoutEnabled(false)
                                 .withCircuitBreakerSleepWindowInMilliseconds(SLEEP_WINDOW)
-                                .withMetricsHealthSnapshotIntervalInMilliseconds(10)
+                                .withCircuitBreakerErrorThresholdPercentage(10)
+                                .withMetricsHealthSnapshotIntervalInMilliseconds(UPDATE_INTERVAL)
                         );
             }
         };

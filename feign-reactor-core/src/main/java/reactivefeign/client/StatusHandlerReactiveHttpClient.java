@@ -16,6 +16,7 @@ package reactivefeign.client;
 import feign.MethodMetadata;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
+import reactivefeign.client.statushandler.ReactiveStatusHandlers;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -33,6 +34,8 @@ public class StatusHandlerReactiveHttpClient implements ReactiveHttpClient {
   private final String methodTag;
 
   private final ReactiveStatusHandler statusHandler;
+
+  private static final ReactiveStatusHandler defaultStatusHandler = ReactiveStatusHandlers.defaultFeignErrorDecoder();
 
   public static ReactiveHttpClient handleStatus(
           ReactiveHttpClient reactiveClient,
@@ -54,6 +57,8 @@ public class StatusHandlerReactiveHttpClient implements ReactiveHttpClient {
     return reactiveClient.executeRequest(request).map(response -> {
       if (statusHandler.shouldHandle(response.status())) {
         return new ErrorReactiveHttpResponse(response, statusHandler.decode(methodTag, response));
+      } else if(defaultStatusHandler.shouldHandle(response.status())){
+        return new ErrorReactiveHttpResponse(response, defaultStatusHandler.decode(methodTag, response));
       } else {
         return response;
       }

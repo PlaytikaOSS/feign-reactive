@@ -14,7 +14,6 @@
 package reactivefeign;
 
 import feign.*;
-import feign.codec.ErrorDecoder;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpClientFactory;
@@ -35,6 +34,7 @@ import reactivefeign.publisher.PublisherClientFactory;
 import reactivefeign.publisher.PublisherHttpClient;
 import reactivefeign.publisher.retry.FluxRetryPublisherHttpClient;
 import reactivefeign.publisher.retry.MonoRetryPublisherHttpClient;
+import reactivefeign.retry.ReactiveRetryPolicy;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -145,8 +145,7 @@ public class ReactiveFeign {
     protected ReactiveHttpClientFactory clientFactory;
     protected List<ReactiveHttpRequestInterceptor> requestInterceptors = new ArrayList<>();
     protected BiFunction<MethodMetadata, ReactiveHttpResponse, ReactiveHttpResponse> responseMapper;
-    protected ReactiveStatusHandler statusHandler =
-            ReactiveStatusHandlers.defaultFeign(new ErrorDecoder.Default());
+    protected ReactiveStatusHandler statusHandler = ReactiveStatusHandlers.defaultFeignErrorDecoder();
     protected List<ReactiveLoggerListener> loggerListeners = new ArrayList<>();
     protected InvocationHandlerFactory invocationHandlerFactory =
             new ReactiveInvocationHandler.Factory();
@@ -282,17 +281,15 @@ public class ReactiveFeign {
               : methodHandlerFactory;
     }
 
-    protected PublisherHttpClient retry(
+    public static PublisherHttpClient retry(
             PublisherHttpClient publisherClient,
             MethodMetadata methodMetadata,
             Function<Flux<Throwable>, Flux<Throwable>> retryFunction) {
       Type returnPublisherType = returnPublisherType(methodMetadata);
       if(returnPublisherType == Mono.class){
-        return new MonoRetryPublisherHttpClient(
-                (MonoPublisherHttpClient)publisherClient, methodMetadata, retryFunction);
+        return new MonoRetryPublisherHttpClient(publisherClient, methodMetadata, retryFunction);
       } else if(returnPublisherType == Flux.class) {
-        return new FluxRetryPublisherHttpClient(
-                (FluxPublisherHttpClient)publisherClient, methodMetadata, retryFunction);
+        return new FluxRetryPublisherHttpClient(publisherClient, methodMetadata, retryFunction);
       } else {
         throw new IllegalArgumentException("Unknown returnPublisherType: " + returnPublisherType);
       }

@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import reactivefeign.FallbackFactory;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
-import reactivefeign.ReactiveRetryPolicy;
+import reactivefeign.retry.ReactiveRetryPolicy;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.client.log.ReactiveLoggerListener;

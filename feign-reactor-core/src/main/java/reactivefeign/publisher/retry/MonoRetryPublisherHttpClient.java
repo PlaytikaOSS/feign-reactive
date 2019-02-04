@@ -28,17 +28,17 @@ import java.util.function.Function;
  *
  * @author Sergii Karpenko
  */
-public class MonoRetryPublisherHttpClient extends RetryPublisherHttpClient<MonoPublisherHttpClient> {
+public class MonoRetryPublisherHttpClient extends RetryPublisherHttpClient {
 
   public MonoRetryPublisherHttpClient(
-          MonoPublisherHttpClient publisherClient, MethodMetadata methodMetadata,
+          PublisherHttpClient publisherClient, MethodMetadata methodMetadata,
           Function<Flux<Throwable>, Flux<Throwable>> retryFunction) {
     super(publisherClient, methodMetadata, retryFunction);
   }
 
   @Override
   public Publisher<Object> executeRequest(ReactiveHttpRequest request) {
-    Mono<Object> response = publisherClient.executeRequest(request);
+    Mono<Object> response = (Mono<Object>)publisherClient.executeRequest(request);
     return response.retryWhen(retryFunction).onErrorMap(outOfRetries());
   }
 }

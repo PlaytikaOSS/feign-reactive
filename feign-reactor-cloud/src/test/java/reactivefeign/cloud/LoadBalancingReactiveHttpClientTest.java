@@ -25,7 +25,7 @@ import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
-import static reactivefeign.ReactiveRetryers.retry;
+import static reactivefeign.retry.BasicReactiveRetryPolicy.retry;
 
 /**
  * @author Sergii Karpenko

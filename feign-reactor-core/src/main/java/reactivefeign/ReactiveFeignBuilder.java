@@ -6,8 +6,8 @@ import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.client.log.ReactiveLoggerListener;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
 import reactivefeign.methodhandler.MethodHandlerFactory;
-import reactivefeign.methodhandler.ReactiveMethodHandlerFactory;
 import reactivefeign.publisher.PublisherClientFactory;
+import reactivefeign.retry.ReactiveRetryPolicy;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

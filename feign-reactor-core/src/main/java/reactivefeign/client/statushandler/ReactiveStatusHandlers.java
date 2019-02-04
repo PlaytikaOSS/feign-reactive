@@ -28,7 +28,11 @@ import static reactivefeign.utils.HttpUtils.familyOf;
 
 public class ReactiveStatusHandlers {
 
-  public static ReactiveStatusHandler defaultFeign(ErrorDecoder errorDecoder) {
+  public static ReactiveStatusHandler defaultFeignErrorDecoder() {
+    return errorDecoder(new ErrorDecoder.Default());
+  }
+
+  public static ReactiveStatusHandler errorDecoder(ErrorDecoder errorDecoder) {
     return new ReactiveStatusHandler() {
 
       @Override

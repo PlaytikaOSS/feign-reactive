@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package reactivefeign;
+package reactivefeign.retry;
 
 import reactor.core.Exceptions;
 import reactor.core.publisher.Flux;
@@ -31,7 +31,7 @@ public abstract class SimpleReactiveRetryPolicy implements ReactiveRetryPolicy {
    * @param attemptNo
    * @return -1 if should not be retried, 0 if retry immediately
    */
-  abstract long retryDelay(Throwable error, int attemptNo);
+  abstract public long retryDelay(Throwable error, int attemptNo);
 
   @Override
   public Function<Flux<Throwable>, Flux<Throwable>> toRetryFunction() {

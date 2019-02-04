@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.publisher.retry.RetryPublisherHttpClient;
+import reactivefeign.retry.BasicReactiveRetryPolicy;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.Mixin;
@@ -72,7 +73,7 @@ public abstract class RetryingTest {
             .withBody(orderStr));
 
     IcecreamServiceApi client = builder()
-        .retryWhen(ReactiveRetryers.retryWithBackoff(3, 0))
+        .retryWhen(BasicReactiveRetryPolicy.retryWithBackoff(3, 0))
         .target(IcecreamServiceApi.class,
             "http://localhost:" + wireMockRule.port());
 
@@ -95,7 +96,7 @@ public abstract class RetryingTest {
             .withBody(mixinsStr));
 
     IcecreamServiceApi client = builder()
-        .retryWhen(ReactiveRetryers.retryWithBackoff(3, 0))
+        .retryWhen(BasicReactiveRetryPolicy.retryWithBackoff(3, 0))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.getAvailableMixins())
@@ -116,7 +117,7 @@ public abstract class RetryingTest {
             .withBody(orderStr));
 
     IcecreamServiceApi client = builder()
-        .retryWhen(ReactiveRetryers.retryWithBackoff(3, 0))
+        .retryWhen(BasicReactiveRetryPolicy.retryWithBackoff(3, 0))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findOrder(1))
@@ -156,7 +157,7 @@ public abstract class RetryingTest {
         .willReturn(aResponse().withStatus(503).withHeader(RETRY_AFTER, "1")));
 
     IcecreamServiceApi client = builder()
-        .retryWhen(ReactiveRetryers.retry(3))
+        .retryWhen(BasicReactiveRetryPolicy.retry(3))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findOrder(1))
@@ -175,7 +176,7 @@ public abstract class RetryingTest {
         .willReturn(aResponse().withStatus(503).withHeader(RETRY_AFTER, "1")));
 
     IcecreamServiceApi client = builder()
-        .retryWhen(ReactiveRetryers.retryWithBackoff(7, 5))
+        .retryWhen(BasicReactiveRetryPolicy.retryWithBackoff(7, 5))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findOrder(1))
