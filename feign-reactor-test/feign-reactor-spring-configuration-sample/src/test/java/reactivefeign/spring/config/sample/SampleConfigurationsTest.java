@@ -22,6 +22,7 @@ import com.netflix.client.ClientFactory;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.DefaultClientConfigImpl;
 import com.netflix.hystrix.*;
+import com.netflix.hystrix.exception.HystrixBadRequestException;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
@@ -45,9 +46,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReadTimeoutException;
-import reactivefeign.client.statushandler.ReactiveStatusHandler;
 import reactivefeign.cloud.CloudReactiveFeign;
-import reactivefeign.publisher.retry.RetryPublisherHttpClient;
 import reactivefeign.retry.BasicReactiveRetryPolicy;
 import reactivefeign.retry.ReactiveRetryPolicy;
 import reactivefeign.spring.config.EnableReactiveFeignClients;
@@ -85,6 +84,12 @@ public class SampleConfigurationsTest {
 	@Autowired
 	private ConfigsSampleClient configsSampleClient;
 
+	@Autowired
+	private FallbackSampleClient fallbackSampleClient;
+
+	@Autowired
+	private ErrorDecoderSampleClient errorDecoderSampleClient;
+
 
 	//this test checks that default readTimeoutMillis is overridden for each client
 	// (one in via properties file and other via configuration class)
@@ -101,8 +106,7 @@ public class SampleConfigurationsTest {
 							throwable instanceof HystrixRuntimeException
 							&& throwable.getCause() instanceof ClientException
 							&& throwable.getCause().getMessage().contains("Number of retries on next server exceeded")
-					        && throwable.getCause().getCause() instanceof RetryPublisherHttpClient.OutOfRetriesException
-							&& throwable.getCause().getCause().getCause() instanceof ReadTimeoutException)
+					        && throwable.getCause().getCause() instanceof ReadTimeoutException)
 					.verify();
 		});
 
@@ -115,40 +119,62 @@ public class SampleConfigurationsTest {
 						.withStatus(503)));
 
 		Mono<Object[]> results = Mono.zip(
-				IntStream.range(0, VOLUME_THRESHOLD + 1).mapToObj(i -> configsSampleClient.sampleMethod()).collect(Collectors.toList()),
+				IntStream.range(0, VOLUME_THRESHOLD + 1).mapToObj(i -> fallbackSampleClient.sampleMethod()).collect(Collectors.toList()),
 				objects -> objects);
 
-		StepVerifier.create(results).expectNextMatches(objects -> Stream.of(objects).allMatch(FALLBACK_VALUE::equals))
+		StepVerifier.create(results)
+				.expectNextMatches(objects -> Stream.of(objects).allMatch(FALLBACK_VALUE::equals))
 				.verifyComplete();
 
 		//wait for circuit breaker updated its status
 		Thread.sleep(5);
-		assertThat(HystrixCircuitBreaker.Factory.getInstance(asKey("ConfigsSampleClient#sampleMethod()"))
+		assertThat(HystrixCircuitBreaker.Factory.getInstance(asKey("FallbackSampleClient#sampleMethod()"))
 				.isOpen())
 				.isTrue();
 	}
 
 	@Test
-	public void shouldNotReturnFallbackAndOpenCircuitBreakerOnHystrixBadRequestException() throws InterruptedException {
+	public void shouldNotOpenCircuitBreakerOnHystrixBadRequestException() throws InterruptedException {
 		mockHttpServer.stubFor(get(urlPathMatching("/sampleUrl"))
 				.willReturn(aResponse()
 						.withStatus(403)));
 
 		Mono<Object[]> results = Mono.zip(
-				IntStream.range(0, VOLUME_THRESHOLD + 1).mapToObj(i -> configsSampleClient.sampleMethod()).collect(Collectors.toList()),
+				IntStream.range(0, VOLUME_THRESHOLD + 1).mapToObj(i -> errorDecoderSampleClient.sampleMethod()).collect(Collectors.toList()),
 				objects -> objects);
 
-		StepVerifier.create(results).expectNextMatches(objects -> Stream.of(objects).allMatch(FALLBACK_VALUE::equals))
-				.verifyComplete();
+		StepVerifier.create(results)
+				.expectError(HystrixBadRequestException.class)
+				.verify();
+
+		assertThat(mockHttpServer.getAllServeEvents().size()).isEqualTo((VOLUME_THRESHOLD + 1) * 2/*retries*/);
+		//wait for circuit breaker updated its status
+		Thread.sleep(5);
+		assertThat(HystrixCircuitBreaker.Factory.getInstance(asKey("ErrorDecoderSampleClient#sampleMethod()"))
+				.isOpen())
+				.isFalse();
+	}
+
+	@Test
+	public void shouldOpenCircuitBreakerButNotWrapException() throws InterruptedException {
+		mockHttpServer.stubFor(get(urlPathMatching("/sampleUrl"))
+				.willReturn(aResponse()
+						.withStatus(503)));
+
+		Mono<Object[]> results = Mono.zip(
+				IntStream.range(0, VOLUME_THRESHOLD + 1).mapToObj(i -> errorDecoderSampleClient.sampleMethod()).collect(Collectors.toList()),
+				objects -> objects);
+
+		StepVerifier.create(results)
+				.expectError(ErrorDecoder.OriginalError.class)
+				.verify();
 
 		//wait for circuit breaker updated its status
 		Thread.sleep(5);
-		assertThat(HystrixCircuitBreaker.Factory.getInstance(asKey("ConfigsSampleClient#sampleMethod()"))
+		assertThat(HystrixCircuitBreaker.Factory.getInstance(asKey("ErrorDecoderSampleClient#sampleMethod()"))
 				.isOpen())
 				.isTrue();
-
 	}
-
 
 	@ReactiveFeignClient(name = "rfgn-proper")
 	protected interface PropertiesSampleClient {
@@ -158,7 +184,6 @@ public class SampleConfigurationsTest {
 	}
 
 	@ReactiveFeignClient(name = "rfgn-configs",
-			fallback = ReactiveFeignSampleConfiguration.Fallback.class,
 			configuration = ReactiveFeignSampleConfiguration.class)
 	protected interface ConfigsSampleClient {
 
@@ -166,10 +191,27 @@ public class SampleConfigurationsTest {
 		Mono<String> sampleMethod();
 	}
 
+	@ReactiveFeignClient(name = "rfgn-fallback",
+			fallback = ReactiveFeignFallbackConfiguration.Fallback.class,
+			configuration = ReactiveFeignFallbackConfiguration.class)
+	protected interface FallbackSampleClient {
+		@RequestMapping(method = RequestMethod.GET, value = "/sampleUrl")
+		Mono<String> sampleMethod();
+	}
+
+	@ReactiveFeignClient(name = "rfgn-errordecoder")
+	protected interface ErrorDecoderSampleClient {
+		@RequestMapping(method = RequestMethod.GET, value = "/sampleUrl")
+		Mono<String> sampleMethod();
+	}
+
 	@Configuration
 	@EnableAutoConfiguration
 	@EnableReactiveFeignClients(defaultConfiguration = DefaultConfiguration.class,
-			clients = {PropertiesSampleClient.class, ConfigsSampleClient.class})
+			clients = {PropertiesSampleClient.class,
+					ConfigsSampleClient.class,
+					FallbackSampleClient.class,
+					ErrorDecoderSampleClient.class})
 	protected static class Application {
 	}
 
@@ -199,6 +241,23 @@ public class SampleConfigurationsTest {
 	}
 
 	@Configuration
+	protected static class ReactiveFeignFallbackConfiguration {
+
+		@Bean
+		public Fallback fallback(){
+			return new Fallback();
+		}
+
+		class Fallback implements FallbackSampleClient {
+			@Override
+			public Mono<String> sampleMethod() {
+				return Mono.just(FALLBACK_VALUE);
+			}
+		}
+
+	}
+
+	@Configuration
 	protected static class ReactiveFeignSampleConfiguration {
 
 		@Bean
@@ -215,19 +274,6 @@ public class SampleConfigurationsTest {
 		public feign.codec.ErrorDecoder reactiveStatusHandler(){
 			return new ErrorDecoder();
 		}
-
-		@Bean
-		public Fallback fallback(){
-			return new Fallback();
-		}
-
-		class Fallback implements ConfigsSampleClient {
-			@Override
-			public Mono<String> sampleMethod() {
-				return Mono.just(FALLBACK_VALUE);
-			}
-		}
-
 	}
 
 	@BeforeClass
@@ -241,14 +287,19 @@ public class SampleConfigurationsTest {
 		DefaultClientConfigImpl clientConfig = new DefaultClientConfigImpl();
 		clientConfig.loadDefaultValues();
 		clientConfig.setProperty(CommonClientConfigKey.NFLoadBalancerClassName, BaseLoadBalancer.class.getName());
-		ILoadBalancer lbFoo = ClientFactory.registerNamedLoadBalancerFromclientConfig("rfgn-proper", clientConfig);
-		lbFoo.addServers(asList(new Server("localhost", mockHttpServer.port())));
-		ILoadBalancer lbBar = ClientFactory.registerNamedLoadBalancerFromclientConfig("rfgn-configs", clientConfig);
-		lbBar.addServers(asList(new Server("localhost", mockHttpServer.port())));
+		ILoadBalancer lbProperties = ClientFactory.registerNamedLoadBalancerFromclientConfig("rfgn-proper", clientConfig);
+		lbProperties.addServers(asList(new Server("localhost", mockHttpServer.port())));
+		ILoadBalancer lbConfigs = ClientFactory.registerNamedLoadBalancerFromclientConfig("rfgn-configs", clientConfig);
+		lbConfigs.addServers(asList(new Server("localhost", mockHttpServer.port())));
+		ILoadBalancer lbFallback = ClientFactory.registerNamedLoadBalancerFromclientConfig("rfgn-fallback", clientConfig);
+		lbFallback.addServers(asList(new Server("localhost", mockHttpServer.port())));
+		ILoadBalancer lbErrordecoder = ClientFactory.registerNamedLoadBalancerFromclientConfig("rfgn-errordecoder", clientConfig);
+		lbErrordecoder.addServers(asList(new Server("localhost", mockHttpServer.port())));
 	}
 
 	@Before
 	public void reset() throws InterruptedException {
+		Hystrix.reset();
 		//to close circuit breaker
 		Thread.sleep(SLEEP_WINDOW);
 	}

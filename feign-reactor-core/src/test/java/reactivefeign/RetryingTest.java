@@ -21,7 +21,6 @@ import feign.RetryableException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import reactivefeign.publisher.retry.RetryPublisherHttpClient;
 import reactivefeign.retry.BasicReactiveRetryPolicy;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.IceCreamOrder;
@@ -36,8 +35,6 @@ import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
 import static org.apache.http.HttpHeaders.RETRY_AFTER;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.HttpStatus.SC_SERVICE_UNAVAILABLE;
-import static org.hamcrest.Matchers.hasProperty;
-import static org.hamcrest.Matchers.isA;
 import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
 
 /**
@@ -161,8 +158,7 @@ public abstract class RetryingTest {
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findOrder(1))
-        .expectErrorMatches(throwable -> throwable instanceof RetryPublisherHttpClient.OutOfRetriesException
-            && hasProperty("cause", isA(RetryableException.class)).matches(throwable))
+        .expectErrorMatches(throwable -> throwable instanceof RetryableException)
         .verify();
   }
 
@@ -180,8 +176,7 @@ public abstract class RetryingTest {
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findOrder(1))
-        .expectErrorMatches(throwable -> throwable instanceof RetryPublisherHttpClient.OutOfRetriesException
-                && hasProperty("cause", isA(RetryableException.class)).matches(throwable))
+        .expectErrorMatches(throwable -> throwable instanceof RetryableException)
         .verify();
   }
 

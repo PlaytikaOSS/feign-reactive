@@ -1,6 +1,7 @@
 package reactivefeign.spring.config;
 
 import feign.Contract;
+import feign.codec.ErrorDecoder;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.log.ReactiveLoggerListener;
 import reactivefeign.retry.ReactiveRetryPolicy;
@@ -67,6 +68,8 @@ public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
 
         private Class<ReactiveStatusHandler> statusHandler;
 
+        private Class<ErrorDecoder> errorDecoder;
+
         private List<Class<ReactiveHttpRequestInterceptor>> requestInterceptors;
 
         private Class<ReactiveLoggerListener> logger;
@@ -97,6 +100,14 @@ public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
 
         public void setStatusHandler(Class<ReactiveStatusHandler> statusHandler) {
             this.statusHandler = statusHandler;
+        }
+
+        public Class<ErrorDecoder> getErrorDecoder() {
+            return errorDecoder;
+        }
+
+        public void setErrorDecoder(Class<ErrorDecoder> errorDecoder) {
+            this.errorDecoder = errorDecoder;
         }
 
         public List<Class<ReactiveHttpRequestInterceptor>> getRequestInterceptors() {
@@ -139,6 +150,7 @@ public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
             return Objects.equals(options, that.options) &&
                     Objects.equals(retry, that.retry) &&
                     Objects.equals(statusHandler, that.statusHandler) &&
+                    Objects.equals(errorDecoder, that.errorDecoder) &&
                     Objects.equals(requestInterceptors, that.requestInterceptors) &&
                     Objects.equals(decode404, that.decode404) &&
                     Objects.equals(contract, that.contract) &&
@@ -148,7 +160,7 @@ public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
         @Override
         public int hashCode() {
             return Objects.hash(options, retry,
-                    statusHandler, requestInterceptors, decode404, contract, logger);
+                    statusHandler, errorDecoder, requestInterceptors, decode404, contract, logger);
         }
     }
 

@@ -185,8 +185,11 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 		}
 
 		if (config.getStatusHandler() != null) {
-			ReactiveStatusHandler errorDecoder = getOrInstantiate(config.getStatusHandler());
-			builder.statusHandler(errorDecoder);
+			ReactiveStatusHandler statusHandler = getOrInstantiate(config.getStatusHandler());
+			builder.statusHandler(statusHandler);
+		} else if(config.getErrorDecoder() != null){
+			ErrorDecoder errorDecoder = getOrInstantiate(config.getErrorDecoder());
+			builder.statusHandler(ReactiveStatusHandlers.errorDecoder(errorDecoder));
 		}
 
 		if(config.getLogger() != null){

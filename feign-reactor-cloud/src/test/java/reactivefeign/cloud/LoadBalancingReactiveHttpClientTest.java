@@ -106,9 +106,7 @@ public class LoadBalancingReactiveHttpClientTest {
     @Test
     public void shouldFailAsPolicyWoRetries() {
 
-        expectedException.expect(RuntimeException.class);
-        expectedException.expectCause(allOf(isA(RetryPublisherHttpClient.OutOfRetriesException.class),
-                hasProperty("cause", isA(RetryableException.class))));
+        expectedException.expect(RetryableException.class);
 
         try {
             loadBalancingWithRetry(2, 0, 0);
@@ -122,9 +120,7 @@ public class LoadBalancingReactiveHttpClientTest {
     @Test
     public void shouldRetryOnSameAndFail() {
 
-        expectedException.expect(RuntimeException.class);
-        expectedException.expectCause(allOf(isA(RetryPublisherHttpClient.OutOfRetriesException.class),
-                                            hasProperty("cause", isA(RetryableException.class))));
+        expectedException.expect(RetryableException.class);
 
         try {
             loadBalancingWithRetry(2, 1, 0);

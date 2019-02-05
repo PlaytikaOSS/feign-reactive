@@ -5,6 +5,7 @@ import com.netflix.client.RetryHandler;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixObservableCommand;
+import com.netflix.hystrix.exception.HystrixBadRequestException;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
 import feign.Contract;
 import feign.MethodMetadata;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import reactivefeign.FallbackFactory;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
+import reactivefeign.retry.FilteredReactiveRetryPolicy;
 import reactivefeign.retry.ReactiveRetryPolicy;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReactiveHttpResponse;
@@ -30,6 +32,7 @@ import java.net.URISyntaxException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static reactivefeign.retry.FilteredReactiveRetryPolicy.notRetryOn;
 import static reactivefeign.utils.FeignUtils.returnPublisherType;
 
 /**
@@ -148,7 +151,7 @@ public class CloudReactiveFeign {
 
         @Override
         public ReactiveFeignBuilder<T> retryWhen(ReactiveRetryPolicy retryPolicy) {
-            builder =  builder.retryWhen(retryPolicy);
+            builder =  builder.retryWhen(notRetryOn(retryPolicy, HystrixBadRequestException.class));
             return this;
         }
 

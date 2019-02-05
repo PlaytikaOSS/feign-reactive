@@ -91,7 +91,7 @@ class Java11ReactiveHttpResponse implements ReactiveHttpResponse{
 	}
 
 	private Flux<ByteBuffer> directContent() {
-		return Flux.from(contentChunks).flatMap(Flux::fromIterable);
+		return Flux.from(contentChunks).concatMap(Flux::fromIterable);
 	}
 
 	@Override

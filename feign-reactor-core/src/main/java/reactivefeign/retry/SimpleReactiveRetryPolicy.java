@@ -43,7 +43,7 @@ public abstract class SimpleReactiveRetryPolicy implements ReactiveRetryPolicy {
           } else {
             throw Exceptions.propagate(error);
           }
-        }).flatMap(
+        }).concatMap(
             tuple2 -> tuple2.getT1() > 0
                 ? Mono.delay(Duration.ofMillis(tuple2.getT1()))
                     .map(time -> tuple2.getT2())

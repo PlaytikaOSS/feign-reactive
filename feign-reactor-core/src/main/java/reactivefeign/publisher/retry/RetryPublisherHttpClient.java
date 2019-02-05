@@ -46,8 +46,8 @@ abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
 
   protected Function<Throwable, Throwable> outOfRetries() {
     return throwable -> {
-      logger.debug("[{}]---> USED ALL RETRIES", feignMethodTag, throwable);
-      return new OutOfRetriesException(throwable, feignMethodTag);
+      logger.error("[{}]---> USED ALL RETRIES", feignMethodTag, throwable);
+      return throwable;
     };
   }
 
@@ -60,11 +60,5 @@ abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
                 logger.debug("[{}]---> RETRYING on error", feignMethodTag, throwable);
               }
             });
-  }
-
-  public static class OutOfRetriesException extends Exception {
-    OutOfRetriesException(Throwable cause, String feignMethodTag) {
-      super("All retries used for: " + feignMethodTag, cause);
-    }
   }
 }
