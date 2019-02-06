@@ -14,16 +14,12 @@
 package reactivefeign.cloud;
 
 import com.netflix.hystrix.exception.HystrixRuntimeException;
+import feign.FeignException;
 import feign.RetryableException;
-import org.apache.http.HttpStatus;
-import org.junit.Test;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.testcase.IcecreamServiceApi;
-import reactor.test.StepVerifier;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static reactivefeign.client.statushandler.CompositeStatusHandler.compose;
-import static reactivefeign.client.statushandler.ReactiveStatusHandlers.throwOnStatus;
+import java.util.function.Predicate;
 
 /**
  * @author Sergii Karpenko
@@ -36,36 +32,26 @@ public class StatusHandlerTest extends reactivefeign.StatusHandlerTest {
   }
 
   @Override
-  @Test
-  public void shouldThrowOnStatusCode() {
-    wireMockRule.stubFor(get(urlEqualTo("/icecream/orders/1"))
-            .withHeader("Accept", equalTo("application/json"))
-            .willReturn(aResponse().withStatus(HttpStatus.SC_SERVICE_UNAVAILABLE)));
+  protected Predicate<Throwable> customException(){
+    return throwable -> throwable instanceof HystrixRuntimeException
+            && throwable.getCause() instanceof UnsupportedOperationException;
+  }
 
-    wireMockRule.stubFor(get(urlEqualTo("/icecream/orders/2"))
-            .withHeader("Accept", equalTo("application/json"))
-            .willReturn(aResponse().withStatus(HttpStatus.SC_UNAUTHORIZED)));
+  @Override
+  protected Predicate<Throwable> feignDefaultException(){
+    return throwable -> throwable instanceof HystrixRuntimeException
+            && throwable.getCause() instanceof FeignException;
+  }
 
+  @Override
+  protected Predicate<Throwable> customException1(){
+    return throwable -> throwable instanceof HystrixRuntimeException
+            && throwable.getCause() instanceof RetryableException;
+  }
 
-    IcecreamServiceApi client = builder()
-            .statusHandler(compose(
-                    throwOnStatus(
-                            status -> status == HttpStatus.SC_SERVICE_UNAVAILABLE,
-                            (methodTag, response) -> new RetryableException("Should retry on next node", null)),
-                    throwOnStatus(
-                            status -> status == HttpStatus.SC_UNAUTHORIZED,
-                            (methodTag, response) -> new RuntimeException("Should login", null))))
-            .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
-
-    StepVerifier.create(client.findFirstOrder())
-            .expectErrorMatches(throwable -> throwable instanceof HystrixRuntimeException
-                    && throwable.getCause() instanceof RetryableException)
-            .verify();
-
-    StepVerifier.create(client.findOrder(2))
-            .expectErrorMatches(throwable -> throwable instanceof HystrixRuntimeException
-                    && throwable.getCause() instanceof RuntimeException)
-            .verify();
-
+  @Override
+  protected Predicate<Throwable> customException2(){
+    return throwable -> throwable instanceof HystrixRuntimeException
+            && throwable.getCause() instanceof RuntimeException;
   }
 }

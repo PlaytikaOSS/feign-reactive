@@ -15,6 +15,7 @@ package reactivefeign;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import feign.FeignException;
 import feign.RetryableException;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
@@ -22,6 +23,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactor.test.StepVerifier;
+
+import java.util.function.Predicate;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static reactivefeign.client.statushandler.CompositeStatusHandler.compose;
@@ -48,19 +51,65 @@ public abstract class StatusHandlerTest {
   }
 
   @Test
-  public void shouldThrowRetryException() {
+  public void shouldThrowCustomExceptionOnMono() {
+
+    IcecreamServiceApi client = builder()
+            .statusHandler(throwOnStatus(
+                    status -> status == HttpStatus.SC_SERVICE_UNAVAILABLE,
+                    (methodTag, response) -> new UnsupportedOperationException("Custom error")))
+            .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
+
 
     wireMockRule.stubFor(get(urlEqualTo("/icecream/orders/1"))
         .withHeader("Accept", equalTo("application/json"))
         .willReturn(aResponse().withStatus(HttpStatus.SC_SERVICE_UNAVAILABLE)));
-    IcecreamServiceApi client = builder()
-        .statusHandler(throwOnStatus(
-            status -> status == HttpStatus.SC_SERVICE_UNAVAILABLE,
-            (methodTag, response) -> new RetryableException("Should retry on next node", null)))
-        .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findFirstOrder())
-        .expectError(RetryableException.class);
+        .expectErrorMatches(customException())
+        .verify();
+
+    //should be processed by default status handler
+    wireMockRule.stubFor(get(urlEqualTo("/icecream/orders/1"))
+            .withHeader("Accept", equalTo("application/json"))
+            .willReturn(aResponse().withStatus(403)));
+
+    StepVerifier.create(client.findFirstOrder())
+            .expectErrorMatches(feignDefaultException())
+            .verify();
+  }
+
+  @Test
+  public void shouldThrowCustomExceptionOnFlux() {
+
+    IcecreamServiceApi client = builder()
+            .statusHandler(throwOnStatus(
+                    status -> status == HttpStatus.SC_SERVICE_UNAVAILABLE,
+                    (methodTag, response) -> new UnsupportedOperationException("Custom error")))
+            .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
+
+
+    wireMockRule.stubFor(get(urlEqualTo("/icecream/mixins"))
+            .willReturn(aResponse().withStatus(HttpStatus.SC_SERVICE_UNAVAILABLE)));
+
+    StepVerifier.create(client.getAvailableMixins())
+            .expectErrorMatches(customException())
+            .verify();
+
+    //should be processed by default status handler
+    wireMockRule.stubFor(get(urlEqualTo("/icecream/mixins"))
+            .willReturn(aResponse().withStatus(403)));
+
+    StepVerifier.create(client.findFirstOrder())
+            .expectErrorMatches(feignDefaultException())
+            .verify();
+  }
+
+  protected Predicate<Throwable> customException(){
+    return throwable -> throwable instanceof UnsupportedOperationException;
+  }
+
+  protected Predicate<Throwable> feignDefaultException(){
+    return throwable -> throwable instanceof FeignException;
   }
 
   @Test
@@ -85,12 +134,19 @@ public abstract class StatusHandlerTest {
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findFirstOrder())
-        .expectError(RetryableException.class)
+        .expectErrorMatches(customException1())
         .verify();
 
     StepVerifier.create(client.findOrder(2))
-        .expectError(RuntimeException.class)
+        .expectErrorMatches(customException2())
         .verify();
+  }
 
+  protected Predicate<Throwable> customException1(){
+    return throwable -> throwable instanceof RetryableException;
+  }
+
+  protected Predicate<Throwable> customException2(){
+    return throwable -> throwable instanceof RuntimeException;
   }
 }

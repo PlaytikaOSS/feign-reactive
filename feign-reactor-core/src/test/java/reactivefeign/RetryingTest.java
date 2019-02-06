@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import feign.RetryableException;
 import org.junit.Before;
 import org.junit.Rule;
@@ -29,13 +30,19 @@ import reactivefeign.testcase.domain.OrderGenerator;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
+import static java.util.stream.Collectors.toList;
 import static org.apache.http.HttpHeaders.RETRY_AFTER;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.HttpStatus.SC_SERVICE_UNAVAILABLE;
+import static org.assertj.core.api.Assertions.assertThat;
 import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
+import static reactivefeign.client.statushandler.ReactiveStatusHandlers.errorDecoder;
+import static reactivefeign.retry.BasicReactiveRetryPolicy.retry;
+import static reactivefeign.retry.FilteredReactiveRetryPolicy.notRetryOn;
 
 /**
  * @author Sergii Karpenko
@@ -63,20 +70,24 @@ public abstract class RetryingTest {
     IceCreamOrder orderGenerated = new OrderGenerator().generate(1);
     String orderStr = TestUtils.MAPPER.writeValueAsString(orderGenerated);
 
+    String requestUrl = "/icecream/orders/1";
     mockResponseAfterSeveralAttempts(wireMockRule, 2, "testRetrying_success",
-        "/icecream/orders/1",
-        aResponse().withStatus(503).withHeader(RETRY_AFTER, "1"),
+            requestUrl,
+        aResponse().withStatus(SC_SERVICE_UNAVAILABLE).withHeader(RETRY_AFTER, "1"),
         aResponse().withStatus(200).withHeader("Content-Type", "application/json")
             .withBody(orderStr));
 
+    int maxRetries = 3;
     IcecreamServiceApi client = builder()
-        .retryWhen(BasicReactiveRetryPolicy.retryWithBackoff(3, 0))
+        .retryWhen(BasicReactiveRetryPolicy.retryWithBackoff(maxRetries, 0))
         .target(IcecreamServiceApi.class,
             "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findOrder(1))
         .expectNextMatches(equalsComparingFieldByFieldRecursively(orderGenerated))
         .verifyComplete();
+
+    assertThat(getEventsForPath(requestUrl).size()).isEqualTo(maxRetries);
   }
 
   @Test
@@ -84,21 +95,24 @@ public abstract class RetryingTest {
 
     String mixinsStr = TestUtils.MAPPER.writeValueAsString(Mixin.values());
 
+    String requestUrl = "/icecream/mixins";
     mockResponseAfterSeveralAttempts(wireMockRule, 2, "testRetrying_success",
-        "/icecream/mixins",
-        aResponse().withStatus(SC_SERVICE_UNAVAILABLE).withHeader(RETRY_AFTER,
-            "1"),
+            requestUrl,
+        aResponse().withStatus(SC_SERVICE_UNAVAILABLE).withHeader(RETRY_AFTER,"1"),
         aResponse().withStatus(SC_OK)
             .withHeader("Content-Type", "application/json")
             .withBody(mixinsStr));
 
+    int maxRetries = 3;
     IcecreamServiceApi client = builder()
-        .retryWhen(BasicReactiveRetryPolicy.retryWithBackoff(3, 0))
+        .retryWhen(BasicReactiveRetryPolicy.retryWithBackoff(maxRetries, 0))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.getAvailableMixins())
         .expectNextSequence(Arrays.asList(Mixin.values()))
         .verifyComplete();
+
+    assertThat(getEventsForPath(requestUrl).size()).isEqualTo(maxRetries);
   }
 
   @Test
@@ -107,19 +121,23 @@ public abstract class RetryingTest {
     IceCreamOrder orderGenerated = new OrderGenerator().generate(1);
     String orderStr = TestUtils.MAPPER.writeValueAsString(orderGenerated);
 
+    String orderUrl = "/icecream/orders/1";
     mockResponseAfterSeveralAttempts(wireMockRule, 2, "testRetrying_success",
-        "/icecream/orders/1", aResponse().withStatus(SC_SERVICE_UNAVAILABLE),
+            orderUrl, aResponse().withStatus(SC_SERVICE_UNAVAILABLE),
         aResponse().withStatus(SC_OK)
             .withHeader("Content-Type", "application/json")
             .withBody(orderStr));
 
+    int maxRetries = 3;
     IcecreamServiceApi client = builder()
-        .retryWhen(BasicReactiveRetryPolicy.retryWithBackoff(3, 0))
+        .retryWhen(BasicReactiveRetryPolicy.retryWithBackoff(maxRetries, 0))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findOrder(1))
         .expectNextMatches(equalsComparingFieldByFieldRecursively(orderGenerated))
         .verifyComplete();
+
+    assertThat(getEventsForPath(orderUrl).size()).isEqualTo(maxRetries);
   }
 
   private static void mockResponseAfterSeveralAttempts(WireMockClassRule rule,
@@ -153,13 +171,16 @@ public abstract class RetryingTest {
         .withHeader("Accept", equalTo("application/json"))
         .willReturn(aResponse().withStatus(503).withHeader(RETRY_AFTER, "1")));
 
+    int maxRetries = 3;
     IcecreamServiceApi client = builder()
-        .retryWhen(BasicReactiveRetryPolicy.retry(3))
+        .retryWhen(retry(maxRetries))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findOrder(1))
         .expectErrorMatches(throwable -> throwable instanceof RetryableException)
         .verify();
+
+    assertThat(getEventsForPath(orderUrl).size()).isEqualTo(maxRetries + 1);
   }
 
   @Test
@@ -169,15 +190,46 @@ public abstract class RetryingTest {
 
     wireMockRule.stubFor(get(urlEqualTo(orderUrl))
         .withHeader("Accept", equalTo("application/json"))
-        .willReturn(aResponse().withStatus(503).withHeader(RETRY_AFTER, "1")));
+        .willReturn(aResponse().withStatus(SC_SERVICE_UNAVAILABLE).withHeader(RETRY_AFTER, "1")));
 
+    int maxRetries = 7;
     IcecreamServiceApi client = builder()
-        .retryWhen(BasicReactiveRetryPolicy.retryWithBackoff(7, 5))
+        .retryWhen(BasicReactiveRetryPolicy.retryWithBackoff(maxRetries, 5))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findOrder(1))
         .expectErrorMatches(throwable -> throwable instanceof RetryableException)
         .verify();
+
+    assertThat(getEventsForPath(orderUrl).size()).isEqualTo(maxRetries + 1);
   }
+
+  @Test
+  public void shouldNotRetryOnFilteredExceptions() {
+
+    String orderUrl = "/icecream/orders/1";
+
+    wireMockRule.stubFor(get(urlEqualTo(orderUrl))
+            .withHeader("Accept", equalTo("application/json"))
+            .willReturn(aResponse().withStatus(403).withHeader(RETRY_AFTER, "1")));
+
+    IcecreamServiceApi client = builder()
+            .retryWhen(notRetryOn(retry(3), IllegalArgumentException.class))
+            .statusHandler(errorDecoder((methodKey, response) -> {
+              throw new IllegalArgumentException();
+            }))
+            .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
+
+    StepVerifier.create(client.findOrder(1))
+            .expectErrorMatches(throwable -> throwable instanceof IllegalArgumentException)
+            .verify();
+
+    assertThat(getEventsForPath(orderUrl).size()).isEqualTo(1);
+  }
+
+  private List<ServeEvent> getEventsForPath(String path) {
+    return wireMockRule.getAllServeEvents().stream().filter(serveEvent -> serveEvent.getRequest().getUrl().contains(path)).collect(toList());
+  }
+
 
 }

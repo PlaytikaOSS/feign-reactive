@@ -15,6 +15,7 @@ package reactivefeign.retry;
 
 import feign.RetryableException;
 
+import java.time.Clock;
 import java.util.Date;
 
 /**
@@ -24,18 +25,20 @@ public class BasicReactiveRetryPolicy extends SimpleReactiveRetryPolicy{
 
   private final int maxRetries;
   private final long periodInMs;
+  private final Clock clock;
 
-  private BasicReactiveRetryPolicy(int maxRetries, long periodInMs){
+  private BasicReactiveRetryPolicy(int maxRetries, long periodInMs, Clock clock){
     this.maxRetries = maxRetries;
     this.periodInMs = periodInMs;
+    this.clock = clock;
   }
 
   public static SimpleReactiveRetryPolicy retry(int maxRetries) {
-    return new BasicReactiveRetryPolicy(maxRetries, 0);
+    return new BasicReactiveRetryPolicy.Builder().setMaxRetries(maxRetries).build();
   }
 
   public static SimpleReactiveRetryPolicy retryWithBackoff(int maxRetries, long periodInMs) {
-    return new BasicReactiveRetryPolicy(maxRetries, periodInMs);
+    return new BasicReactiveRetryPolicy.Builder().setMaxRetries(maxRetries).setBackoffInMs(periodInMs).build();
   }
 
   @Override
@@ -48,7 +51,7 @@ public class BasicReactiveRetryPolicy extends SimpleReactiveRetryPolicy{
         if (error instanceof RetryableException
                 && (retryAfter = ((RetryableException) error)
                 .retryAfter()) != null) {
-          delay = retryAfter.getTime() - System.currentTimeMillis();
+          delay = retryAfter.getTime() - clock.millis();
           delay = Math.min(delay, periodInMs);
           delay = Math.max(delay, 0);
         } else {
@@ -66,25 +69,25 @@ public class BasicReactiveRetryPolicy extends SimpleReactiveRetryPolicy{
   public static class Builder implements ReactiveRetryPolicy.Builder{
     private int maxRetries;
     private long backoffInMs = 0;
+    private Clock clock = Clock.systemUTC();
 
-    public int getMaxRetries() {
-      return maxRetries;
-    }
-
-    public void setMaxRetries(int maxRetries) {
+    public Builder setMaxRetries(int maxRetries) {
       this.maxRetries = maxRetries;
+      return this;
     }
 
-    public long getBackoffInMs() {
-      return backoffInMs;
-    }
-
-    public void setBackoffInMs(long backoffInMs) {
+    public Builder setBackoffInMs(long backoffInMs) {
       this.backoffInMs = backoffInMs;
+      return this;
+    }
+
+    Builder setClock(Clock clock) {
+      this.clock = clock;
+      return this;
     }
 
     public BasicReactiveRetryPolicy build(){
-      return new BasicReactiveRetryPolicy(maxRetries, backoffInMs);
+      return new BasicReactiveRetryPolicy(maxRetries, backoffInMs, clock);
     }
   }
 }
