@@ -212,9 +212,11 @@ public class HystrixReactiveHttpClientTest {
                         .andCommandKey(commandKey)
                         .andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
                                 .withCircuitBreakerRequestVolumeThreshold(VOLUME_THRESHOLD)
+                                .withCircuitBreakerErrorThresholdPercentage(1)
                                 .withExecutionTimeoutEnabled(false)
                                 .withCircuitBreakerSleepWindowInMilliseconds(SLEEP_WINDOW)
-                                .withCircuitBreakerErrorThresholdPercentage(10)
+                                .withMetricsRollingStatisticalWindowInMilliseconds(1000)
+                                .withMetricsRollingStatisticalWindowBuckets(1)
                                 .withMetricsHealthSnapshotIntervalInMilliseconds(UPDATE_INTERVAL)
                         );
             }
