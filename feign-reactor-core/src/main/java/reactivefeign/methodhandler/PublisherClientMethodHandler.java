@@ -51,6 +51,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
     private final Map<String, List<Function<Map<String, ?>, List<String>>>> headerExpanders;
     private final Map<String, Collection<String>> queriesAll;
     private final Map<String, List<Function<Map<String, ?>, List<String>>>> queryExpanders;
+    private final URI staticUri;
 
     public PublisherClientMethodHandler(Target target,
                                         MethodMetadata methodMetadata,
@@ -66,6 +67,15 @@ public class PublisherClientMethodHandler implements MethodHandler {
         methodMetadata.formParams()
                 .forEach(param -> add(queriesAll, param, "{" + param + "}"));
         this.queryExpanders = buildExpanders(queriesAll);
+
+        //static template (POST & PUT)
+        if(pathExpander instanceof StaticPathExpander
+                && queriesAll.isEmpty()
+                && methodMetadata.queryMapIndex() == null){
+            staticUri = URI.create(target.url() + methodMetadata.template().url());
+        } else {
+            staticUri = null;
+        }
     }
 
     @Override
@@ -81,16 +91,25 @@ public class PublisherClientMethodHandler implements MethodHandler {
 
         Map<String, ?> substitutionsMap = buildSubstitutions(argv);
 
+        URI uri = buildUri(argv, substitutionsMap);
+
+        Map<String, List<String>> headers = headers(argv, substitutionsMap);
+
+        return new ReactiveHttpRequest(methodMetadata.template().method(), uri, headers, body(argv));
+    }
+
+    private URI buildUri(Object[] argv, Map<String, ?> substitutionsMap) {
+        //static template
+        if(staticUri != null){
+            return staticUri;
+        }
+
         String path = pathExpander.apply(substitutionsMap);
 
         Map<String, Collection<String>> queries = queries(argv, substitutionsMap);
         String queryLine = queryLine(queries);
 
-        URI uri = URI.create(target.url() + path + queryLine);
-
-        Map<String, List<String>> headers = headers(argv, substitutionsMap);
-
-        return new ReactiveHttpRequest(methodMetadata.template().method(), uri, headers, body(argv));
+        return URI.create(target.url() + path + queryLine);
     }
 
     private Map<String, Object> buildSubstitutions(Object[] argv) {
@@ -273,13 +292,32 @@ public class PublisherClientMethodHandler implements MethodHandler {
             previousMatchEnd = matcher.end();
         }
 
-        String textChunk = template.substring(previousMatchEnd, template.length());
+        //no substitutions in path
+        if(previousMatchEnd == 0){
+            return new StaticPathExpander(template);
+        }
+
+        String textChunk = template.substring(previousMatchEnd);
         if (textChunk.length() > 0) {
             chunks.add(data -> textChunk);
         }
 
         return traceData -> chunks.stream().map(chunk -> chunk.apply(traceData))
                 .collect(Collectors.joining());
+    }
+
+    private static class StaticPathExpander implements Function<Map<String, ?>, String>{
+
+        private final String staticPath;
+
+        private StaticPathExpander(String staticPath) {
+            this.staticPath = staticPath;
+        }
+
+        @Override
+        public String apply(Map<String, ?> stringMap) {
+            return staticPath;
+        }
     }
 
 }
