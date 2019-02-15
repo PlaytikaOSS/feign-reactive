@@ -15,7 +15,6 @@
         <module>feign-reactor-spring-mvc-test</module>
         <module>feign-reactor-spring-configuration-test</module>
         <module>feign-reactor-spring-configuration-cloud-test</module>
-        <module>feign-reactor-spring-configuration-sample</module>
     </modules>
 
     <name>feign-reactive-test</name>

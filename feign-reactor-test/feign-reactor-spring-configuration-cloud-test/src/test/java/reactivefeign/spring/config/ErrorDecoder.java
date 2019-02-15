@@ -1,4 +1,4 @@
-package reactivefeign.spring.config.sample;
+package reactivefeign.spring.config;
 
 import com.netflix.hystrix.exception.ExceptionNotWrappedByHystrix;
 import com.netflix.hystrix.exception.HystrixBadRequestException;

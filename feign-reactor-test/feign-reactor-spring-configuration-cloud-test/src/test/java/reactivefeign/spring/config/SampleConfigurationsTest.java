@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package reactivefeign.spring.config.sample;
+package reactivefeign.spring.config;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.netflix.client.ClientException;
@@ -41,6 +41,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -49,8 +50,6 @@ import reactivefeign.client.ReadTimeoutException;
 import reactivefeign.cloud.CloudReactiveFeign;
 import reactivefeign.retry.BasicReactiveRetryPolicy;
 import reactivefeign.retry.ReactiveRetryPolicy;
-import reactivefeign.spring.config.EnableReactiveFeignClients;
-import reactivefeign.spring.config.ReactiveFeignClient;
 import reactivefeign.webclient.WebReactiveOptions;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -69,6 +68,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = SampleConfigurationsTest.Application.class, webEnvironment = WebEnvironment.NONE)
 @DirtiesContext
+@TestPropertySource("classpath:error-decoder.properties")
 public class SampleConfigurationsTest {
 
 	static final int VOLUME_THRESHOLD = 2;

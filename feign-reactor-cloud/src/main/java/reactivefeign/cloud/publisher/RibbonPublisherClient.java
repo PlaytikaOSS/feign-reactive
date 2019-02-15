@@ -3,8 +3,8 @@ package reactivefeign.cloud.publisher;
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
 import org.reactivestreams.Publisher;
-import org.springframework.lang.Nullable;
 import reactivefeign.client.ReactiveHttpRequest;
+import reactivefeign.cloud.LoadBalancerCommandFactory;
 import reactivefeign.publisher.PublisherHttpClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -20,21 +20,24 @@ import java.net.URISyntaxException;
  */
 public class RibbonPublisherClient implements PublisherHttpClient {
 
-    private final LoadBalancerCommand<Object> loadBalancerCommand;
+    private final LoadBalancerCommandFactory loadBalancerCommandFactory;
+    private String serviceName;
     private final PublisherHttpClient publisherClient;
     private final Type publisherType;
 
-    public RibbonPublisherClient(@Nullable LoadBalancerCommand<Object> loadBalancerCommand,
+    public RibbonPublisherClient(LoadBalancerCommandFactory loadBalancerCommandFactory,
+                                 String serviceName,
                                  PublisherHttpClient publisherClient,
                                  Type publisherType) {
-        this.loadBalancerCommand = loadBalancerCommand;
+        this.loadBalancerCommandFactory = loadBalancerCommandFactory;
+        this.serviceName = serviceName;
         this.publisherClient = publisherClient;
         this.publisherType = publisherType;
     }
 
     @Override
     public Publisher<Object> executeRequest(ReactiveHttpRequest request) {
-
+        LoadBalancerCommand<Object> loadBalancerCommand = loadBalancerCommandFactory.apply(serviceName);
         if (loadBalancerCommand != null) {
             Observable<?> observable = loadBalancerCommand.submit(server -> {
 
