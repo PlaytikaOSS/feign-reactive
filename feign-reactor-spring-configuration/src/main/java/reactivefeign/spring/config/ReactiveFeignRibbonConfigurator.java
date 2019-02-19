@@ -22,7 +22,9 @@ import com.netflix.client.DefaultLoadBalancerRetryHandler;
 import com.netflix.client.RetryHandler;
 import com.netflix.client.config.DefaultClientConfigImpl;
 import com.netflix.client.config.IClientConfig;
+import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
+import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.cloud.CloudReactiveFeign;
 import reactivefeign.cloud.LoadBalancerCommandFactory;
@@ -43,12 +45,22 @@ public class ReactiveFeignRibbonConfigurator implements ReactiveFeignConfigurato
 		LoadBalancerCommandFactory balancerCommandFactory = context.getInstance(clientName, LoadBalancerCommandFactory.class);
 		if(balancerCommandFactory == null){
 
-			IClientConfig clientConfig = DefaultClientConfigImpl.getClientConfigWithDefaultValues(clientName);
+			IClientConfig clientConfig;
+			ILoadBalancer namedLoadBalancer;
+
+			SpringClientFactory springClientFactory = context.getInstance(clientName, SpringClientFactory.class);
+			if(springClientFactory != null){
+				clientConfig = springClientFactory.getClientConfig(clientName);
+				namedLoadBalancer = springClientFactory.getLoadBalancer(clientName);
+			} else {
+				clientConfig = DefaultClientConfigImpl.getClientConfigWithDefaultValues(clientName);
+				namedLoadBalancer = ClientFactory.getNamedLoadBalancer(clientName);
+			}
 			RetryHandler retryHandler = getOrInstantiateRetryHandler(context, clientName, clientConfig);
 
 			balancerCommandFactory = serviceName ->
 					LoadBalancerCommand.builder()
-							.withLoadBalancer(ClientFactory.getNamedLoadBalancer(serviceName))
+							.withLoadBalancer(namedLoadBalancer)
 							.withRetryHandler(retryHandler)
 							.withClientConfig(clientConfig)
 							.build();

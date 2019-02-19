@@ -18,12 +18,6 @@ package reactivefeign.spring.config;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.netflix.client.ClientException;
-import com.netflix.client.ClientFactory;
-import com.netflix.client.config.CommonClientConfigKey;
-import com.netflix.client.config.DefaultClientConfigImpl;
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -41,7 +35,7 @@ import reactor.test.StepVerifier;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static java.util.Arrays.asList;
+import static reactivefeign.spring.config.AutoConfigurationTest.MOCK_SERVER_PORT_PROPERTY;
 
 /**
  * @author Sergii Karpenko
@@ -51,9 +45,12 @@ import static java.util.Arrays.asList;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = AutoConfigurationTest.TestConfiguration.class,
-		        webEnvironment = SpringBootTest.WebEnvironment.NONE)
+		        webEnvironment = SpringBootTest.WebEnvironment.NONE,
+				properties = "ribbon.listOfServers=localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}")
 @DirtiesContext
 public class AutoConfigurationTest {
+
+	static final String MOCK_SERVER_PORT_PROPERTY = "mock.server.port";
 
 	static final String TEST_FEIGN_CLIENT = "test-feign-client";
 	private static final String TEST_URL = "/testUrl";
@@ -94,14 +91,9 @@ public class AutoConfigurationTest {
 	}
 
 	@BeforeClass
-	public static void setup() throws ClientException {
+	public static void setup() {
 		mockHttpServer.start();
-
-		DefaultClientConfigImpl clientConfig = new DefaultClientConfigImpl();
-		clientConfig.loadDefaultValues();
-		clientConfig.setProperty(CommonClientConfigKey.NFLoadBalancerClassName, BaseLoadBalancer.class.getName());
-		ILoadBalancer lb = ClientFactory.registerNamedLoadBalancerFromclientConfig(TEST_FEIGN_CLIENT, clientConfig);
-		lb.addServers(asList(new Server("localhost", mockHttpServer.port())));
+		System.setProperty(MOCK_SERVER_PORT_PROPERTY, Integer.toString(mockHttpServer.port()));
 	}
 
 	@AfterClass

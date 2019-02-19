@@ -46,6 +46,9 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static reactivefeign.spring.config.AutoConfigurationTest.MOCK_SERVER_PORT_PROPERTY;
+import static reactivefeign.spring.config.RibbonEnabledHystrixDisabledUsingPropertiesTest.MOCK_SERVER_1_PORT_PROPERTY;
+import static reactivefeign.spring.config.RibbonEnabledHystrixDisabledUsingPropertiesTest.MOCK_SERVER_2_PORT_PROPERTY;
 
 /**
  * @author Sergii Karpenko
@@ -55,10 +58,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = RibbonEnabledHystrixDisabledUsingPropertiesTest.TestConfiguration.class,
-		        webEnvironment = SpringBootTest.WebEnvironment.NONE)
+		        webEnvironment = SpringBootTest.WebEnvironment.NONE,
+		        properties = "ribbon.listOfServers=localhost:${"+MOCK_SERVER_1_PORT_PROPERTY+"}, localhost:${"+MOCK_SERVER_2_PORT_PROPERTY+"}")
 @TestPropertySource("classpath:ribbon-enabled-hystrix-disabled.properties")
 @DirtiesContext
 public class RibbonEnabledHystrixDisabledUsingPropertiesTest {
+
+	static final String MOCK_SERVER_1_PORT_PROPERTY = "mock.server1.port";
+	static final String MOCK_SERVER_2_PORT_PROPERTY = "mock.server2.port";
 
 	static final String FEIGN_CLIENT_TEST_RIBBON = "feign-client-test-ribbon";
 	private static final String TEST_URL = "/testUrl";
@@ -91,16 +98,12 @@ public class RibbonEnabledHystrixDisabledUsingPropertiesTest {
 	}
 
 	@BeforeClass
-	public static void setup() throws ClientException {
+	public static void setup() {
 		mockHttpServer1.start();
+		System.setProperty(MOCK_SERVER_1_PORT_PROPERTY, Integer.toString(mockHttpServer1.port()));
+
 		mockHttpServer2.start();
-
-		DefaultClientConfigImpl clientConfig = new DefaultClientConfigImpl();
-		clientConfig.loadDefaultValues();
-		clientConfig.setProperty(CommonClientConfigKey.NFLoadBalancerClassName, BaseLoadBalancer.class.getName());
-		ILoadBalancer lb = ClientFactory.registerNamedLoadBalancerFromclientConfig(FEIGN_CLIENT_TEST_RIBBON, clientConfig);
-		lb.addServers(asList(new Server("localhost", mockHttpServer1.port()), new Server("localhost", mockHttpServer2.port())));
-
+		System.setProperty(MOCK_SERVER_2_PORT_PROPERTY, Integer.toString(mockHttpServer2.port()));
 	}
 
 	@AfterClass

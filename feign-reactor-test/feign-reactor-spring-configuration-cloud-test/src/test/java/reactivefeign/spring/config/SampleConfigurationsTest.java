@@ -64,9 +64,11 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static com.netflix.hystrix.HystrixCommandKey.Factory.asKey;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static reactivefeign.spring.config.AutoConfigurationTest.MOCK_SERVER_PORT_PROPERTY;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = SampleConfigurationsTest.Application.class, webEnvironment = WebEnvironment.NONE)
+@SpringBootTest(classes = SampleConfigurationsTest.Application.class, webEnvironment = WebEnvironment.NONE,
+		properties = "ribbon.listOfServers=localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}")
 @DirtiesContext
 @TestPropertySource("classpath:error-decoder.properties")
 public class SampleConfigurationsTest {
@@ -291,24 +293,10 @@ public class SampleConfigurationsTest {
 	}
 
 	@BeforeClass
-	public static void setupStubs() throws ClientException {
+	public static void setupStubs() {
 		mockHttpServer.start();
 
-		setupLoadbalancers();
-	}
-
-	private static void setupLoadbalancers() throws ClientException {
-		DefaultClientConfigImpl clientConfig = new DefaultClientConfigImpl();
-		clientConfig.loadDefaultValues();
-		clientConfig.setProperty(CommonClientConfigKey.NFLoadBalancerClassName, BaseLoadBalancer.class.getName());
-		ILoadBalancer lbProperties = ClientFactory.registerNamedLoadBalancerFromclientConfig("rfgn-proper", clientConfig);
-		lbProperties.addServers(asList(new Server("localhost", mockHttpServer.port())));
-		ILoadBalancer lbConfigs = ClientFactory.registerNamedLoadBalancerFromclientConfig("rfgn-configs", clientConfig);
-		lbConfigs.addServers(asList(new Server("localhost", mockHttpServer.port())));
-		ILoadBalancer lbFallback = ClientFactory.registerNamedLoadBalancerFromclientConfig("rfgn-fallback", clientConfig);
-		lbFallback.addServers(asList(new Server("localhost", mockHttpServer.port())));
-		ILoadBalancer lbErrordecoder = ClientFactory.registerNamedLoadBalancerFromclientConfig("rfgn-errordecoder", clientConfig);
-		lbErrordecoder.addServers(asList(new Server("localhost", mockHttpServer.port())));
+		System.setProperty(MOCK_SERVER_PORT_PROPERTY, Integer.toString(mockHttpServer.port()));
 	}
 
 	@Before

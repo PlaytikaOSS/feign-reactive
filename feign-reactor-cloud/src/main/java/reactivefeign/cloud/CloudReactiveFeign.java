@@ -1,6 +1,5 @@
 package reactivefeign.cloud;
 
-import com.netflix.client.ClientFactory;
 import com.netflix.client.RetryHandler;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
@@ -15,8 +14,6 @@ import org.slf4j.LoggerFactory;
 import reactivefeign.FallbackFactory;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
-import reactivefeign.retry.FilteredReactiveRetryPolicy;
-import reactivefeign.retry.ReactiveRetryPolicy;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.client.log.ReactiveLoggerListener;
@@ -26,6 +23,7 @@ import reactivefeign.cloud.publisher.RibbonPublisherClient;
 import reactivefeign.methodhandler.MethodHandlerFactory;
 import reactivefeign.publisher.PublisherClientFactory;
 import reactivefeign.publisher.PublisherHttpClient;
+import reactivefeign.retry.ReactiveRetryPolicy;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -72,20 +70,26 @@ public class CloudReactiveFeign {
         }
 
         public Builder<T> enableLoadBalancer(){
+            return enableLoadBalancer(ReactiveFeignClientFactory.DEFAULT);
+        }
+
+        public Builder<T> enableLoadBalancer(ReactiveFeignClientFactory clientFactory){
             return setLoadBalancerCommandFactory(serviceName ->
                     LoadBalancerCommand.builder()
-                            .withLoadBalancer(ClientFactory.getNamedLoadBalancer(serviceName))
+                            .withLoadBalancer(clientFactory.loadBalancer(serviceName))
+                            .withClientConfig(clientFactory.clientConfig(serviceName))
                             .build());
         }
 
-        public Builder<T> enableLoadBalancer(RetryHandler retryHandler){
+        public Builder<T> enableLoadBalancer(ReactiveFeignClientFactory clientFactory, RetryHandler retryHandler){
             if(retryHandler.getMaxRetriesOnSameServer() > 0){
                 logger.warn("Use retryWhen(ReactiveRetryPolicy retryPolicy) " +
                         "as it allow to configure retry delays (backoff)");
             }
             return setLoadBalancerCommandFactory(serviceName ->
                     LoadBalancerCommand.builder()
-                    .withLoadBalancer(ClientFactory.getNamedLoadBalancer(serviceName))
+                    .withLoadBalancer(clientFactory.loadBalancer(serviceName))
+                    .withClientConfig(clientFactory.clientConfig(serviceName))
                     .withRetryHandler(retryHandler)
                     .build());
         }

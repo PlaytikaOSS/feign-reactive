@@ -12,7 +12,6 @@ import feign.RequestLine;
 import feign.RetryableException;
 import org.junit.*;
 import org.junit.rules.ExpectedException;
-import reactivefeign.publisher.retry.RetryPublisherHttpClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -24,7 +23,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.isA;
 import static reactivefeign.retry.BasicReactiveRetryPolicy.retry;
 
 /**
@@ -171,7 +170,7 @@ public class LoadBalancingReactiveHttpClientTest {
                 new DefaultLoadBalancerRetryHandler(0, retryOnNext, true), null);
 
         TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder()
-                .enableLoadBalancer(retryHandler)
+                .enableLoadBalancer(ReactiveFeignClientFactory.DEFAULT, retryHandler)
                 .disableHystrix()
                 .retryWhen(retry(retryOnSame))
                 .target(TestMonoInterface.class, "http://" + serviceName);
@@ -205,7 +204,7 @@ public class LoadBalancingReactiveHttpClientTest {
                 new DefaultLoadBalancerRetryHandler(retryOnSame, retryOnNext, true), null);
 
         TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder()
-                .enableLoadBalancer(retryHandler)
+                .enableLoadBalancer(ReactiveFeignClientFactory.DEFAULT, retryHandler)
                 .disableHystrix()
                 .target(TestMonoInterface.class, "http://" + serviceName);
 

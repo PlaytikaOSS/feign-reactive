@@ -58,9 +58,11 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static reactivefeign.spring.config.AutoConfigurationTest.MOCK_SERVER_PORT_PROPERTY;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = CloudClientUsingConfigurationsTests.Application.class, webEnvironment = WebEnvironment.NONE)
+@SpringBootTest(classes = CloudClientUsingConfigurationsTests.Application.class, webEnvironment = WebEnvironment.NONE,
+		properties = "ribbon.listOfServers=localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}")
 @DirtiesContext
 public class CloudClientUsingConfigurationsTests {
 
@@ -74,16 +76,10 @@ public class CloudClientUsingConfigurationsTests {
 
 
 	@BeforeClass
-	public static void setupStubs() throws ClientException {
+	public static void setupStubs() {
     	mockHttpServer.start();
 
-		DefaultClientConfigImpl clientConfig = new DefaultClientConfigImpl();
-		clientConfig.loadDefaultValues();
-		clientConfig.setProperty(CommonClientConfigKey.NFLoadBalancerClassName, BaseLoadBalancer.class.getName());
-		ILoadBalancer lbFoo = ClientFactory.registerNamedLoadBalancerFromclientConfig("foo", clientConfig);
-		lbFoo.addServers(asList(new Server("localhost", mockHttpServer.port())));
-		ILoadBalancer lbBar = ClientFactory.registerNamedLoadBalancerFromclientConfig("bar", clientConfig);
-		lbBar.addServers(asList(new Server("localhost", mockHttpServer.port())));
+		System.setProperty(MOCK_SERVER_PORT_PROPERTY, Integer.toString(mockHttpServer.port()));
 	}
 
 	@AfterClass
