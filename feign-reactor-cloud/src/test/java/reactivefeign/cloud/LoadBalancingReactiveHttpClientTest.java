@@ -1,5 +1,6 @@
 package reactivefeign.cloud;
 
+import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.netflix.client.*;
@@ -228,7 +229,7 @@ public class LoadBalancingReactiveHttpClientTest {
                         .withBody(body)));
     }
 
-    static void mockSuccessAfterSeveralAttempts(WireMockClassRule server, String url,
+    static void mockSuccessAfterSeveralAttempts(WireMockServer server, String url,
                                                 int failedAttemptsNo, int errorCode, ResponseDefinitionBuilder response) {
         String state = STARTED;
         for (int attempt = 0; attempt < failedAttemptsNo; attempt++) {

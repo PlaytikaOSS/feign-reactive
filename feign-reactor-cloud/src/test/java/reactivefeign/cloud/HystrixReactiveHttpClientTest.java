@@ -1,12 +1,11 @@
 package reactivefeign.cloud;
 
-import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import com.netflix.hystrix.*;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import feign.MethodMetadata;
 import feign.Target;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
@@ -38,8 +37,8 @@ public class HystrixReactiveHttpClientTest {
     public static final String FALLBACK = "fallback";
     public static final String SUCCESS = "success!";
     public static final int UPDATE_INTERVAL = 5;
-    @ClassRule
-    public static WireMockClassRule server = new WireMockClassRule(wireMockConfig().dynamicPort());
+    @Rule
+    public static WireMockRule server = new WireMockRule(wireMockConfig().dynamicPort());
 
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
