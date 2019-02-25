@@ -192,7 +192,7 @@ public class CloudReactiveFeign {
                 public PublisherHttpClient create(MethodMetadata methodMetadata) {
                     PublisherHttpClient publisherClient = publisherClientFactory.create(methodMetadata);
                     String serviceName = extractServiceName(target.url());
-                    return new RibbonPublisherClient(loadBalancerCommandFactory.apply(serviceName),
+                    return new RibbonPublisherClient(loadBalancerCommandFactory, serviceName,
                             publisherClient, returnPublisherType(methodMetadata));
                 }
             };

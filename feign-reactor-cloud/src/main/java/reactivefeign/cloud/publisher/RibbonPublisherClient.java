@@ -6,6 +6,7 @@ import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.cloud.LoadBalancerCommandFactory;
 import reactivefeign.publisher.PublisherHttpClient;
+import reactivefeign.utils.LazyInitialized;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import rx.Observable;
@@ -20,20 +21,22 @@ import java.net.URISyntaxException;
  */
 public class RibbonPublisherClient implements PublisherHttpClient {
 
-    private final LoadBalancerCommand<Object> loadBalancerCommand;
+    private final LazyInitialized<LoadBalancerCommand<Object>> loadBalancerCommand;
     private final PublisherHttpClient publisherClient;
     private final Type publisherType;
 
-    public RibbonPublisherClient(LoadBalancerCommand<Object> loadBalancerCommand,
+    public RibbonPublisherClient(LoadBalancerCommandFactory loadBalancerCommandFactory,
+                                 String serviceName,
                                  PublisherHttpClient publisherClient,
                                  Type publisherType) {
-        this.loadBalancerCommand = loadBalancerCommand;
+        this.loadBalancerCommand = new LazyInitialized<>(() -> loadBalancerCommandFactory.apply(serviceName));
         this.publisherClient = publisherClient;
         this.publisherType = publisherType;
     }
 
     @Override
     public Publisher<Object> executeRequest(ReactiveHttpRequest request) {
+        LoadBalancerCommand<Object> loadBalancerCommand = this.loadBalancerCommand.get();
         if (loadBalancerCommand != null) {
             Observable<?> observable = loadBalancerCommand.submit(server -> {
 

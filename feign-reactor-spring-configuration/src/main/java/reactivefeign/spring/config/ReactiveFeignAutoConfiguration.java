@@ -1,10 +1,12 @@
 package reactivefeign.spring.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.client.actuator.HasFeatures;
+import org.springframework.cloud.netflix.ribbon.RibbonAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import reactivefeign.ReactiveFeign;
@@ -20,6 +22,7 @@ import java.util.List;
 
 @Configuration
 @ConditionalOnClass(ReactiveFeign.class)
+@AutoConfigureAfter(RibbonAutoConfiguration.class)
 public class ReactiveFeignAutoConfiguration {
 
     @Autowired(required = false)

@@ -45,25 +45,28 @@ public class ReactiveFeignRibbonConfigurator implements ReactiveFeignConfigurato
 		LoadBalancerCommandFactory balancerCommandFactory = context.getInstance(clientName, LoadBalancerCommandFactory.class);
 		if(balancerCommandFactory == null){
 
-			IClientConfig clientConfig;
-			ILoadBalancer namedLoadBalancer;
+            SpringClientFactory springClientFactory = context.getInstance(clientName, SpringClientFactory.class);
 
-			SpringClientFactory springClientFactory = context.getInstance(clientName, SpringClientFactory.class);
-			if(springClientFactory != null){
-				clientConfig = springClientFactory.getClientConfig(clientName);
-				namedLoadBalancer = springClientFactory.getLoadBalancer(clientName);
-			} else {
-				clientConfig = DefaultClientConfigImpl.getClientConfigWithDefaultValues(clientName);
-				namedLoadBalancer = ClientFactory.getNamedLoadBalancer(clientName);
-			}
-			RetryHandler retryHandler = getOrInstantiateRetryHandler(context, clientName, clientConfig);
+			balancerCommandFactory = serviceName -> {
 
-			balancerCommandFactory = serviceName ->
-					LoadBalancerCommand.builder()
-							.withLoadBalancer(namedLoadBalancer)
-							.withRetryHandler(retryHandler)
-							.withClientConfig(clientConfig)
-							.build();
+                IClientConfig clientConfig;
+                ILoadBalancer namedLoadBalancer;
+                if(springClientFactory != null){
+                    clientConfig = springClientFactory.getClientConfig(clientName);
+                    namedLoadBalancer = springClientFactory.getLoadBalancer(clientName);
+                } else {
+                    clientConfig = DefaultClientConfigImpl.getClientConfigWithDefaultValues(clientName);
+                    namedLoadBalancer = ClientFactory.getNamedLoadBalancer(clientName);
+                }
+
+                RetryHandler retryHandler = getOrInstantiateRetryHandler(context, clientName, clientConfig);
+
+				return LoadBalancerCommand.builder()
+						.withLoadBalancer(namedLoadBalancer)
+						.withRetryHandler(retryHandler)
+						.withClientConfig(clientConfig)
+						.build();
+			};
 		}
 
 		cloudBuilder = cloudBuilder.setLoadBalancerCommandFactory(balancerCommandFactory);
