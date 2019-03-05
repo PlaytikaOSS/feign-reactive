@@ -34,6 +34,11 @@ abstract public class DelegatingReactiveHttpResponse implements ReactiveHttpResp
   }
 
   @Override
+  public ReactiveHttpRequest request() {
+    return response.request();
+  }
+
+  @Override
   public int status() {
     return response.status();
   }

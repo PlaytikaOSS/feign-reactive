@@ -150,26 +150,6 @@ abstract public class SmokeTest {
   }
 
   @Test
-  public void shouldFailOnCorruptedUrlMono() {
-
-    Mono<IceCreamOrder> orderEmpty = client.corruptedUrlMono(123);
-
-    StepVerifier.create(orderEmpty)
-            .expectError(RuntimeException.class)
-            .verify();
-  }
-
-  @Test
-  public void shouldFailOnCorruptedUrlFlux() {
-
-    Flux<IceCreamOrder> orderEmpty = client.corruptedUrlFlux(123);
-
-    StepVerifier.create(orderEmpty)
-            .expectError(RuntimeException.class)
-            .verify();
-  }
-
-  @Test
   public void testMakeOrder_success() throws JsonProcessingException {
 
     IceCreamOrder order = new OrderGenerator().generate(20);

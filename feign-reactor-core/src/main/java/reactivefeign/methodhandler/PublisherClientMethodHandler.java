@@ -14,6 +14,7 @@
 package reactivefeign.methodhandler;
 
 import feign.MethodMetadata;
+import feign.RequestTemplate;
 import feign.Target;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpClient;
@@ -34,6 +35,7 @@ import static feign.Util.checkNotNull;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.*;
 import static reactivefeign.utils.MultiValueMapUtils.*;
+import static reactivefeign.utils.StringUtils.cutTail;
 
 /**
  * Method handler for asynchronous HTTP requests via {@link PublisherHttpClient}.
@@ -60,10 +62,12 @@ public class PublisherClientMethodHandler implements MethodHandler {
         this.methodMetadata = checkNotNull(methodMetadata,
                 "methodMetadata must be not null");
         this.publisherClient = checkNotNull(publisherClient, "client must be not null");
-        this.pathExpander = buildUrlExpandFunction(methodMetadata.template().url());
-        this.headerExpanders = buildExpanders(methodMetadata.template().headers());
+        RequestTemplate requestTemplate = methodMetadata.template();
+        this.pathExpander = buildUrlExpandFunction(
+                cutTail(requestTemplate.url(), requestTemplate.queryLine()));
+        this.headerExpanders = buildExpanders(requestTemplate.headers());
 
-        this.queriesAll = new HashMap<>(methodMetadata.template().queries());
+        this.queriesAll = new HashMap<>(requestTemplate.queries());
         methodMetadata.formParams()
                 .forEach(param -> add(queriesAll, param, "{" + param + "}"));
         this.queryExpanders = buildExpanders(queriesAll);
@@ -72,7 +76,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
         if(pathExpander instanceof StaticPathExpander
                 && queriesAll.isEmpty()
                 && methodMetadata.queryMapIndex() == null){
-            staticUri = URI.create(target.url() + methodMetadata.template().url());
+            staticUri = URI.create(target.url() + requestTemplate.url());
         } else {
             staticUri = null;
         }

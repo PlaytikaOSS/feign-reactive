@@ -75,9 +75,4 @@ public interface IcecreamServiceApi {
     throw RUNTIME_EXCEPTION;
   }
 
-  @RequestLine("GET / / /{orderId}")
-  Mono<IceCreamOrder> corruptedUrlMono(@Param("orderId") int orderId);
-
-  @RequestLine("GET / / /{orderId}")
-  Flux<IceCreamOrder> corruptedUrlFlux(@Param("orderId") int orderId);
 }

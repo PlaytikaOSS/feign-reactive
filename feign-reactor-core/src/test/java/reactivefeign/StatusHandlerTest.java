@@ -29,6 +29,7 @@ import java.util.function.Predicate;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static reactivefeign.client.statushandler.CompositeStatusHandler.compose;
 import static reactivefeign.client.statushandler.ReactiveStatusHandlers.throwOnStatus;
+import static reactivefeign.utils.FeignUtils.httpMethod;
 
 /**
  * @author Sergii Karpenko
@@ -127,7 +128,10 @@ public abstract class StatusHandlerTest {
         .statusHandler(compose(
             throwOnStatus(
                 status -> status == HttpStatus.SC_SERVICE_UNAVAILABLE,
-                (methodTag, response) -> new RetryableException("Should retry on next node", null)),
+                (methodTag, response) -> new RetryableException(
+                        "Should retry on next node",
+                        httpMethod(response.request().method()),
+                        null)),
             throwOnStatus(
                 status -> status == HttpStatus.SC_UNAUTHORIZED,
                 (methodTag, response) -> new RuntimeException("Should login", null))))

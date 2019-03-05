@@ -24,6 +24,7 @@ import reactivefeign.rx2.testcase.IcecreamServiceApi;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static reactivefeign.rx2.client.statushandler.Rx2StatusHandlers.throwOnStatus;
+import static reactivefeign.utils.FeignUtils.httpMethod;
 
 /**
  * @author Sergii Karpenko
@@ -52,7 +53,8 @@ public class StatusHandlerTest {
     IcecreamServiceApi client = builder()
         .statusHandler(throwOnStatus(
             status -> status == HttpStatus.SC_SERVICE_UNAVAILABLE,
-            (methodTag, response) -> new RetryableException("Should retry on next node", null)))
+            (methodTag, response) -> new RetryableException("Should retry on next node",
+                    httpMethod(response.request().method()), null)))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     client.findFirstOrder().test()

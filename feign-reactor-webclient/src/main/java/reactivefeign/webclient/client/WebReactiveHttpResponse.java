@@ -4,6 +4,7 @@ import org.reactivestreams.Publisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.web.reactive.function.client.ClientResponse;
+import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -14,15 +15,23 @@ import java.util.Map;
 
 class WebReactiveHttpResponse implements ReactiveHttpResponse{
 
+	private ReactiveHttpRequest reactiveRequest;
 	private final ClientResponse clientResponse;
 	private final Type returnPublisherType;
 	private final ParameterizedTypeReference<Object> returnActualType;
 
-	WebReactiveHttpResponse(ClientResponse clientResponse,
-								   Type returnPublisherType, ParameterizedTypeReference<Object> returnActualType) {
+	WebReactiveHttpResponse(ReactiveHttpRequest reactiveRequest,
+							ClientResponse clientResponse,
+							Type returnPublisherType, ParameterizedTypeReference<Object> returnActualType) {
+		this.reactiveRequest = reactiveRequest;
 		this.clientResponse = clientResponse;
 		this.returnPublisherType = returnPublisherType;
 		this.returnActualType = returnActualType;
+	}
+
+	@Override
+	public ReactiveHttpRequest request() {
+		return reactiveRequest;
 	}
 
 	@Override

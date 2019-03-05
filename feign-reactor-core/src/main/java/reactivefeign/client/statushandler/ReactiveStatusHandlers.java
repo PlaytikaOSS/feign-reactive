@@ -13,17 +13,19 @@
  */
 package reactivefeign.client.statushandler;
 
+import feign.Request;
 import feign.Response;
 import feign.codec.ErrorDecoder;
 import org.apache.commons.httpclient.HttpStatus;
+import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
+import static reactivefeign.utils.FeignUtils.httpMethod;
 import static reactivefeign.utils.HttpUtils.familyOf;
 
 public class ReactiveStatusHandlers {
@@ -45,15 +47,24 @@ public class ReactiveStatusHandlers {
         return response.bodyData()
                 .defaultIfEmpty(new byte[0])
                 .map(bodyData -> errorDecoder.decode(methodTag,
-                        Response.builder().status(response.status())
-                                .reason(HttpStatus.getStatusText(response.status()))
-                                .headers(response.headers().entrySet()
-                                        .stream()
-                                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                                Map.Entry::getValue)))
-                                .body(bodyData).build()));
+                        buildFeignResponseForDecoder(response, bodyData)));
       }
     };
+  }
+
+  private static Response buildFeignResponseForDecoder(ReactiveHttpResponse response, byte[] bodyData) {
+    ReactiveHttpRequest request = response.request();
+    Request feignRequest = Request.create(httpMethod(request.method()),
+            request.uri().toString(),
+            (Map)request.headers(),
+            Request.Body.empty());
+
+    return Response.builder()
+            .request(feignRequest)
+            .status(response.status())
+            .reason(HttpStatus.getStatusText(response.status()))
+            .headers((Map)response.headers())
+            .body(bodyData).build();
   }
 
   public static ReactiveStatusHandler throwOnStatus(

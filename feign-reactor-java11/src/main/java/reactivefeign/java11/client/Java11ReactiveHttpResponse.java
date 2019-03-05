@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.async_.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectReader;
 import org.eclipse.jetty.reactive.client.internal.QueuedSinglePublisher;
 import org.reactivestreams.Publisher;
+import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivejson.ReactorObjectReader;
 import reactor.core.publisher.Flux;
@@ -24,6 +25,7 @@ import static reactivefeign.utils.HttpUtils.CONTENT_TYPE_HEADER;
 class Java11ReactiveHttpResponse implements ReactiveHttpResponse{
 
 	public static final String CHARSET_DELIMITER = ";charset=";
+	private ReactiveHttpRequest request;
 	private final HttpResponse clientResponse;
 	private final Publisher<List<ByteBuffer>> contentChunks;
 	private final Class returnPublisherType;
@@ -31,15 +33,21 @@ class Java11ReactiveHttpResponse implements ReactiveHttpResponse{
 	private final ObjectReader objectReader;
 	private final JsonFactory jsonFactory;
 
-	Java11ReactiveHttpResponse(HttpResponse clientResponse, Publisher<List<ByteBuffer>> contentChunks,
-							  Class returnPublisherType, Class returnActualClass,
-							  JsonFactory jsonFactory, ObjectReader objectReader) {
+	Java11ReactiveHttpResponse(ReactiveHttpRequest request, HttpResponse clientResponse, Publisher<List<ByteBuffer>> contentChunks,
+							   Class returnPublisherType, Class returnActualClass,
+							   JsonFactory jsonFactory, ObjectReader objectReader) {
+		this.request = request;
 		this.clientResponse = clientResponse;
 		this.contentChunks = contentChunks;
 		this.returnPublisherType = returnPublisherType;
 		this.returnActualClass = returnActualClass;
 		this.objectReader = objectReader;
 		this.jsonFactory = jsonFactory;
+	}
+
+	@Override
+	public ReactiveHttpRequest request() {
+		return request;
 	}
 
 	@Override

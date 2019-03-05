@@ -55,7 +55,7 @@
         <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
 
         <reactor.version>3.2.3.RELEASE</reactor.version>
-        <feign.version>9.5.1</feign.version>
+        <feign.version>10.1.0</feign.version>
         <slf4j.version>1.7.25</slf4j.version>
         <commons-httpclient.version>3.1</commons-httpclient.version>
 
@@ -66,7 +66,7 @@
         <jackson.version>2.9.7</jackson.version>
 
         <!--Cloud-->
-        <spring-cloud.version>2.0.2.RELEASE</spring-cloud.version>
+        <spring-cloud.version>2.1.0.RELEASE</spring-cloud.version>
         <ribbon-version>2.2.5</ribbon-version>
         <hystrix.version>1.5.18</hystrix.version>
         <archaius.version>0.6.6</archaius.version>
@@ -439,7 +439,7 @@
                         <groupId>org.springframework.boot</groupId>
                     </exclusion>
                 </exclusions>
-                <version>2.0.2.RELEASE</version>
+                <version>${spring-cloud.version}</version>
             </dependency>
 
             <!--autoconfigure-->

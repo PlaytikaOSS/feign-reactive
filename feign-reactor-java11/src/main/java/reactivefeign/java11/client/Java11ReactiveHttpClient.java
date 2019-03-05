@@ -128,7 +128,7 @@ public class Java11ReactiveHttpClient implements ReactiveHttpClient {
                 	if(!resp.version().equals(httpClient.version())){
                 		throw new IllegalArgumentException("Incorrect response version:"+resp.version());
 					}
-                	return new Java11ReactiveHttpResponse(resp, bodySubscriber.content(),
+                	return new Java11ReactiveHttpResponse(request, resp, bodySubscriber.content(),
 							returnPublisherClass, returnActualClass,
 							jsonFactory, responseReader);
 				})

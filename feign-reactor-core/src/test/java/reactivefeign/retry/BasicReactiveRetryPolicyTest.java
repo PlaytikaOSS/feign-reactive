@@ -1,5 +1,6 @@
 package reactivefeign.retry;
 
+import feign.Request;
 import feign.RetryableException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -59,10 +60,10 @@ public class BasicReactiveRetryPolicyTest {
         when(clock.millis()).thenReturn(currentTime);
 
 
-        long retryDelay = retryPolicy.retryDelay(new RetryableException("error msg", new Date(currentTime + delay)), 1);
+        long retryDelay = retryPolicy.retryDelay(new RetryableException("error msg", Request.HttpMethod.GET, new Date(currentTime + delay)), 1);
         assertThat(retryDelay).isEqualTo(delay);
 
-        retryDelay = retryPolicy.retryDelay(new RetryableException("error msg", null), 1);
+        retryDelay = retryPolicy.retryDelay(new RetryableException("error msg", Request.HttpMethod.GET, null), 1);
         assertThat(retryDelay).isEqualTo(backoff);
     }
 

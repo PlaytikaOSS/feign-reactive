@@ -14,6 +14,7 @@
 package reactivefeign.utils;
 
 import feign.MethodMetadata;
+import feign.Request;
 import feign.Target;
 import org.reactivestreams.Publisher;
 
@@ -75,5 +76,9 @@ public class FeignUtils {
 
   public static boolean responseWithBody(MethodMetadata methodMetadata){
     return returnActualType(methodMetadata) != Void.class;
+  }
+
+  public static Request.HttpMethod httpMethod(String method){
+    return Request.HttpMethod.valueOf(method.toUpperCase());
   }
 }

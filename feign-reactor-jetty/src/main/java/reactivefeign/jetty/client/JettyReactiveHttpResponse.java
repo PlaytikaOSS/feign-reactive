@@ -6,6 +6,7 @@ import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.http.HttpField;
 import org.eclipse.jetty.reactive.client.ContentChunk;
 import org.reactivestreams.Publisher;
+import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivejson.ReactorObjectReader;
 import reactor.core.publisher.Flux;
@@ -26,6 +27,7 @@ import static org.eclipse.jetty.http.HttpHeader.CONTENT_TYPE;
 class JettyReactiveHttpResponse implements ReactiveHttpResponse{
 
 	public static final String CHARSET_DELIMITER = ";charset=";
+	private ReactiveHttpRequest request;
 	private final Response clientResponse;
 	private final Publisher<ContentChunk> contentChunks;
 	private final Class returnPublisherType;
@@ -33,15 +35,21 @@ class JettyReactiveHttpResponse implements ReactiveHttpResponse{
 	private final ObjectReader objectReader;
 	private final JsonFactory jsonFactory;
 
-	JettyReactiveHttpResponse(Response clientResponse, Publisher<ContentChunk> contentChunks,
+	JettyReactiveHttpResponse(ReactiveHttpRequest request, Response clientResponse, Publisher<ContentChunk> contentChunks,
 							  Class returnPublisherType, Class returnActualClass,
 							  JsonFactory jsonFactory, ObjectReader objectReader) {
+		this.request = request;
 		this.clientResponse = clientResponse;
 		this.contentChunks = contentChunks;
 		this.returnPublisherType = returnPublisherType;
 		this.returnActualClass = returnActualClass;
 		this.objectReader = objectReader;
 		this.jsonFactory = jsonFactory;
+	}
+
+	@Override
+	public ReactiveHttpRequest request() {
+		return request;
 	}
 
 	@Override

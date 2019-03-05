@@ -126,7 +126,7 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 		}
 
 		return Mono.<ReactiveHttpResponse>from(requestBuilder.build().response((response, content) -> Mono.just(
-				new JettyReactiveHttpResponse(response.getResponse(),
+				new JettyReactiveHttpResponse(request, response.getResponse(),
 						postProcess(content,
 								(contentChunk, throwable) -> {
 									if(throwable != null){

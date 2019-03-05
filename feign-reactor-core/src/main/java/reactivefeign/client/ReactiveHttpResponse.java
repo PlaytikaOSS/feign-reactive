@@ -26,6 +26,8 @@ import java.util.Map;
  */
 public interface ReactiveHttpResponse {
 
+  ReactiveHttpRequest request();
+
   int status();
 
   Map<String, List<String>> headers();

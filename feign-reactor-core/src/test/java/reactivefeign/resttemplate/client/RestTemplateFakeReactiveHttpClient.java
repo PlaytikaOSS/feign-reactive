@@ -92,13 +92,13 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
               restTemplate.exchange(request.uri().toString(), HttpMethod.valueOf(request.method()),
                       new HttpEntity<>(body, headers), responseType());
 
-      return Mono.just(new FakeReactiveHttpResponse(response, returnPublisherType));
+      return Mono.just(new FakeReactiveHttpResponse(request, response, returnPublisherType));
     })
             .onErrorMap(ex -> ex instanceof ResourceAccessException
                                 && ex.getCause() instanceof SocketTimeoutException,
                     ReadTimeoutException::new)
             .onErrorResume(HttpStatusCodeException.class,
-                    ex -> Mono.just(new ErrorReactiveHttpResponse(ex)));
+                    ex -> Mono.just(new ErrorReactiveHttpResponse(request, ex)));
   }
 
   private ParameterizedTypeReference<Object> responseType(){
@@ -126,12 +126,19 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
 
   private static class FakeReactiveHttpResponse implements ReactiveHttpResponse{
 
+    private ReactiveHttpRequest request;
     private final ResponseEntity response;
     private final Type returnPublisherType;
 
-    private FakeReactiveHttpResponse(ResponseEntity response, Type returnPublisherType) {
+    private FakeReactiveHttpResponse(ReactiveHttpRequest request, ResponseEntity response, Type returnPublisherType) {
+      this.request = request;
       this.response = response;
       this.returnPublisherType = returnPublisherType;
+    }
+
+    @Override
+    public ReactiveHttpRequest request() {
+      return request;
     }
 
     @Override
@@ -161,10 +168,17 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
 
   private static class ErrorReactiveHttpResponse implements ReactiveHttpResponse{
 
+    private ReactiveHttpRequest request;
     private final HttpStatusCodeException ex;
 
-    private ErrorReactiveHttpResponse(HttpStatusCodeException ex) {
+    private ErrorReactiveHttpResponse(ReactiveHttpRequest request, HttpStatusCodeException ex) {
+      this.request = request;
       this.ex = ex;
+    }
+
+    @Override
+    public ReactiveHttpRequest request() {
+      return request;
     }
 
     @Override
