@@ -25,12 +25,13 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cloud.netflix.ribbon.SpringClientFactory;
+import org.springframework.cloud.client.loadbalancer.reactive.WebClientCustomizer;
 import org.springframework.cloud.openfeign.support.SpringMvcContract;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.cloud.CloudReactiveFeign;
 import reactivefeign.webclient.WebReactiveFeign;
@@ -51,9 +52,27 @@ public class ReactiveFeignClientsConfiguration {
 	@Bean
 	@Scope("prototype")
 	@ConditionalOnClass(WebReactiveFeign.class)
+	@ConditionalOnMissingBean
+	public WebClientCustomizer webClientCustomizer() {
+		return webClientBuilder -> {};
+	}
+
+	@Bean
+	@Scope("prototype")
+	@ConditionalOnClass(WebReactiveFeign.class)
+	@ConditionalOnMissingBean
+	public WebClient webClient(WebClientCustomizer webClientCustomizer) {
+		WebClient.Builder builder = WebClient.builder();
+		webClientCustomizer.customize(builder);
+		return builder.build();
+	}
+
+	@Bean
+	@Scope("prototype")
+	@ConditionalOnClass(WebReactiveFeign.class)
 	@ConditionalOnMissingBean(ignoredType = "reactivefeign.cloud.CloudReactiveFeign.Builder")
-	public ReactiveFeignBuilder reactiveFeignBuilder() {
-		return WebReactiveFeign.builder();
+	public ReactiveFeignBuilder reactiveFeignBuilder(WebClient webClient) {
+		return WebReactiveFeign.builder(webClient);
 	}
 
 	@AutoConfigureAfter(ReactiveFeignClientsConfiguration.class)

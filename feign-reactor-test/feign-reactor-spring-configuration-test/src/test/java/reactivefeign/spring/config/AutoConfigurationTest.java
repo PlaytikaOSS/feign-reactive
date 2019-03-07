@@ -26,9 +26,9 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.client.loadbalancer.reactive.WebClientCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.stereotype.Component;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -54,6 +54,8 @@ public class AutoConfigurationTest {
 	private static final String TEST_URL = "/testUrl";
 	private static final String BODY_TEXT = "test";
 	private static final String FALLBACK_TEXT = "test fallback";
+	public static final String CUSTOM = "custom";
+	public static final String HEADER = "header";
 	private static WireMockServer mockHttpServer = new WireMockServer(wireMockConfig().dynamicPort());
 
 	@Autowired
@@ -62,6 +64,7 @@ public class AutoConfigurationTest {
 	@Test
 	public void shouldReturnBody() {
 		mockHttpServer.stubFor(WireMock.get(WireMock.urlPathMatching(TEST_URL))
+				.withHeader(CUSTOM, equalTo(HEADER))
 				.willReturn(WireMock.aResponse()
 						.withBody(BODY_TEXT)));
 		Mono<String> result = feignClient.testMethod();
@@ -74,6 +77,7 @@ public class AutoConfigurationTest {
 	@Test
 	public void shouldReturnFallbackOnError() {
 		mockHttpServer.stubFor(get(urlPathMatching(TEST_URL))
+				.withHeader(CUSTOM, equalTo(HEADER))
 				.willReturn(aResponse()
 						.withStatus(598)));
 
@@ -126,6 +130,13 @@ public class AutoConfigurationTest {
 		@Bean
 		public TestFallback reactiveFallback(){
 			return new TestFallback();
+		}
+
+		@Bean
+		public WebClientCustomizer webClientCustomizer(){
+			return webClientBuilder -> {
+				webClientBuilder.defaultHeader(CUSTOM, HEADER);
+			};
 		}
 	}
 }
