@@ -46,6 +46,13 @@ import static reactivefeign.utils.StringUtils.cutTail;
  */
 public class PublisherClientMethodHandler implements MethodHandler {
 
+    /**
+     *
+     * @param template
+     * @return function that able to map substitutions map to actual value for specified template
+     */
+    public static final Pattern SUBSTITUTION_PATTERN = Pattern.compile("\\{([^}]+)\\}");
+
     private final Target target;
     private final MethodMetadata methodMetadata;
     private final PublisherHttpClient publisherClient;
@@ -63,7 +70,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
                 "methodMetadata must be not null");
         this.publisherClient = checkNotNull(publisherClient, "client must be not null");
         RequestTemplate requestTemplate = methodMetadata.template();
-        this.pathExpander = buildUrlExpandFunction(
+        this.pathExpander = buildUrlExpandFunction(target.url() +
                 cutTail(requestTemplate.url(), requestTemplate.queryLine()));
         this.headerExpanders = buildExpanders(requestTemplate.headers());
 
@@ -113,7 +120,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
         Map<String, Collection<String>> queries = queries(argv, substitutionsMap);
         String queryLine = queryLine(queries);
 
-        return URI.create(target.url() + path + queryLine);
+        return URI.create(path + queryLine);
     }
 
     private Map<String, Object> buildSubstitutions(Object[] argv) {
@@ -238,15 +245,8 @@ public class PublisherClientMethodHandler implements MethodHandler {
      * @param template
      * @return function that able to map substitutions map to actual value for specified template
      */
-    private static final Pattern PATTERN = Pattern.compile("\\{([^}]+)\\}");
-
-    /**
-     *
-     * @param template
-     * @return function that able to map substitutions map to actual value for specified template
-     */
     private static Function<Map<String, ?>, List<String>> buildExpandFunction(String template) {
-        Matcher matcher = PATTERN.matcher(template);
+        Matcher matcher = SUBSTITUTION_PATTERN.matcher(template);
         if(matcher.matches()){
             String substitute = matcher.group(1);
 
@@ -276,7 +276,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
      */
     private static Function<Map<String, ?>, String> buildUrlExpandFunction(String template) {
         List<Function<Map<String, ?>, String>> chunks = new ArrayList<>();
-        Matcher matcher = PATTERN.matcher(template);
+        Matcher matcher = SUBSTITUTION_PATTERN.matcher(template);
         int previousMatchEnd = 0;
         while (matcher.find()) {
             String textChunk = template.substring(previousMatchEnd, matcher.start());

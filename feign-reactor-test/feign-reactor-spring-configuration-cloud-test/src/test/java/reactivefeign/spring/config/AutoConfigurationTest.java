@@ -18,6 +18,12 @@ package reactivefeign.spring.config;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.netflix.client.ClientException;
+import com.netflix.hystrix.HystrixCommandGroupKey;
+import com.netflix.hystrix.HystrixCommandKey;
+import com.netflix.hystrix.HystrixCommandProperties;
+import com.netflix.hystrix.HystrixObservableCommand;
+import feign.MethodMetadata;
+import feign.Target;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -26,10 +32,13 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import reactivefeign.cloud.CloudReactiveFeign;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -61,6 +70,9 @@ public class AutoConfigurationTest {
 	@Autowired
 	TestReactiveFeignClient feignClient;
 
+	@Autowired
+	TestReactiveFeignClientWithParamInPath feignClientWithParamInPath;
+
 	@Test
 	public void shouldMirrorIntegerStreamBody() {
 		mockHttpServer.stubFor(get(urlPathMatching(TEST_URL))
@@ -90,6 +102,20 @@ public class AutoConfigurationTest {
 				.verify();
 	}
 
+	@Test
+	public void shouldUseParameterFromPath() {
+		mockHttpServer.stubFor(get(urlPathMatching("/test/1"+TEST_URL))
+				.willReturn(aResponse()
+						.withBody(BODY_TEXT)
+						.withStatus(200)));
+
+		Mono<String> result = feignClientWithParamInPath.testMethod(1);
+
+		StepVerifier.create(result)
+				.expectNext(BODY_TEXT)
+				.verifyComplete();
+	}
+
 	@BeforeClass
 	public static void setup() {
 		mockHttpServer.start();
@@ -112,8 +138,38 @@ public class AutoConfigurationTest {
 		Mono<String> testMethod();
 	}
 
-	@EnableReactiveFeignClients(clients = AutoConfigurationTest.TestReactiveFeignClient.class)
+	@ReactiveFeignClient(name = "test-feign-client-w-param", path = "test/{id}",
+			configuration = HystrixTimeoutDisabledConfiguration.class)
+	public interface TestReactiveFeignClientWithParamInPath {
+		@GetMapping(path = TEST_URL)
+		Mono<String> testMethod(@PathVariable("id") long id);
+	}
+
+	@EnableReactiveFeignClients(clients = {
+			AutoConfigurationTest.TestReactiveFeignClient.class,
+			TestReactiveFeignClientWithParamInPath.class})
 	@EnableAutoConfiguration
 	@Configuration
 	public static class TestConfiguration{}
+
+	@Configuration
+	protected static class HystrixTimeoutDisabledConfiguration {
+
+		@Bean
+		CloudReactiveFeign.SetterFactory setterFactory() {
+			return new CloudReactiveFeign.SetterFactory() {
+				@Override
+				public HystrixObservableCommand.Setter create(Target<?> target, MethodMetadata methodMetadata) {
+					String groupKey = target.name();
+					HystrixCommandKey commandKey = HystrixCommandKey.Factory.asKey(methodMetadata.configKey());
+					return HystrixObservableCommand.Setter
+							.withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
+							.andCommandKey(commandKey)
+							.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
+									.withExecutionTimeoutEnabled(false)
+							);
+				}
+			};
+		}
+	}
 }

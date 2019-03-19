@@ -30,6 +30,7 @@ import java.net.URISyntaxException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static reactivefeign.methodhandler.PublisherClientMethodHandler.SUBSTITUTION_PATTERN;
 import static reactivefeign.retry.FilteredReactiveRetryPolicy.notRetryOn;
 import static reactivefeign.utils.FeignUtils.returnPublisherType;
 
@@ -200,7 +201,8 @@ public class CloudReactiveFeign {
 
         private String extractServiceName(String url){
             try {
-                return new URI(url).getHost();
+                String substitutedUrl = url.replaceAll(SUBSTITUTION_PATTERN.toString(), "tempsubstitution");
+                return new URI(substitutedUrl).getHost();
             } catch (URISyntaxException e) {
                 throw new IllegalArgumentException("Can't extract service name from url:"+url, e);
             }
