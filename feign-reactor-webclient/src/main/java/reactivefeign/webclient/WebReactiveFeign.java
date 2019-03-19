@@ -52,15 +52,15 @@ public class WebReactiveFeign {
 
         protected Builder() {
             this(WebClient.create());
-        }
-
-        protected Builder(WebClient webClient) {
-            setWebClient(webClient);
             options(new WebReactiveOptions.Builder()
                     .setReadTimeoutMillis(DEFAULT_READ_TIMEOUT_MILLIS)
                     .setWriteTimeoutMillis(DEFAULT_WRITE_TIMEOUT_MILLIS)
                     .setConnectTimeoutMillis(DEFAULT_CONNECT_TIMEOUT_MILLIS)
                     .build());
+        }
+
+        protected Builder(WebClient webClient) {
+            setWebClient(webClient);
         }
 
         @Override
