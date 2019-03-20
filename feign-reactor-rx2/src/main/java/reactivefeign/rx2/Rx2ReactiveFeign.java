@@ -17,6 +17,7 @@ import reactivefeign.publisher.PublisherHttpClient;
 import reactivefeign.rx2.client.statushandler.Rx2ReactiveStatusHandler;
 import reactivefeign.rx2.client.statushandler.Rx2StatusHandler;
 import reactivefeign.rx2.methodhandler.Rx2MethodHandlerFactory;
+import reactivefeign.webclient.WebClientFeignCustomizer;
 import reactivefeign.webclient.WebReactiveFeign;
 import reactivefeign.webclient.client.WebReactiveHttpClient;
 import reactor.core.publisher.Flux;
@@ -41,8 +42,8 @@ public final class Rx2ReactiveFeign {
         return new Builder<>();
     }
 
-    public static <T> Builder<T> builder(WebClient webClient) {
-        return new Builder<>(webClient);
+    public static <T> Builder<T> builder(WebClientFeignCustomizer webClientCustomizer) {
+        return new Builder<>(webClientCustomizer);
     }
 
     public static class Builder<T> extends WebReactiveFeign.Builder<T> {
@@ -53,8 +54,8 @@ public final class Rx2ReactiveFeign {
             super();
         }
 
-        protected Builder(WebClient webClient) {
-            super(webClient);
+        protected Builder(WebClientFeignCustomizer webClientCustomizer) {
+            super(webClientCustomizer);
         }
 
         /**
@@ -117,9 +118,8 @@ public final class Rx2ReactiveFeign {
         }
 
         @Override
-        protected void setWebClient(WebClient webClient){
-            this.webClient = webClient;
-            clientFactory(methodMetadata -> webClient(methodMetadata, webClient));
+        protected void updateClientFactory(){
+            clientFactory(methodMetadata -> webClient(methodMetadata, webClientBuilder.build()));
         }
 
         public static WebReactiveHttpClient webClient(MethodMetadata methodMetadata, WebClient webClient) {

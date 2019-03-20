@@ -23,9 +23,6 @@ In cloudless mode you need to specify `url` attribute.
 To configure you feign client as cloud ready (Hystrix + Ribbon) you need to add 
 `feign-reactor-cloud` module to your classpath.
 
-!!! For `WebClient` based implementation in cloud mode you need to exclude `ReactiveLoadBalancerAutoConfiguration` 
-as it breaks feign load balancer based on `LoadBalancerCommand`
-
 This may be useful in case of tests:
 - set `reactive.feign.cloud.enabled` to `false` to disable cloud configuration for all clients
 - set `reactive.feign.ribbon.enabled` to `false` to disable ribbon configuration for all clients 

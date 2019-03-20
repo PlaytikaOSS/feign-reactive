@@ -13,17 +13,9 @@
  */
 package reactivefeign.webclient;
 
-import io.netty.channel.ChannelOption;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.handler.timeout.WriteTimeoutHandler;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveOptions;
-import reactor.netty.http.client.HttpClient;
-import reactor.netty.tcp.TcpClient;
-
-import java.util.concurrent.TimeUnit;
 
 import static reactivefeign.webclient.client.WebReactiveHttpClient.webClient;
 
@@ -34,71 +26,40 @@ import static reactivefeign.webclient.client.WebReactiveHttpClient.webClient;
  */
 public class WebReactiveFeign {
 
-    public static final int DEFAULT_READ_TIMEOUT_MILLIS = 10000;
-    public static final int DEFAULT_WRITE_TIMEOUT_MILLIS = 10000;
-    public static final int DEFAULT_CONNECT_TIMEOUT_MILLIS = 5000;
-
     public static <T> Builder<T> builder() {
         return new Builder<>();
     }
 
-    public static <T> Builder<T> builder(WebClient webClient) {
-        return new Builder<>(webClient);
+    public static <T> Builder<T> builder(WebClientFeignCustomizer webClientCustomizer) {
+        return new Builder<>(webClientCustomizer);
     }
 
     public static class Builder<T> extends ReactiveFeign.Builder<T> {
 
-        protected WebClient webClient;
+        protected CustomizableWebClientBuilder webClientBuilder = new CustomizableWebClientBuilder();
 
         protected Builder() {
-            this(WebClient.create());
-            options(new WebReactiveOptions.Builder()
-                    .setReadTimeoutMillis(DEFAULT_READ_TIMEOUT_MILLIS)
-                    .setWriteTimeoutMillis(DEFAULT_WRITE_TIMEOUT_MILLIS)
-                    .setConnectTimeoutMillis(DEFAULT_CONNECT_TIMEOUT_MILLIS)
-                    .build());
+            updateClientFactory();
         }
 
-        protected Builder(WebClient webClient) {
-            setWebClient(webClient);
+        protected Builder(WebClientFeignCustomizer webClientCustomizer) {
+            webClientCustomizer.accept(webClientBuilder);
+            updateClientFactory();
         }
 
         @Override
         public Builder<T> options(ReactiveOptions options) {
-            if (!options.isEmpty()) {
-                WebReactiveOptions webOptions = (WebReactiveOptions)options;
-                TcpClient tcpClient = TcpClient.create();
-                if (options.getConnectTimeoutMillis() != null) {
-                    tcpClient = tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
-                            options.getConnectTimeoutMillis().intValue());
-                }
-                tcpClient = tcpClient.doOnConnected(connection -> {
-                    if(webOptions.getReadTimeoutMillis() != null){
-                        connection.addHandlerLast(new ReadTimeoutHandler(
-                                webOptions.getReadTimeoutMillis(), TimeUnit.MILLISECONDS));
-                    }
-                    if(webOptions.getWriteTimeoutMillis() != null){
-                        connection.addHandlerLast(new WriteTimeoutHandler(
-                                webOptions.getWriteTimeoutMillis(), TimeUnit.MILLISECONDS));
-                    }
-                });
-
-                HttpClient httpClient = HttpClient.from(tcpClient);
-                if (options.isTryUseCompression() != null) {
-                    httpClient = httpClient.compress(true);
-                }
-                ReactorClientHttpConnector connector = new ReactorClientHttpConnector(httpClient);
-
-                setWebClient(webClient.mutate().clientConnector(connector).build());
-            }
+            webClientBuilder.setWebOptions((WebReactiveOptions)options);
+            updateClientFactory();
             return this;
         }
 
-        protected void setWebClient(WebClient webClient){
-            this.webClient = webClient;
-            clientFactory(methodMetadata -> webClient(methodMetadata, webClient));
+        protected void updateClientFactory(){
+            clientFactory(methodMetadata -> webClient(methodMetadata, webClientBuilder.build()));
         }
     }
+
+
 }
 
 

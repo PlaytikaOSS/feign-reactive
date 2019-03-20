@@ -32,6 +32,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
+import reactivefeign.webclient.WebClientFeignCustomizer;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -133,10 +134,8 @@ public class AutoConfigurationTest {
 		}
 
 		@Bean
-		public WebClientCustomizer webClientCustomizer(){
-			return webClientBuilder -> {
-				webClientBuilder.defaultHeader(CUSTOM, HEADER);
-			};
+		public WebClientFeignCustomizer webClientCustomizer(){
+			return webClientBuilder -> webClientBuilder.defaultHeader(CUSTOM, HEADER);
 		}
 	}
 }

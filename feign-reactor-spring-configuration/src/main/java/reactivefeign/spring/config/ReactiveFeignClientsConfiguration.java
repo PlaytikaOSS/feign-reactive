@@ -20,6 +20,7 @@ package reactivefeign.spring.config;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
 import feign.Contract;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -31,9 +32,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.cloud.CloudReactiveFeign;
+import reactivefeign.webclient.WebClientFeignCustomizer;
 import reactivefeign.webclient.WebReactiveFeign;
 
 
@@ -52,27 +53,11 @@ public class ReactiveFeignClientsConfiguration {
 	@Bean
 	@Scope("prototype")
 	@ConditionalOnClass(WebReactiveFeign.class)
-	@ConditionalOnMissingBean
-	public WebClientCustomizer webClientCustomizer() {
-		return webClientBuilder -> {};
-	}
-
-	@Bean
-	@Scope("prototype")
-	@ConditionalOnClass(WebReactiveFeign.class)
-	@ConditionalOnMissingBean
-	public WebClient webClient(WebClientCustomizer webClientCustomizer) {
-		WebClient.Builder builder = WebClient.builder();
-		webClientCustomizer.customize(builder);
-		return builder.build();
-	}
-
-	@Bean
-	@Scope("prototype")
-	@ConditionalOnClass(WebReactiveFeign.class)
 	@ConditionalOnMissingBean(ignoredType = "reactivefeign.cloud.CloudReactiveFeign.Builder")
-	public ReactiveFeignBuilder reactiveFeignBuilder(WebClient webClient) {
-		return WebReactiveFeign.builder(webClient);
+	public ReactiveFeignBuilder reactiveFeignBuilder(@Autowired(required = false) WebClientFeignCustomizer webClientCustomizer) {
+		return webClientCustomizer != null
+				? WebReactiveFeign.builder(webClientCustomizer)
+				: WebReactiveFeign.builder();
 	}
 
 	@AutoConfigureAfter(ReactiveFeignClientsConfiguration.class)

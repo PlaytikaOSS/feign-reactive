@@ -20,6 +20,12 @@ import reactivefeign.ReactiveOptions;
  */
 public class WebReactiveOptions extends ReactiveOptions {
 
+  public static final WebReactiveOptions DEFAULT_OPTIONS = (WebReactiveOptions)new WebReactiveOptions.Builder()
+          .setReadTimeoutMillis(10000)
+          .setWriteTimeoutMillis(10000)
+          .setConnectTimeoutMillis(5000)
+          .build();
+
   private final Long readTimeoutMillis;
   private final Long writeTimeoutMillis;
 
