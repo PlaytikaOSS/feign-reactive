@@ -32,6 +32,8 @@ import static reactivefeign.webclient.WebReactiveOptions.DEFAULT_OPTIONS;
 public class CustomizableWebClientBuilder implements WebClient.Builder {
 
     private static final Logger logger = LoggerFactory.getLogger(CustomizableWebClientBuilder.class);
+
+    private final WebClient.Builder builder;
     private String baseUrl;
     private Map<String, ?> defaultUriVariables;
     private UriBuilderFactory uriBuilderFactory;
@@ -48,6 +50,10 @@ public class CustomizableWebClientBuilder implements WebClient.Builder {
     private List<ExchangeFilterFunction> filters = new ArrayList<>();
 
     private WebReactiveOptions webOptions = DEFAULT_OPTIONS;
+
+    public CustomizableWebClientBuilder(WebClient.Builder builder) {
+        this.builder = builder;
+    }
 
     @Override
     public WebClient.Builder baseUrl(String baseUrl) {
@@ -193,7 +199,7 @@ public class CustomizableWebClientBuilder implements WebClient.Builder {
 
     @Override
     public WebClient build() {
-        WebClient.Builder builder = WebClient.builder();
+        WebClient.Builder builder = this.builder;
         if(baseUrl != null){
             builder = builder.baseUrl(baseUrl);
         }

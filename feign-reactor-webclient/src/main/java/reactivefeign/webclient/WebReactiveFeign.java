@@ -27,23 +27,30 @@ import static reactivefeign.webclient.client.WebReactiveHttpClient.webClient;
 public class WebReactiveFeign {
 
     public static <T> Builder<T> builder() {
-        return new Builder<>();
+        return builder(WebClient.builder());
     }
 
-    public static <T> Builder<T> builder(WebClientFeignCustomizer webClientCustomizer) {
-        return new Builder<>(webClientCustomizer);
+    public static <T> Builder<T> builder(WebClient.Builder webClientBuilder) {
+        return new Builder<>(webClientBuilder);
+    }
+
+    public static <T> Builder<T> builder(WebClient.Builder webClientBuilder,
+                                         WebClientFeignCustomizer webClientCustomizer) {
+        return new Builder<>(webClientBuilder, webClientCustomizer);
     }
 
     public static class Builder<T> extends ReactiveFeign.Builder<T> {
 
-        protected CustomizableWebClientBuilder webClientBuilder = new CustomizableWebClientBuilder();
+        protected CustomizableWebClientBuilder webClientBuilder;
 
-        protected Builder() {
+        protected Builder(WebClient.Builder webClientBuilder) {
+            this.webClientBuilder = new CustomizableWebClientBuilder(webClientBuilder);
             updateClientFactory();
         }
 
-        protected Builder(WebClientFeignCustomizer webClientCustomizer) {
-            webClientCustomizer.accept(webClientBuilder);
+        protected Builder(WebClient.Builder webClientBuilder, WebClientFeignCustomizer webClientCustomizer) {
+            this.webClientBuilder = new CustomizableWebClientBuilder(webClientBuilder);
+            webClientCustomizer.accept(this.webClientBuilder);
             updateClientFactory();
         }
 

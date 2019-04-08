@@ -39,23 +39,27 @@ public final class Rx2ReactiveFeign {
     private Rx2ReactiveFeign(){}
 
     public static <T> Builder<T> builder() {
-        return new Builder<>();
+        return new Builder<>(WebClient.builder());
     }
 
-    public static <T> Builder<T> builder(WebClientFeignCustomizer webClientCustomizer) {
-        return new Builder<>(webClientCustomizer);
+    public static <T> Builder<T> builder(WebClient.Builder webClientBuilder) {
+        return new Builder<>(webClientBuilder);
+    }
+
+    public static <T> Builder<T> builder(WebClient.Builder webClientBuilder, WebClientFeignCustomizer webClientCustomizer) {
+        return new Builder<>(webClientBuilder, webClientCustomizer);
     }
 
     public static class Builder<T> extends WebReactiveFeign.Builder<T> {
 
         private BackpressureStrategy backpressureStrategy;
 
-        protected Builder() {
-            super();
+        protected Builder(WebClient.Builder webClientBuilder) {
+            super(webClientBuilder);
         }
 
-        protected Builder(WebClientFeignCustomizer webClientCustomizer) {
-            super(webClientCustomizer);
+        protected Builder(WebClient.Builder webClientBuilder, WebClientFeignCustomizer webClientCustomizer) {
+            super(webClientBuilder, webClientCustomizer);
         }
 
         /**
