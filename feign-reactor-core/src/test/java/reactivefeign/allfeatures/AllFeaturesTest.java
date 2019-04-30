@@ -16,6 +16,7 @@
 
 package reactivefeign.allfeatures;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.awaitility.Duration;
 import org.eclipse.jetty.server.HttpConfiguration;
 import org.eclipse.jetty.server.ServerConnector;
@@ -51,6 +52,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -401,6 +403,26 @@ abstract public class AllFeaturesTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldFailIfNoSubstitutionForPath(){
 		client.urlNotSubstituted().block();
+	}
+
+
+	@Test
+	public void shouldEncodeQueryParam() {
+		String QUERY_PARAM_VALUE = "query param value with space";
+
+		StepVerifier.create(client.encodeParam(QUERY_PARAM_VALUE))
+				.expectNextMatches(testObject -> testObject.payload.equals(QUERY_PARAM_VALUE))
+				.verifyComplete();
+	}
+
+	@Test
+	public void shouldEncodePathParam() {
+		String PATH_PARAM = "path value with space";
+
+		StepVerifier.create(client.encodePath(PATH_PARAM))
+				.expectNextMatches(testObject -> testObject.payload.equals(PATH_PARAM))
+				.verifyComplete();
+
 	}
 
 	private static ByteBuffer fromByteArray(byte[] data){

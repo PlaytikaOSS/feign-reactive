@@ -131,4 +131,12 @@ public interface AllFeaturesFeign extends AllFeaturesApi{
 		return mirrorBody("default");
 	}
 
+	@Override
+	@RequestLine("GET /encode")
+    Mono<TestObject> encodeParam(@Param("id") String param);
+
+	@Override
+	@RequestLine("GET /encode/{id}")
+    Mono<TestObject> encodePath(@Param("id") String param);
+
 }

@@ -156,6 +156,16 @@ public class AllFeaturesController implements AllFeaturesMvc {
 	}
 
 	@Override
+	public Mono<TestObject> encodeParam(String param) {
+		return Mono.just(new TestObject(param));
+	}
+
+	@Override
+	public Mono<TestObject> encodePath(String param) {
+		return Mono.just(new TestObject(param));
+	}
+
+	@Override
 	public Flux<ByteBuffer> mirrorStreamingBinaryBodyReactive(Publisher<ByteBuffer> body) {
 		return Flux.from(body);
 	}

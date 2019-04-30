@@ -117,4 +117,13 @@ public interface AllFeaturesMvc extends AllFeaturesApi {
 	@GetMapping(path = "/empty")
 	Mono<TestObject> empty();
 
+	@Override
+	@GetMapping(path = "/encode")
+	Mono<TestObject> encodeParam(@RequestParam("id") String param);
+
+	@Override
+	@GetMapping(path = "/encode/{id}")
+	Mono<TestObject> encodePath(@PathVariable("id") String param);
+
+
 }

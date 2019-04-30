@@ -16,6 +16,7 @@ package reactivefeign.methodhandler;
 import feign.MethodMetadata;
 import feign.RequestTemplate;
 import feign.Target;
+import feign.template.UriUtils;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpRequest;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static feign.Util.checkNotNull;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.*;
 import static reactivefeign.utils.MultiValueMapUtils.*;
@@ -145,7 +147,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
                 queryBuilder.append(field);
                 queryBuilder.append('=');
                 if (!value.isEmpty()) {
-                    queryBuilder.append(value);
+                    queryBuilder.append(UriUtils.queryEncode(value, UTF_8));
                 }
             }
         }
@@ -288,7 +290,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
             chunks.add(data -> {
                 Object substitution = data.get(substitute);
                 if (substitution != null) {
-                    return substitution.toString();
+                    return UriUtils.pathEncode(substitution.toString(), UTF_8);
                 } else {
                     throw new IllegalArgumentException("No substitution in url for:"+substitute);
                 }

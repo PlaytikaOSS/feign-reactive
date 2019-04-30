@@ -89,7 +89,7 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
       }
 
       ResponseEntity response =
-              restTemplate.exchange(request.uri().toString(), HttpMethod.valueOf(request.method()),
+              restTemplate.exchange(request.uri(), HttpMethod.valueOf(request.method()),
                       new HttpEntity<>(body, headers), responseType());
 
       return Mono.just(new FakeReactiveHttpResponse(request, response, returnPublisherType));
