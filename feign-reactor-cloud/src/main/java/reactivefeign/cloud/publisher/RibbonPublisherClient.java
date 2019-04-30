@@ -2,7 +2,10 @@ package reactivefeign.cloud.publisher;
 
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
+import java.lang.reflect.Type;
+import java.net.URI;
 import org.reactivestreams.Publisher;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.cloud.LoadBalancerCommandFactory;
 import reactivefeign.publisher.PublisherHttpClient;
@@ -11,10 +14,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import rx.Observable;
 import rx.RxReactiveStreams;
-
-import java.lang.reflect.Type;
-import java.net.URI;
-import java.net.URISyntaxException;
 
 /**
  * @author Sergii Karpenko
@@ -61,13 +60,10 @@ public class RibbonPublisherClient implements PublisherHttpClient {
     }
 
     protected ReactiveHttpRequest loadBalanceRequest(ReactiveHttpRequest request, Server server) {
-        URI uri = request.uri();
-        try {
-            URI lbUrl = new URI(uri.getScheme(), uri.getUserInfo(), server.getHost(), server.getPort(),
-                    uri.getPath(), uri.getQuery(), uri.getFragment());
-            return new ReactiveHttpRequest(request.method(), lbUrl, request.headers(), request.body());
-        } catch (URISyntaxException e) {
-            throw new IllegalArgumentException(e);
-        }
+        URI lbUrl = UriComponentsBuilder.fromUri(request.uri())
+                .host(server.getHost())
+                .port(server.getPort())
+                .build(true).toUri();
+        return new ReactiveHttpRequest(request.method(), lbUrl, request.headers(), request.body());
     }
 }
