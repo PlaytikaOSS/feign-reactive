@@ -50,11 +50,6 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>commons-httpclient</groupId>
-            <artifactId>commons-httpclient</artifactId>
-        </dependency>
-
         <!-- Tests -->
         <dependency>
             <groupId>io.projectreactor</groupId>

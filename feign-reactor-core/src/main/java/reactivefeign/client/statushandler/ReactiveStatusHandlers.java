@@ -16,9 +16,9 @@ package reactivefeign.client.statushandler;
 import feign.Request;
 import feign.Response;
 import feign.codec.ErrorDecoder;
-import org.apache.commons.httpclient.HttpStatus;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
+import reactivefeign.utils.HttpStatus;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;

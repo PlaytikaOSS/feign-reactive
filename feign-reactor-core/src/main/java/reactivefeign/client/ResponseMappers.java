@@ -14,8 +14,8 @@
 package reactivefeign.client;
 
 import feign.MethodMetadata;
-import org.apache.commons.httpclient.HttpStatus;
 import org.reactivestreams.Publisher;
+import reactivefeign.utils.HttpStatus;
 import reactor.core.publisher.Mono;
 
 import java.util.function.BiFunction;
