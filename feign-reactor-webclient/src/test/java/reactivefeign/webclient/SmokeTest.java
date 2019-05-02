@@ -13,7 +13,6 @@
  */
 package reactivefeign.webclient;
 
-import com.fasterxml.jackson.core.io.JsonEOFException;
 import org.springframework.core.codec.DecodingException;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;

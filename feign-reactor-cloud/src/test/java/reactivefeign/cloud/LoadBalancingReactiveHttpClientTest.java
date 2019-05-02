@@ -66,7 +66,7 @@ public class LoadBalancingReactiveHttpClientTest {
         mockSuccessMono(server1, body);
         mockSuccessMono(server2, body);
 
-        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder()
+        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder("shouldLoadBalanceRequests")
                 .enableLoadBalancer()
                 .disableHystrix()
                 .target(TestMonoInterface.class, "http://" + serviceName);
@@ -88,7 +88,7 @@ public class LoadBalancingReactiveHttpClientTest {
         mockSuccessFlux(server1, body);
         mockSuccessFlux(server2, body);
 
-        TestFluxInterface client = BuilderUtils.<TestFluxInterface>cloudBuilder()
+        TestFluxInterface client = BuilderUtils.<TestFluxInterface>cloudBuilder("shouldLoadBalanceFluxRequests")
                 .enableLoadBalancer()
                 .disableHystrix()
                 .target(TestFluxInterface.class, "http://" + serviceName);
@@ -170,7 +170,7 @@ public class LoadBalancingReactiveHttpClientTest {
         RetryHandler retryHandler = new RequestSpecificRetryHandler(true, true,
                 new DefaultLoadBalancerRetryHandler(0, retryOnNext, true), null);
 
-        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder()
+        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder("loadBalancingWithRetry")
                 .enableLoadBalancer(ReactiveFeignClientFactory.DEFAULT, retryHandler)
                 .disableHystrix()
                 .retryWhen(retry(retryOnSame))
@@ -204,7 +204,7 @@ public class LoadBalancingReactiveHttpClientTest {
         RetryHandler retryHandler = new RequestSpecificRetryHandler(true, true,
                 new DefaultLoadBalancerRetryHandler(retryOnSame, retryOnNext, true), null);
 
-        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder()
+        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder("loadBalancingWithRetryWithWarning")
                 .enableLoadBalancer(ReactiveFeignClientFactory.DEFAULT, retryHandler)
                 .disableHystrix()
                 .target(TestMonoInterface.class, "http://" + serviceName);

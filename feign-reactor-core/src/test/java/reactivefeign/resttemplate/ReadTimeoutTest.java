@@ -13,7 +13,6 @@
  */
 package reactivefeign.resttemplate;
 
-import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
 import reactivefeign.resttemplate.client.RestTemplateReactiveOptions;

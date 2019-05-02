@@ -48,7 +48,7 @@ public class PathVariableInTargetUrlTest {
         String body = "Success";
         mockSuccessMono(server1, body);
 
-        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder()
+        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder("shouldCorrectlyProcessPathVariableInUrl")
                 .enableLoadBalancer()
                 .disableHystrix()
                 .target(TestMonoInterface.class, "http://"+serviceName+"/mono/{id}");

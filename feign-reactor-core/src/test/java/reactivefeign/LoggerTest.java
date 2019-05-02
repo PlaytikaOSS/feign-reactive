@@ -30,7 +30,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import reactivefeign.client.log.DefaultReactiveLogger;
-import reactivefeign.client.log.LoggerReactiveHttpClient;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.Bill;
 import reactivefeign.testcase.domain.IceCreamOrder;

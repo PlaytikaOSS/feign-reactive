@@ -17,7 +17,6 @@
 
 package reactivefeign.spring.config;
 
-import com.netflix.client.RetryHandler;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.cloud.CloudReactiveFeign;
 

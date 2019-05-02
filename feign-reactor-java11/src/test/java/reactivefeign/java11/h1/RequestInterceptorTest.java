@@ -17,8 +17,6 @@ import reactivefeign.ReactiveFeign;
 import reactivefeign.java11.Java11ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
 
-import java.util.function.Predicate;
-
 /**
  * @author Sergii Karpenko
  */

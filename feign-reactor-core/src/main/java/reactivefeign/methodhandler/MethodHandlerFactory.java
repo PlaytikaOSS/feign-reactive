@@ -15,7 +15,6 @@ package reactivefeign.methodhandler;
 
 import feign.MethodMetadata;
 import feign.Target;
-import reactivefeign.methodhandler.MethodHandler;
 
 import java.lang.reflect.Method;
 

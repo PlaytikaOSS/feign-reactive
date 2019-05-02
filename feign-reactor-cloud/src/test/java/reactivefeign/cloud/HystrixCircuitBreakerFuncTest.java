@@ -27,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
                 "hystrix.command.default.circuitBreaker.enabled=false",
                 "hystrix.command.default.execution.timeout.enabled=false"
         })
-@AutoConfigureWireMock
+@AutoConfigureWireMock(port = 8081)
 @EnableAutoConfiguration
 public class HystrixCircuitBreakerFuncTest {
     private static final String TEST_URL = "/call";
@@ -51,7 +51,7 @@ public class HystrixCircuitBreakerFuncTest {
         int callsNo = HYSTRIX_VOLUME_THRESHOLD + 10;
         mockResponseServiceUnavailable();
 
-        TestCaller testCaller = BuilderUtils.<TestCaller>cloudBuilder()
+        TestCaller testCaller = BuilderUtils.<TestCaller>cloudBuilder("shouldReturnFallbackWithClosedCircuitAfterThreshold")
                 .fallback(() -> Mono.just(FALLBACK))
                 .target(TestCaller.class, "http://localhost:" + WIREMOCK_PORT);
 
@@ -72,7 +72,7 @@ public class HystrixCircuitBreakerFuncTest {
         int callsNo = HYSTRIX_VOLUME_THRESHOLD + 10;
         mockResponseServiceUnavailable();
 
-        TestCaller testCaller = BuilderUtils.<TestCaller>cloudBuilder()
+        TestCaller testCaller = BuilderUtils.<TestCaller>cloudBuilder("shouldNotOpenCircuitAfterThreshold")
                 .target(TestCaller.class, "http://localhost:" + WIREMOCK_PORT);
 
         //check that circuit breaker DOESN'T open on volume threshold

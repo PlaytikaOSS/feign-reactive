@@ -16,7 +16,6 @@ package reactivefeign.publisher.retry;
 import feign.MethodMetadata;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpRequest;
-import reactivefeign.publisher.MonoPublisherHttpClient;
 import reactivefeign.publisher.PublisherHttpClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

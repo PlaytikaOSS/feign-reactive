@@ -18,12 +18,6 @@ package reactivefeign.spring.config;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.netflix.client.ClientException;
-import com.netflix.client.ClientFactory;
-import com.netflix.client.config.CommonClientConfigKey;
-import com.netflix.client.config.DefaultClientConfigImpl;
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -44,9 +38,7 @@ import java.util.stream.Stream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static reactivefeign.spring.config.AutoConfigurationTest.MOCK_SERVER_PORT_PROPERTY;
 import static reactivefeign.spring.config.RibbonEnabledHystrixDisabledUsingPropertiesTest.MOCK_SERVER_1_PORT_PROPERTY;
 import static reactivefeign.spring.config.RibbonEnabledHystrixDisabledUsingPropertiesTest.MOCK_SERVER_2_PORT_PROPERTY;
 

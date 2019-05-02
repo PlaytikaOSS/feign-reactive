@@ -16,32 +16,25 @@ package reactivefeign;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.web.client.RestClientException;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.*;
-import reactor.core.Exceptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.util.Arrays.asList;
-import static reactivefeign.TestUtils.MAPPER;
-import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
-import static reactivefeign.TestUtils.readJsonFromFile;
+import static reactivefeign.TestUtils.*;
 
 /**
  * @author Sergii Karpenko

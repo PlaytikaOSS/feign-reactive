@@ -16,8 +16,6 @@
 
 package reactivefeign.allfeatures;
 
-import feign.Param;
-import feign.RequestLine;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

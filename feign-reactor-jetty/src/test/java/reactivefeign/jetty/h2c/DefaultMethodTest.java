@@ -15,7 +15,6 @@ package reactivefeign.jetty.h2c;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import reactivefeign.ReactiveFeign;
-import reactivefeign.jetty.JettyReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 import static reactivefeign.jetty.h2c.TestUtils.builderHttp2;

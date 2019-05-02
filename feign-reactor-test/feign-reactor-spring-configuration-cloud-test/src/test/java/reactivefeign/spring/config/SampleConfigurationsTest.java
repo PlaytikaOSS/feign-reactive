@@ -18,15 +18,9 @@ package reactivefeign.spring.config;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.netflix.client.ClientException;
-import com.netflix.client.ClientFactory;
-import com.netflix.client.config.CommonClientConfigKey;
-import com.netflix.client.config.DefaultClientConfigImpl;
 import com.netflix.hystrix.*;
 import com.netflix.hystrix.exception.HystrixBadRequestException;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
 import feign.MethodMetadata;
 import feign.Target;
 import org.junit.AfterClass;

@@ -13,13 +13,11 @@
  */
 package reactivefeign.rx2.testcase;
 
-import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
 import io.reactivex.Flowable;
 import io.reactivex.Single;
 import reactivefeign.ReactiveContract;
-import reactivefeign.rx2.testcase.domain.Bill;
 import reactivefeign.rx2.testcase.domain.Flavor;
 import reactivefeign.rx2.testcase.domain.IceCreamOrder;
 import reactivefeign.rx2.testcase.domain.Mixin;

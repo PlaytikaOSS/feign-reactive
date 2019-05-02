@@ -2,8 +2,6 @@ package reactivefeign.cloud.publisher;
 
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
-import java.lang.reflect.Type;
-import java.net.URI;
 import org.reactivestreams.Publisher;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactivefeign.client.ReactiveHttpRequest;
@@ -14,6 +12,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import rx.Observable;
 import rx.RxReactiveStreams;
+
+import java.lang.reflect.Type;
+import java.net.URI;
 
 /**
  * @author Sergii Karpenko

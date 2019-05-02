@@ -2,7 +2,7 @@ package reactivefeign.methodhandler;
 
 import feign.MethodMetadata;
 import feign.Target;
-import reactivefeign.publisher.*;
+import reactivefeign.publisher.PublisherClientFactory;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 

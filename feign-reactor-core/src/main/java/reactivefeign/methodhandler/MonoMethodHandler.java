@@ -1,6 +1,5 @@
 package reactivefeign.methodhandler;
 
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class MonoMethodHandler implements MethodHandler {

@@ -2,7 +2,6 @@ package reactivefeign.benchmarks;
 
 import feign.Headers;
 import feign.RequestLine;
-import feign.Response;
 import reactor.core.publisher.Mono;
 
 import java.util.Map;

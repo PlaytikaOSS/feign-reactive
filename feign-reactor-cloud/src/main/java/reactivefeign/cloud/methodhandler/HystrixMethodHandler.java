@@ -15,11 +15,9 @@ import rx.RxReactiveStreams;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
 
-import static feign.Feign.configKey;
 import static feign.Util.checkNotNull;
 import static reactivefeign.utils.FeignUtils.findMethodInTarget;
 

@@ -16,20 +16,13 @@
 
 package reactivefeign.allfeatures;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.awaitility.Duration;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.ServerConnector;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.web.embedded.jetty.JettyReactiveWebServerFactory;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
 import org.springframework.boot.web.reactive.server.ReactiveWebServerFactory;
 import org.springframework.boot.web.server.LocalServerPort;
@@ -52,9 +45,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.waitAtMost;
 import static reactivefeign.ReactivityTest.*;
@@ -79,16 +70,20 @@ abstract public class AllFeaturesTest {
 	protected AllFeaturesApi client;
 
 	@LocalServerPort
-	private int port;
+	protected int port;
 
 	@Rule
 	public ExpectedException expectedException = ExpectedException.none();
 
 	abstract protected AllFeaturesApi buildClient(String url);
 
+	protected AllFeaturesApi buildClient(){
+		return buildClient("http://localhost:" + port);
+	}
+
 	@Before
 	public void setUp() {
-		client = buildClient("http://localhost:" + port);
+		client = buildClient();
 	}
 
 	@Test
@@ -408,7 +403,7 @@ abstract public class AllFeaturesTest {
 
 	@Test
 	public void shouldEncodeQueryParam() {
-		String QUERY_PARAM_VALUE = "query param value with space";
+		String QUERY_PARAM_VALUE = "query param value with space and Cyrillic Героям Слава";
 
 		StepVerifier.create(client.encodeParam(QUERY_PARAM_VALUE))
 				.expectNextMatches(testObject -> testObject.payload.equals(QUERY_PARAM_VALUE))
@@ -417,7 +412,7 @@ abstract public class AllFeaturesTest {
 
 	@Test
 	public void shouldEncodePathParam() {
-		String PATH_PARAM = "path value with space";
+		String PATH_PARAM = "path value with space and Cyrillic Героям Слава";
 
 		StepVerifier.create(client.encodePath(PATH_PARAM))
 				.expectNextMatches(testObject -> testObject.payload.equals(PATH_PARAM))

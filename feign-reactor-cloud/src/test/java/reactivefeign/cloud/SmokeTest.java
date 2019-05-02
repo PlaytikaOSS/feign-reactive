@@ -16,7 +16,6 @@ package reactivefeign.cloud;
 import org.springframework.core.codec.DecodingException;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.testcase.IcecreamServiceApi;
-import reactivefeign.webclient.WebReactiveFeign;
 
 import java.util.function.Predicate;
 

@@ -17,7 +17,6 @@
 package reactivefeign.spring.mvc.allfeatures;
 
 import org.reactivestreams.Publisher;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

@@ -1,7 +1,6 @@
 package reactivefeign.client.log;
 
 import org.slf4j.LoggerFactory;
-import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.utils.Pair;

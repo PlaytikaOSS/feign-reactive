@@ -26,7 +26,6 @@ import reactor.test.StepVerifier;
 import java.lang.reflect.InvocationTargetException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Sergii Karpenko

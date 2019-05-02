@@ -14,7 +14,6 @@
 package reactivefeign.testcase.domain;
 
 import java.time.Instant;
-import java.time.temporal.TemporalUnit;
 import java.util.*;
 
 import static java.time.temporal.ChronoUnit.MICROS;

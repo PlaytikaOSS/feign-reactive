@@ -17,7 +17,6 @@
 package reactivefeign.spring.config;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.netflix.client.ClientException;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandProperties;
