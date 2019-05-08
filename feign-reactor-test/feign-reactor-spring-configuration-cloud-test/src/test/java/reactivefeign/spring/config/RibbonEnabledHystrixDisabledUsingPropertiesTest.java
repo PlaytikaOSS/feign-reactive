@@ -39,8 +39,7 @@ import java.util.stream.Stream;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
-import static reactivefeign.spring.config.RibbonEnabledHystrixDisabledUsingPropertiesTest.MOCK_SERVER_1_PORT_PROPERTY;
-import static reactivefeign.spring.config.RibbonEnabledHystrixDisabledUsingPropertiesTest.MOCK_SERVER_2_PORT_PROPERTY;
+import static reactivefeign.spring.config.RibbonEnabledHystrixDisabledUsingPropertiesTest.*;
 
 /**
  * @author Sergii Karpenko
@@ -51,7 +50,7 @@ import static reactivefeign.spring.config.RibbonEnabledHystrixDisabledUsingPrope
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = RibbonEnabledHystrixDisabledUsingPropertiesTest.TestConfiguration.class,
 		        webEnvironment = SpringBootTest.WebEnvironment.NONE,
-		        properties = "ribbon.listOfServers=localhost:${"+MOCK_SERVER_1_PORT_PROPERTY+"}, localhost:${"+MOCK_SERVER_2_PORT_PROPERTY+"}")
+		        properties = FEIGN_CLIENT_TEST_RIBBON+".ribbon.listOfServers=localhost:${"+MOCK_SERVER_1_PORT_PROPERTY+"}, localhost:${"+MOCK_SERVER_2_PORT_PROPERTY+"}")
 @TestPropertySource("classpath:ribbon-enabled-hystrix-disabled.properties")
 @DirtiesContext
 public class RibbonEnabledHystrixDisabledUsingPropertiesTest {

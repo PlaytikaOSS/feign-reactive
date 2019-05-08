@@ -2,7 +2,11 @@ package reactivefeign.rx2.methodhandler;
 
 import feign.MethodMetadata;
 import feign.Target;
-import io.reactivex.*;
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
+import io.reactivex.Maybe;
+import io.reactivex.Observable;
+import io.reactivex.Single;
 import org.reactivestreams.Publisher;
 import reactivefeign.methodhandler.PublisherClientMethodHandler;
 import reactivefeign.publisher.PublisherHttpClient;

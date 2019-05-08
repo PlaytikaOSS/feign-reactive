@@ -20,15 +20,10 @@ import com.netflix.client.ClientException;
 import com.netflix.client.ClientFactory;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.DefaultClientConfigImpl;
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixCommandKey;
-import com.netflix.hystrix.HystrixCommandProperties;
-import com.netflix.hystrix.HystrixObservableCommand;
 import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -39,10 +34,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import reactivefeign.allfeatures.AllFeaturesApi;
 import reactivefeign.allfeatures.AllFeaturesController;
 import reactivefeign.allfeatures.AllFeaturesFeign;
-import reactivefeign.webclient.WebReactiveFeign;
 
 import static java.util.Arrays.asList;
-import static reactivefeign.ReactivityTest.CALLS_NUMBER;
 
 /**
  * @author Sergii Karpenko

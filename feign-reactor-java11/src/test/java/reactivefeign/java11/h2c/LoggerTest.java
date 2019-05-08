@@ -16,6 +16,8 @@ package reactivefeign.java11.h2c;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import reactivefeign.ReactiveFeign;
+import reactivefeign.java11.Java11ReactiveFeign;
+import reactivefeign.java11.Java11ReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 import java.util.List;
@@ -42,6 +44,14 @@ public class LoggerTest extends reactivefeign.LoggerTest {
     @Override
     protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
         return builderHttp2();
+    }
+
+    @Override
+    protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
+        return Java11ReactiveFeign.<IcecreamServiceApi>builder().options(
+                new Java11ReactiveOptions.Builder()
+                        .setRequestTimeoutMillis(readTimeoutInMillis)
+                        .setUseHttp2(true).build());
     }
 
     @Override

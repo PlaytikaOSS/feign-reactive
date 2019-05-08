@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import feign.MethodMetadata;
 import org.reactivestreams.Publisher;
+import reactivefeign.client.ReactiveFeignException;
 import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
@@ -132,9 +133,14 @@ public class Java11ReactiveHttpClient implements ReactiveHttpClient {
 							returnPublisherClass, returnActualClass,
 							jsonFactory, responseReader);
 				})
-                .onErrorMap(ex -> ex instanceof CompletionException
-						          && ex.getCause() instanceof java.net.http.HttpTimeoutException,
-                        ReadTimeoutException::new);
+                .onErrorMap(ex -> {
+                	if(ex instanceof CompletionException
+							&& ex.getCause() instanceof java.net.http.HttpTimeoutException){
+                		return new ReadTimeoutException(ex.getCause(), request);
+					} else {
+                		return new ReactiveFeignException(ex, request);
+					}
+				});
 	}
 
 	protected void setUpHeaders(ReactiveHttpRequest request, HttpRequest.Builder requestBuilder) {

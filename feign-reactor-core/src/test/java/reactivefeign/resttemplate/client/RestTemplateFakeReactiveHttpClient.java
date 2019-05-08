@@ -27,6 +27,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+import reactivefeign.client.ReactiveFeignException;
 import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
@@ -94,11 +95,17 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
 
       return Mono.just(new FakeReactiveHttpResponse(request, response, returnPublisherType));
     })
-            .onErrorMap(ex -> ex instanceof ResourceAccessException
-                                && ex.getCause() instanceof SocketTimeoutException,
-                    ReadTimeoutException::new)
             .onErrorResume(HttpStatusCodeException.class,
-                    ex -> Mono.just(new ErrorReactiveHttpResponse(request, ex)));
+                    ex -> Mono.just(new ErrorReactiveHttpResponse(request, ex)))
+            .onErrorMap(ex -> {
+                      if (ex instanceof ResourceAccessException
+                              && ex.getCause() instanceof SocketTimeoutException) {
+                        return new ReadTimeoutException(ex.getCause(), request);
+                      } else {
+                        return new ReactiveFeignException(ex, request);
+                      }
+                    }
+            );
   }
 
   private ParameterizedTypeReference<Object> responseType(){

@@ -22,6 +22,10 @@ import feign.Target;
 
 public interface PublisherClientFactory {
 
+    /**
+     * always called before create(MethodMetadata methodMetadata)
+     * @param target
+     */
     void target(Target target);
 
     PublisherHttpClient create(MethodMetadata methodMetadata);

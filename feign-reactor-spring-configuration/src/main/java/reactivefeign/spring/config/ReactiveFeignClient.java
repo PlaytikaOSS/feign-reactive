@@ -19,7 +19,11 @@ package reactivefeign.spring.config;
 import org.springframework.core.annotation.AliasFor;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 
-import java.lang.annotation.*;
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
 /**
  * Annotation for interfaces declaring that a REST client with that interface should be

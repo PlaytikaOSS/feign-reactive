@@ -1,6 +1,10 @@
 package reactivefeign;
 
-import feign.*;
+import feign.Contract;
+import feign.FeignException;
+import feign.InvocationHandlerFactory;
+import feign.MethodMetadata;
+import feign.Target;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.client.log.ReactiveLoggerListener;

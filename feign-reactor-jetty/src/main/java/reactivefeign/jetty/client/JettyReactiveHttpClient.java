@@ -28,6 +28,7 @@ import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.reactive.client.ContentChunk;
 import org.eclipse.jetty.reactive.client.ReactiveRequest;
 import org.reactivestreams.Publisher;
+import reactivefeign.client.ReactiveFeignException;
 import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
@@ -136,11 +137,14 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 									}
 								}),
 						returnPublisherClass, returnActualClass,
-						jsonFactory, responseReader))
-
-
-		)).onErrorMap(ex -> ex instanceof java.util.concurrent.TimeoutException,
-				ReadTimeoutException::new);
+						jsonFactory, responseReader))))
+				.onErrorMap(ex -> {
+					if(ex instanceof java.util.concurrent.TimeoutException){
+						return new ReadTimeoutException(ex, request);
+					} else {
+						return new ReactiveFeignException(ex, request);
+					}
+				});
 	}
 
 	protected void setUpHeaders(ReactiveHttpRequest request, HttpFields httpHeaders) {

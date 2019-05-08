@@ -27,34 +27,30 @@ import static reactivefeign.TestUtils.MAPPER;
 /**
  * @author Sergii Karpenko
  */
-public class LoggerTest extends reactivefeign.LoggerTest {
+public class MetricsTest extends reactivefeign.MetricsTest {
 
-    @Override
-    protected String appenderPrefix(){
-        return "h1_";
-    }
+  @Override
+  protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
+    return JettyReactiveFeign.builder();
+  }
 
-    @Override
-    protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
-        return JettyReactiveFeign.builder();
-    }
+  @Override
+  protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
+    return JettyReactiveFeign.<IcecreamServiceApi>builder().options(
+            new JettyReactiveOptions.Builder().setRequestTimeoutMillis(readTimeoutInMillis).build());
+  }
 
-    @Override
-    protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
-        return JettyReactiveFeign.<IcecreamServiceApi>builder().options(
-                new JettyReactiveOptions.Builder().setRequestTimeoutMillis(readTimeoutInMillis).build());
-    }
+  @Override
+  protected String fluxRequestBody(List<?> list) {
+    return list.stream()
+            .map(element -> {
+              try {
+                return MAPPER.writeValueAsString(element);
+              } catch (JsonProcessingException e) {
+                throw new RuntimeException(e);
+              }
+            }).collect(Collectors.joining("\n"))+"\n";
 
-    @Override
-    protected String fluxRequestBody(List<?> list) {
-        return list.stream()
-                .map(element -> {
-                    try {
-                        return MAPPER.writeValueAsString(element);
-                    } catch (JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
-                }).collect(Collectors.joining("\n"))+"\n";
+  }
 
-    }
 }

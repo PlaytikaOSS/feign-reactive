@@ -1,8 +1,12 @@
 package reactivefeign.client.log;
 
+import feign.MethodMetadata;
+import feign.Target;
+import org.reactivestreams.Publisher;
 import org.slf4j.LoggerFactory;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
+import reactivefeign.utils.FeignUtils;
 import reactivefeign.utils.Pair;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -27,17 +31,20 @@ public class DefaultReactiveLogger implements ReactiveLoggerListener<DefaultReac
     }
 
     @Override
-    public LogContext requestStarted(ReactiveHttpRequest request, String feignMethodTag) {
+    public LogContext requestStarted(ReactiveHttpRequest request, Target target, MethodMetadata methodMetadata) {
+        LogContext logContext = new LogContext(request, target, methodMetadata, clock);
+
         if (logger.isDebugEnabled()) {
-            logger.debug("[{}]--->{} {} HTTP/1.1", feignMethodTag, request.method(),
+            logger.debug("[{}]--->{} {} HTTP/1.1", logContext.feignMethodTag, request.method(),
                     request.uri());
         }
 
         if (logger.isTraceEnabled()) {
-            logRequestHeaders(request, feignMethodTag);
+            logRequestHeaders(request, logContext.feignMethodTag);
         }
 
-        return new LogContext(clock);
+
+        return logContext;
     }
 
     @Override
@@ -56,21 +63,31 @@ public class DefaultReactiveLogger implements ReactiveLoggerListener<DefaultReac
     }
 
     @Override
-    public void bodySent(ReactiveHttpRequest request, String feignMethodTag, LogContext logContext, Object body) {
+    public void bodySent(Object body, LogContext logContext) {
         if (logger.isTraceEnabled()) {
-            if (request.body() instanceof Mono) {
-                logger.trace("[{}] REQUEST BODY\n{}", feignMethodTag, body);
-            } else if (request.body() instanceof Flux) {
-                logger.trace("[{}] REQUEST BODY ELEMENT\n{}", feignMethodTag, body);
+            Publisher<Object> requestBody = logContext.request.body();
+            if (requestBody instanceof Mono) {
+                logger.trace("[{}] REQUEST BODY\n{}", logContext.feignMethodTag, body);
+            } else if (requestBody instanceof Flux) {
+                logger.trace("[{}] REQUEST BODY ELEMENT\n{}", logContext.feignMethodTag, body);
             } else {
-                throw new IllegalArgumentException("Unsupported publisher type: " + request.body().getClass());
+                throw new IllegalArgumentException("Unsupported publisher type: " + requestBody.getClass());
             }
         }
     }
 
     @Override
-    public void responseReceived(ReactiveHttpResponse response, String feignMethodTag, LogContext logContext) {
-        logResponseHeaders(response, feignMethodTag, logContext.timeSpent());
+    public void responseReceived(ReactiveHttpResponse response, LogContext logContext) {
+        logContext.setResponse(response);
+        logResponseHeaders(response, logContext.feignMethodTag, logContext.timeSpent());
+    }
+
+    @Override
+    public void errorReceived(Throwable throwable, LogContext logContext) {
+        if (logger.isErrorEnabled()) {
+            logger.error("[{}]--->{} {} HTTP/1.1", logContext.feignMethodTag,
+                    logContext.request.method(), logContext.request.uri(), throwable);
+        }
     }
 
     @Override
@@ -95,31 +112,50 @@ public class DefaultReactiveLogger implements ReactiveLoggerListener<DefaultReac
     }
 
     @Override
-    public void bodyReceived(ReactiveHttpResponse response, String feignMethodTag, LogContext logContext, Object body) {
+    public void bodyReceived(Object body, LogContext logContext) {
         if (logger.isTraceEnabled()) {
-            if(response.body() instanceof Mono) {
-                logger.trace("[{}] RESPONSE BODY\n{}", feignMethodTag, body);
+            if(logContext.getResponse().body() instanceof Mono) {
+                logger.trace("[{}] RESPONSE BODY\n{}", logContext.feignMethodTag, body);
             } else {
-                logger.trace("[{}] RESPONSE BODY ELEMENT\n{}", feignMethodTag, body);
+                logger.trace("[{}] RESPONSE BODY ELEMENT\n{}", logContext.feignMethodTag, body);
             }
         }
 
         if (logger.isDebugEnabled()) {
-            logger.debug("[{}]<--- body takes {} milliseconds", feignMethodTag, logContext.timeSpent());
+            logger.debug("[{}]<--- body takes {} milliseconds", logContext.feignMethodTag, logContext.timeSpent());
         }
     }
 
     static class LogContext{
+        private final ReactiveHttpRequest request;
+        private final Target target;
+        private final MethodMetadata methodMetadata;
         private final Clock clock;
         private final long startTime;
 
-        public LogContext(Clock clock) {
+        private final String feignMethodTag;
+
+        private ReactiveHttpResponse response;
+
+        public LogContext(ReactiveHttpRequest request, Target target, MethodMetadata methodMetadata, Clock clock) {
+            this.request = request;
+            this.target = target;
+            this.methodMetadata = methodMetadata;
             this.clock = clock;
             this.startTime = clock.millis();
+            this.feignMethodTag = FeignUtils.methodTag(methodMetadata);
         }
 
         public long timeSpent(){
             return clock.millis() - startTime;
+        }
+
+        public ReactiveHttpResponse getResponse() {
+            return response;
+        }
+
+        public void setResponse(ReactiveHttpResponse response) {
+            this.response = response;
         }
     }
 

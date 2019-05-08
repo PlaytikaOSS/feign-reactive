@@ -13,9 +13,9 @@
  */
 package reactivefeign.client;
 
-public class ReadTimeoutException extends RuntimeException {
+public class ReadTimeoutException extends ReactiveFeignException {
 
-  public ReadTimeoutException(Throwable cause) {
-    super(cause);
+  public ReadTimeoutException(Throwable cause, ReactiveHttpRequest request) {
+    super(cause, request);
   }
 }

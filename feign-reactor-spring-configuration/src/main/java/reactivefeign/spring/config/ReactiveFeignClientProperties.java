@@ -5,6 +5,7 @@ import feign.codec.ErrorDecoder;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.log.ReactiveLoggerListener;
+import reactivefeign.client.metrics.MicrometerReactiveLogger;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
 import reactivefeign.retry.ReactiveRetryPolicy;
 
@@ -74,6 +75,8 @@ public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
 
         private Class<ReactiveLoggerListener> logger;
 
+        private Class<MicrometerReactiveLogger> metricsLogger;
+
         private Boolean decode404;
 
         private Class<Contract> contract;
@@ -124,6 +127,14 @@ public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
 
         public void setLogger(Class<ReactiveLoggerListener> logger) {
             this.logger = logger;
+        }
+
+        public Class<MicrometerReactiveLogger> getMetricsLogger() {
+            return metricsLogger;
+        }
+
+        public void setMetricsLogger(Class<MicrometerReactiveLogger> metricsLogger) {
+            this.metricsLogger = metricsLogger;
         }
 
         public Boolean getDecode404() {

@@ -2,7 +2,11 @@ package reactivefeign.rx2;
 
 import feign.Contract;
 import feign.MethodMetadata;
-import io.reactivex.*;
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
+import io.reactivex.Maybe;
+import io.reactivex.Observable;
+import io.reactivex.Single;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactivefeign.ReactiveOptions;

@@ -13,9 +13,13 @@
  */
 package reactivefeign.resttemplate;
 
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import reactivefeign.ReactiveFeign;
+import reactivefeign.client.ReactiveFeignException;
 import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
+
+import java.util.function.Predicate;
 
 /**
  * @author Sergii Karpenko
@@ -25,5 +29,10 @@ public class SmokeTest extends reactivefeign.SmokeTest {
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
     return RestTemplateFakeReactiveFeign.builder();
+  }
+
+  protected Predicate<Throwable> corruptedJsonError() {
+    return throwable -> throwable instanceof ReactiveFeignException
+            && throwable.getCause().getCause() instanceof HttpMessageNotReadableException;
   }
 }

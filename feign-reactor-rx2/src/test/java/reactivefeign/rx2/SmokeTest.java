@@ -23,7 +23,11 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.rx2.testcase.IcecreamServiceApi;
-import reactivefeign.rx2.testcase.domain.*;
+import reactivefeign.rx2.testcase.domain.Bill;
+import reactivefeign.rx2.testcase.domain.Flavor;
+import reactivefeign.rx2.testcase.domain.IceCreamOrder;
+import reactivefeign.rx2.testcase.domain.Mixin;
+import reactivefeign.rx2.testcase.domain.OrderGenerator;
 
 import java.util.Map;
 import java.util.stream.Collectors;

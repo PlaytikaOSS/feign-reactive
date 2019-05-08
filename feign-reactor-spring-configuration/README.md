@@ -27,6 +27,9 @@ This may be useful in case of tests:
 - set `reactive.feign.cloud.enabled` to `false` to disable cloud configuration for all clients
 - set `reactive.feign.ribbon.enabled` to `false` to disable ribbon configuration for all clients 
 - set `reactive.feign.hystrix.enabled` to `false` to disable hystrix configuration for all clients 
+- set `reactive.feign.logger.enabled` to `true` to enable default logger
+- set `reactive.feign.metrics.enabled` to `true` to enable default Micrometer logger. 
+  Also make sure that you added actual Micrometer implementation module into your project dependency 
 
 There are to ways to configure specific settings for feign clients: 
 via `application.properties` file and configuration class. In both approaches it's possible specify default settings 
@@ -43,6 +46,7 @@ Here is the list of available properties:
 - `statusHandler` : class that implements `ReactiveStatusHandler`. Is a replacement of regular feign `ErrorDecoder`.  
 - `requestInterceptors` : classes of `ReactiveHttpRequestInterceptor`. May be used to setup specific headers to request
 - `logger` : class of `ReactiveLoggerListener`
+- `metricsLogger` : class of `MicrometerReactiveLogger`
 - `decode404` : the same as in regular feign
 
 ## Configuration via configuration class
@@ -52,7 +56,7 @@ Here is the list of available properties:
 
 Here is the list of bean classes that will be used by reactive feign client if they declared in configuration class:
 `ReactiveOptions.Builder`, `ReactiveRetryPolicy`, `List<Class<ReactiveHttpRequestInterceptor>>`, `ReactiveStatusHandler`,
-`feign.codec.ErrorDecoder`, `ReactiveLoggerListener`
+`feign.codec.ErrorDecoder`, `ReactiveLoggerListener`, `MicrometerReactiveLogger`
 
 ## Cloud specific configuration
 

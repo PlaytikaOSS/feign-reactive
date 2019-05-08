@@ -29,6 +29,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
+import reactivefeign.client.ReadTimeoutException;
 import reactivefeign.client.log.DefaultReactiveLogger;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.Bill;
@@ -42,6 +43,7 @@ import java.util.List;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.*;
 
 /**
@@ -58,6 +60,8 @@ abstract public class LoggerTest {
           .dynamicPort());
 
   abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder();
+
+  abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder(long readTimeoutInMillis);
 
   protected String appenderPrefix(){
     return "";
@@ -191,7 +195,7 @@ abstract public class LoggerTest {
   @Test
   public void shouldLogNoBody() throws Exception {
 
-    Appender appender = createAppender("TestPingAppender");
+    Appender appender = createAppender("TestTimeoutAppender");
 
     Level originalLevel = setLogLevel(Level.TRACE);
 
@@ -226,6 +230,51 @@ abstract public class LoggerTest {
             "[IcecreamServiceApi#ping]<--- headers takes");
 
     setLogLevel(originalLevel);
+  }
+
+  @Test(expected = ReadTimeoutException.class)
+  public void shouldLogTimeout() throws Exception {
+
+    Appender appender = createAppender("TestPingAppender");
+
+    Level originalLevel = setLogLevel(Level.TRACE);
+
+    int readTimeoutInMillis = 100;
+    wireMockRule.stubFor(get(urlEqualTo("/ping"))
+            .willReturn(aResponse()
+                    .withFixedDelay(readTimeoutInMillis * 2)
+                    .withStatus(200)
+                    .withHeader("Content-Type", "application/json")));
+
+    IcecreamServiceApi client = builder(readTimeoutInMillis)
+            .target(IcecreamServiceApi.class,
+                    "http://localhost:" + wireMockRule.port());
+
+    Mono<Void> ping = client.ping();
+
+    // no logs before subscription
+    ArgumentCaptor<LogEvent> argumentCaptor = ArgumentCaptor.forClass(LogEvent.class);
+    Mockito.verify(appender, never()).append(argumentCaptor.capture());
+
+    try {
+      ping.block();
+      fail("should throw ReadTimeoutException");
+    }
+    catch (ReadTimeoutException e) {
+      Mockito.verify(appender, times(3)).append(argumentCaptor.capture());
+
+      List<LogEvent> logEvents = argumentCaptor.getAllValues();
+      assertLogEvent(logEvents, 0, Level.DEBUG,
+              "[IcecreamServiceApi#ping]--->GET http://localhost");
+      assertLogEvent(logEvents, 1, Level.TRACE,
+              "[IcecreamServiceApi#ping] REQUEST HEADERS\n" +
+                      "Accept:[application/json]");
+      assertLogEvent(logEvents, 2, Level.ERROR,
+              "[IcecreamServiceApi#ping]--->GET http://localhost");
+
+      setLogLevel(originalLevel);
+      throw e;
+    }
   }
 
   private void assertLogEvent(List<LogEvent> events, int index, Level level, String message) {

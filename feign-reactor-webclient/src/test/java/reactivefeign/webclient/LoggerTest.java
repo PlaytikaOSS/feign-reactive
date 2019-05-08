@@ -26,4 +26,11 @@ public class LoggerTest extends reactivefeign.LoggerTest {
     return WebReactiveFeign.builder();
   }
 
+  @Override
+  protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
+    return WebReactiveFeign.<IcecreamServiceApi>builder().options(
+            new WebReactiveOptions.Builder().setReadTimeoutMillis(readTimeoutInMillis).build()
+    );
+  }
+
 }

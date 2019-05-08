@@ -3,7 +3,11 @@ package reactivefeign.cloud;
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import com.netflix.client.*;
+import com.netflix.client.ClientException;
+import com.netflix.client.ClientFactory;
+import com.netflix.client.DefaultLoadBalancerRetryHandler;
+import com.netflix.client.RequestSpecificRetryHandler;
+import com.netflix.client.RetryHandler;
 import com.netflix.client.config.CommonClientConfigKey;
 import com.netflix.client.config.DefaultClientConfigImpl;
 import com.netflix.loadbalancer.BaseLoadBalancer;
@@ -11,7 +15,11 @@ import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
 import feign.RequestLine;
 import feign.RetryableException;
-import org.junit.*;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -43,7 +51,7 @@ public class LoadBalancingReactiveHttpClientTest {
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
-    private static String serviceName = "LoadBalancingTargetTest-loadBalancingDefaultPolicyRoundRobin";
+    private static String serviceName = "LoadBalancingReactiveHttpClientTest-loadBalancingDefaultPolicyRoundRobin";
 
     @BeforeClass
     public static void setupServersList() throws ClientException {

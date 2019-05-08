@@ -13,7 +13,11 @@
  */
 package reactivefeign;
 
-import feign.*;
+import feign.Contract;
+import feign.Feign;
+import feign.InvocationHandlerFactory;
+import feign.MethodMetadata;
+import feign.Target;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpClientFactory;
@@ -43,7 +47,11 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.time.Clock;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -231,9 +239,12 @@ public class ReactiveFeign {
     public PublisherClientFactory buildReactiveClientFactory() {
       return new PublisherClientFactory(){
 
+        Target target;
+
         @Override
         public void target(Target target) {
           clientFactory.target(target);
+          this.target = target;
         }
 
         @Override
@@ -248,7 +259,7 @@ public class ReactiveFeign {
           }
 
           for(ReactiveLoggerListener loggerListener : loggerListeners){
-            reactiveClient = log(reactiveClient, methodMetadata, loggerListener);
+            reactiveClient = log(reactiveClient, methodMetadata, target, loggerListener);
           }
 
           if (responseMapper != null) {

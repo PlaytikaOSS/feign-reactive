@@ -144,10 +144,8 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 			builder.statusHandler(statusHandler);
 		}
 
-		ReactiveLoggerListener logger = getOptional(context, ReactiveLoggerListener.class);
-		if(logger != null){
-			builder.addLoggerListener(logger);
-		}
+		getAll(context, ReactiveLoggerListener.class).values()
+				.forEach(builder::addLoggerListener);
 
 		if (decode404) {
 			builder.decode404();
@@ -197,6 +195,10 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 
 		if(config.getLogger() != null){
 			builder.addLoggerListener(getOrInstantiate(config.getLogger()));
+		}
+
+		if(config.getMetricsLogger() != null){
+			builder.addLoggerListener(getOrInstantiate(config.getMetricsLogger()));
 		}
 
 		if (config.getDecode404() != null) {

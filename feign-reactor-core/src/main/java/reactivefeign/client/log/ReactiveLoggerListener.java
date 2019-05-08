@@ -1,5 +1,7 @@
 package reactivefeign.client.log;
 
+import feign.MethodMetadata;
+import feign.Target;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
 
@@ -10,15 +12,17 @@ import reactivefeign.client.ReactiveHttpResponse;
  */
 public interface ReactiveLoggerListener<CONTEXT> {
 
-    CONTEXT requestStarted(ReactiveHttpRequest request, String methodTag);
+    CONTEXT requestStarted(ReactiveHttpRequest request, Target target, MethodMetadata methodMetadata);
 
     boolean logRequestBody();
 
-    void bodySent(ReactiveHttpRequest request, String methodTag, CONTEXT context, Object body);
+    void bodySent(Object body, CONTEXT context);
 
-    void responseReceived(ReactiveHttpResponse response, String methodTag, CONTEXT context);
+    void responseReceived(ReactiveHttpResponse response, CONTEXT context);
+
+    void errorReceived(Throwable throwable, CONTEXT context);
 
     boolean logResponseBody();
 
-    void bodyReceived(ReactiveHttpResponse response, String methodTag, CONTEXT context, Object body);
+    void bodyReceived(Object body, CONTEXT context);
 }

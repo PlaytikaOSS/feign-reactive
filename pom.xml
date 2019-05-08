@@ -57,6 +57,7 @@
         <reactor.version>3.2.3.RELEASE</reactor.version>
         <feign.version>10.1.0</feign.version>
         <slf4j.version>1.7.25</slf4j.version>
+        <micrometer.version>1.1.4</micrometer.version>
 
         <!--WebClient-->
         <spring.version>5.1.3.RELEASE</spring.version>
@@ -274,6 +275,13 @@
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.micrometer</groupId>
+                <artifactId>micrometer-core</artifactId>
+                <version>${micrometer.version}</version>
+                <optional>true</optional>
             </dependency>
 
             <!--WebClient part-->

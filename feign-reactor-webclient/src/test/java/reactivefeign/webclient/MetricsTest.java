@@ -11,29 +11,25 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package reactivefeign.resttemplate;
+package reactivefeign.webclient;
 
 import reactivefeign.ReactiveFeign;
-import reactivefeign.ReactiveFeignBuilder;
-import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
-import reactivefeign.resttemplate.client.RestTemplateReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 /**
  * @author Sergii Karpenko
  */
-public class LoggerTest extends reactivefeign.LoggerTest {
+public class MetricsTest extends reactivefeign.MetricsTest {
 
-  @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
-    return RestTemplateFakeReactiveFeign.builder();
-  }
+    @Override
+    protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
+        return WebReactiveFeign.builder();
+    }
 
-  @Override
-  protected ReactiveFeignBuilder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
-    return RestTemplateFakeReactiveFeign.<IcecreamServiceApi>builder().options(
-            new RestTemplateReactiveOptions.Builder().setReadTimeoutMillis(readTimeoutInMillis).build()
-    );
-  }
-
+    @Override
+    protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
+        return WebReactiveFeign.<IcecreamServiceApi>builder().options(
+                new WebReactiveOptions.Builder().setReadTimeoutMillis(readTimeoutInMillis).build()
+        );
+    }
 }

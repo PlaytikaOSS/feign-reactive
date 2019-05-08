@@ -20,6 +20,7 @@ package reactivefeign.spring.config;
 import com.netflix.hystrix.HystrixCommand;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
 import feign.Contract;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -33,9 +34,14 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactivefeign.ReactiveFeignBuilder;
+import reactivefeign.client.log.DefaultReactiveLogger;
+import reactivefeign.client.log.ReactiveLoggerListener;
+import reactivefeign.client.metrics.MicrometerReactiveLogger;
 import reactivefeign.cloud.CloudReactiveFeign;
 import reactivefeign.webclient.WebClientFeignCustomizer;
 import reactivefeign.webclient.WebReactiveFeign;
+
+import java.time.Clock;
 
 
 /**
@@ -49,6 +55,22 @@ public class ReactiveFeignClientsConfiguration {
 	public Contract reactiveFeignContract() {
 		return new SpringMvcContract();
 	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	@ConditionalOnClass(MeterRegistry.class)
+	@ConditionalOnProperty(name = "reactive.feign.metrics.enabled", havingValue = "true")
+	public MicrometerReactiveLogger metricsReactiveLogger() {
+		return MicrometerReactiveLogger.basicTimer();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(ignoredType = "reactivefeign.client.metrics.MicrometerReactiveLogger")
+	@ConditionalOnProperty(name = "reactive.feign.logger.enabled", havingValue = "true")
+	public ReactiveLoggerListener reactiveLogger() {
+		return new DefaultReactiveLogger(Clock.systemUTC());
+	}
+
 
 	@Bean
 	@Scope("prototype")
@@ -65,19 +87,19 @@ public class ReactiveFeignClientsConfiguration {
 	@AutoConfigureAfter(ReactiveFeignClientsConfiguration.class)
 	@Configuration
 	@ConditionalOnClass({HystrixCommand.class, LoadBalancerCommand.class, CloudReactiveFeign.class})
-	@ConditionalOnProperty(name = "reactive.feign.cloud.enabled", matchIfMissing = true)
+	@ConditionalOnProperty(name = "reactive.feign.cloud.enabled", havingValue = "true", matchIfMissing = true)
 	protected static class ReactiveFeignClientsCloudConfiguration {
 
 		@Bean
 		@Scope("prototype")
-		@ConditionalOnProperty(name = "reactive.feign.hystrix.enabled", matchIfMissing = true)
+		@ConditionalOnProperty(name = "reactive.feign.hystrix.enabled", havingValue = "true", matchIfMissing = true)
 		public ReactiveFeignHystrixConfigurator reactiveFeignHystrixConfigurator(){
 			return new ReactiveFeignHystrixConfigurator();
 		}
 
 		@Bean
 		@Scope("prototype")
-		@ConditionalOnProperty(name = "reactive.feign.ribbon.enabled", matchIfMissing = true)
+		@ConditionalOnProperty(name = "reactive.feign.ribbon.enabled", havingValue = "true", matchIfMissing = true)
 		public ReactiveFeignRibbonConfigurator reactiveFeignRibbonConfigurator(){
 			return new ReactiveFeignRibbonConfigurator();
 		}

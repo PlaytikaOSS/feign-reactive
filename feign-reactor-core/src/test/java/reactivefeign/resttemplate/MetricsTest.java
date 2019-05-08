@@ -13,7 +13,6 @@
  */
 package reactivefeign.resttemplate;
 
-import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
 import reactivefeign.resttemplate.client.RestTemplateReactiveOptions;
@@ -22,10 +21,10 @@ import reactivefeign.testcase.IcecreamServiceApi;
 /**
  * @author Sergii Karpenko
  */
-public class LoggerTest extends reactivefeign.LoggerTest {
+public class MetricsTest extends reactivefeign.MetricsTest {
 
   @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
+  protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
     return RestTemplateFakeReactiveFeign.builder();
   }
 

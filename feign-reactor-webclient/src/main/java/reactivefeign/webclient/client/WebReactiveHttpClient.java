@@ -24,6 +24,7 @@ import org.springframework.http.client.reactive.ClientHttpRequest;
 import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactivefeign.client.ReactiveFeignException;
 import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
@@ -80,8 +81,13 @@ public class WebReactiveHttpClient implements ReactiveHttpClient {
 				.headers(httpHeaders -> setUpHeaders(request, httpHeaders))
 				.body(provideBody(request))
 				.exchange()
-				.onErrorMap(ex -> ex instanceof io.netty.handler.timeout.ReadTimeoutException,
-						ReadTimeoutException::new)
+				.onErrorMap(ex -> {
+					if(ex instanceof io.netty.handler.timeout.ReadTimeoutException){
+						return new ReadTimeoutException(ex, request);
+					} else {
+						return new ReactiveFeignException(ex, request);
+					}
+				})
 				.map(response -> new WebReactiveHttpResponse(request, response, returnPublisherType, returnActualType));
 	}
 
