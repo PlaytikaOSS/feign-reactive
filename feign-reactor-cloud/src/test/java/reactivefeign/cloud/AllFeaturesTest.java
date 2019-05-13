@@ -62,7 +62,7 @@ public class AllFeaturesTest extends reactivefeign.allfeatures.AllFeaturesTest {
 
 	@Override
 	protected AllFeaturesApi buildClient() {
-		return BuilderUtils.<AllFeaturesFeign>cloudBuilder("AllFeaturesTest")
+		return BuilderUtils.<AllFeaturesFeign>cloudBuilderWithExecutionTimeoutDisabled("AllFeaturesTest")
 				.enableLoadBalancer()
 				.decode404()
 				.target(AllFeaturesFeign.class, "http://"+serviceName);

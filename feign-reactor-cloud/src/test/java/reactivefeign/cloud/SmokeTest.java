@@ -26,7 +26,7 @@ public class SmokeTest extends reactivefeign.SmokeTest {
 
   @Override
   protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
-    return BuilderUtils.cloudBuilderWithExecutionTimeoutDisabled();
+    return BuilderUtils.cloudBuilderWithExecutionTimeoutDisabled("SmokeTest");
   }
 
   @Override

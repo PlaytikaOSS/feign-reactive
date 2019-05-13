@@ -28,7 +28,7 @@ public class StatusHandlerTest extends reactivefeign.StatusHandlerTest {
 
   @Override
   protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
-    return BuilderUtils.cloudBuilderWithExecutionTimeoutDisabled();
+    return BuilderUtils.cloudBuilderWithExecutionTimeoutDisabled("StatusHandlerTest");
   }
 
   @Override

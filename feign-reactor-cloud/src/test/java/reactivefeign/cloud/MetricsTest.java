@@ -50,13 +50,13 @@ public class MetricsTest extends reactivefeign.MetricsTest {
 
   @Override
   protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
-    return BuilderUtils.<IcecreamServiceApi>cloudBuilderWithExecutionTimeoutDisabled()
+    return BuilderUtils.<IcecreamServiceApi>cloudBuilderWithExecutionTimeoutDisabled("MetricsTest")
             .enableLoadBalancer();
   }
 
   @Override
   protected ReactiveFeignBuilder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
-    return BuilderUtils.<IcecreamServiceApi>cloudBuilderWithExecutionTimeoutDisabled()
+    return BuilderUtils.<IcecreamServiceApi>cloudBuilderWithExecutionTimeoutDisabled("MetricsTest")
             .enableLoadBalancer()
             .options(new WebReactiveOptions.Builder().setReadTimeoutMillis(readTimeoutInMillis).build()
     );

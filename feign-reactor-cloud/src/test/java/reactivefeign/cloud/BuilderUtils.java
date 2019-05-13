@@ -30,11 +30,11 @@ public class BuilderUtils {
                 );
     }
 
-    static <T> CloudReactiveFeign.Builder<T> cloudBuilderWithExecutionTimeoutDisabled() {
+    static <T> CloudReactiveFeign.Builder<T> cloudBuilderWithExecutionTimeoutDisabled(String hystrixGroupPrefix) {
         return CloudReactiveFeign.<T>builder(WebReactiveFeign.builder())
                 .setHystrixCommandSetterFactory(
                 (target, methodMetadata) -> {
-                    String groupKey = target.name();
+                    String groupKey = hystrixGroupPrefix + target.name();
                     HystrixCommandKey commandKey = HystrixCommandKey.Factory.asKey(methodMetadata.configKey());
                     return HystrixObservableCommand.Setter
                             .withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))

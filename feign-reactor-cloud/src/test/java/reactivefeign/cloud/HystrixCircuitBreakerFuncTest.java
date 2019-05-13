@@ -51,7 +51,8 @@ public class HystrixCircuitBreakerFuncTest {
         int callsNo = HYSTRIX_VOLUME_THRESHOLD + 10;
         mockResponseServiceUnavailable();
 
-        TestCaller testCaller = BuilderUtils.<TestCaller>cloudBuilder("shouldReturnFallbackWithClosedCircuitAfterThreshold")
+        TestCaller testCaller = BuilderUtils.<TestCaller>cloudBuilderWithExecutionTimeoutDisabled(
+                "shouldReturnFallbackWithClosedCircuitAfterThreshold")
                 .fallback(() -> Mono.just(FALLBACK))
                 .target(TestCaller.class, "http://localhost:" + WIREMOCK_PORT);
 
@@ -72,7 +73,8 @@ public class HystrixCircuitBreakerFuncTest {
         int callsNo = HYSTRIX_VOLUME_THRESHOLD + 10;
         mockResponseServiceUnavailable();
 
-        TestCaller testCaller = BuilderUtils.<TestCaller>cloudBuilder("shouldNotOpenCircuitAfterThreshold")
+        TestCaller testCaller = BuilderUtils.<TestCaller>cloudBuilderWithExecutionTimeoutDisabled(
+                "shouldNotOpenCircuitAfterThreshold")
                 .target(TestCaller.class, "http://localhost:" + WIREMOCK_PORT);
 
         //check that circuit breaker DOESN'T open on volume threshold
