@@ -16,8 +16,12 @@
 
 package reactivefeign.spring.config;
 
+import static java.util.Collections.emptyMap;
+
 import feign.Contract;
 import feign.codec.ErrorDecoder;
+import java.util.Map;
+import java.util.Objects;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.MutablePropertyValues;
@@ -37,12 +41,8 @@ import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.log.ReactiveLoggerListener;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
 import reactivefeign.client.statushandler.ReactiveStatusHandlers;
+import reactivefeign.cloud.CloudReactiveFeign;
 import reactivefeign.retry.ReactiveRetryPolicy;
-
-import java.util.Map;
-import java.util.Objects;
-
-import static java.util.Collections.emptyMap;
 
 /**
  *
@@ -286,6 +286,9 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 				url = "http://" + this.url;
 			} else {
 				url = this.url;
+			}
+			if (builder instanceof CloudReactiveFeign.Builder) {
+				builder = ((CloudReactiveFeign.Builder) builder).getDelegate();
 			}
 		}
 		url += cleanPath();
