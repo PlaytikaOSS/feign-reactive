@@ -60,6 +60,10 @@ public class CloudReactiveFeign {
             this.builder = builder;
         }
 
+        public ReactiveFeignBuilder<T> getDelegate() {
+            return builder;
+        }
+
         public Builder<T> disableHystrix() {
             this.hystrixEnabled = false;
             return this;
