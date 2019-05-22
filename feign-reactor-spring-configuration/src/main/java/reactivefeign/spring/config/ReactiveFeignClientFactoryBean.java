@@ -37,6 +37,7 @@ import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.log.ReactiveLoggerListener;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
 import reactivefeign.client.statushandler.ReactiveStatusHandlers;
+import reactivefeign.cloud.CloudReactiveFeign;
 import reactivefeign.retry.ReactiveRetryPolicy;
 
 import java.util.Map;
@@ -286,6 +287,9 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 				url = "http://" + this.url;
 			} else {
 				url = this.url;
+			}
+			if (builder instanceof CloudReactiveFeign.Builder) {
+				builder = ((CloudReactiveFeign.Builder) builder).getDelegate();
 			}
 		}
 		url += cleanPath();
