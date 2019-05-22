@@ -1,9 +1,5 @@
 package reactivefeign.cloud;
 
-import static reactivefeign.methodhandler.PublisherClientMethodHandler.SUBSTITUTION_PATTERN;
-import static reactivefeign.retry.FilteredReactiveRetryPolicy.notRetryOn;
-import static reactivefeign.utils.FeignUtils.returnPublisherType;
-
 import com.netflix.client.RetryHandler;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
@@ -13,10 +9,6 @@ import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
 import feign.Contract;
 import feign.MethodMetadata;
 import feign.Target;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactivefeign.FallbackFactory;
@@ -32,6 +24,15 @@ import reactivefeign.methodhandler.MethodHandlerFactory;
 import reactivefeign.publisher.PublisherClientFactory;
 import reactivefeign.publisher.PublisherHttpClient;
 import reactivefeign.retry.ReactiveRetryPolicy;
+
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+
+import static reactivefeign.methodhandler.PublisherClientMethodHandler.SUBSTITUTION_PATTERN;
+import static reactivefeign.retry.FilteredReactiveRetryPolicy.notRetryOn;
+import static reactivefeign.utils.FeignUtils.returnPublisherType;
 
 /**
  * Allows to specify ribbon {@link LoadBalancerCommand}
