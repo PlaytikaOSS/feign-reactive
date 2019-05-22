@@ -16,8 +16,6 @@
 
 package reactivefeign.spring.config;
 
-import static java.util.Collections.emptyMap;
-
 import feign.Contract;
 import feign.codec.ErrorDecoder;
 import org.springframework.beans.BeanUtils;
