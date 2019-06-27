@@ -80,7 +80,7 @@
         <!--Jetty-->
         <jetty-reactive-httpclient.version>1.0.2</jetty-reactive-httpclient.version>
         <json-reactor.version>0.0.1</json-reactor.version>
-        <jetty-http2-client.version>9.4.14.v20181114</jetty-http2-client.version>
+        <jetty-http2-client.version>9.4.19.v20190610</jetty-http2-client.version>
 
         <!-- Tests -->
         <spring-boot-starter-webflux.version>2.1.1.RELEASE</spring-boot-starter-webflux.version>
