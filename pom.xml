@@ -102,7 +102,7 @@
         <jacoco-plugin.version>0.7.7.201606060606</jacoco-plugin.version>
         <coveralls-plugin.version>4.1.0</coveralls-plugin.version>
 
-        <maven-compiler-plugin.version>3.7.0</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>2.19.1</maven-surefire-plugin.version>
         <versions-maven-plugin.version>2.3</versions-maven-plugin.version>
         <nexus-staging-maven-plugin.version>1.6.3</nexus-staging-maven-plugin.version>
