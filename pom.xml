@@ -96,7 +96,7 @@
         <awaitility.version>3.1.6</awaitility.version>
         <mockito-core.version>2.23.4</mockito-core.version>
         <log4j.version>2.11.2</log4j.version>
-        <guava.version>20.0</guava.version>
+        <guava.version>23.0</guava.version>
 
         <!-- Plugins -->
         <jacoco-plugin.version>0.7.7.201606060606</jacoco-plugin.version>
