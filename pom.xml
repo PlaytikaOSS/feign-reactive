@@ -85,7 +85,7 @@
         <!-- Tests -->
         <spring-boot-starter-webflux.version>2.1.1.RELEASE</spring-boot-starter-webflux.version>
         <spring-boot-starter.version>2.1.1.RELEASE</spring-boot-starter.version>
-        <spring-boot-autoconfigure.version>2.1.1.RELEASE</spring-boot-autoconfigure.version>
+        <spring-boot-autoconfigure.version>2.1.6.RELEASE</spring-boot-autoconfigure.version>
         <spring-cloud-contract-wiremock.version>2.0.2.RELEASE</spring-cloud-contract-wiremock.version>
         <junit.version>4.12</junit.version>
         <assertj.version>3.12.2</assertj.version>
