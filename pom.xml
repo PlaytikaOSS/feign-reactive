@@ -62,7 +62,7 @@
         <!--WebClient-->
         <spring.version>5.1.3.RELEASE</spring.version>
         <reactor-netty.version>0.8.9.RELEASE</reactor-netty.version>
-        <netty-all.version>4.1.32.Final</netty-all.version>
+        <netty-all.version>4.1.42.Final</netty-all.version>
         <jackson.version>2.9.9</jackson.version>
 
         <!--Cloud-->
