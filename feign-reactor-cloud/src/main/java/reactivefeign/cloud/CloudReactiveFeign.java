@@ -40,6 +40,7 @@ import static reactivefeign.utils.FeignUtils.returnPublisherType;
  *
  * @author Sergii Karpenko
  */
+
 public class CloudReactiveFeign {
 
     private static final Logger logger = LoggerFactory.getLogger(CloudReactiveFeign.class);
