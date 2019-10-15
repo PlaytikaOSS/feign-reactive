@@ -53,7 +53,7 @@ public class StatusHandlerTest {
     IcecreamServiceApi client = builder()
         .statusHandler(throwOnStatus(
             status -> status == HttpStatus.SC_SERVICE_UNAVAILABLE,
-            (methodTag, response) -> new RetryableException("Should retry on next node",
+            (methodTag, response) -> new RetryableException(response.status(), "Should retry on next node",
                     httpMethod(response.request().method()), null)))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
