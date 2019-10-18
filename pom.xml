@@ -75,7 +75,7 @@
 
         <!--Rx2-->
         <reactor-adapter.version>3.1.6.RELEASE</reactor-adapter.version>
-        <rxjava2.version>2.2.2</rxjava2.version>
+        <rxjava2.version>2.2.13</rxjava2.version>
 
         <!--Jetty-->
         <jetty-reactive-httpclient.version>1.0.2</jetty-reactive-httpclient.version>
