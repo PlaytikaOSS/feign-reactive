@@ -52,11 +52,11 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--BOMs-->
-        <spring-cloud-bom.version>Greenwich.SR1</spring-cloud-bom.version>
+        <spring-cloud-bom.version>Greenwich.SR3</spring-cloud-bom.version>
 
         <!-- jetty related tests are failing if set bigger version of spring-boot-dependencies-->
         <!-- related issue https://stackoverflow.com/questions/58050161/issue-with-jetty-http2-client#comment103051015_58050337 -->
-        <spring-boot-dependencies-bom.version>2.1.1.RELEASE</spring-boot-dependencies-bom.version>
+        <spring-boot-dependencies-bom.version>2.1.9.RELEASE</spring-boot-dependencies-bom.version>
 
         <!--other-->
         <json-reactor.version>0.0.1</json-reactor.version>
