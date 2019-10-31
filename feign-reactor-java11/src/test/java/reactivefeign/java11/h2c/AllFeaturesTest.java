@@ -37,6 +37,7 @@ import reactivefeign.ReactiveFeign;
 import reactivefeign.allfeatures.AllFeaturesFeign;
 import reactivefeign.allfeatures.AllFeaturesFeignTest;
 
+import static java.util.Collections.singleton;
 import static reactivefeign.ReactivityTest.CALLS_NUMBER;
 import static reactivefeign.java11.h2c.TestUtils.builderHttp2;
 
@@ -47,7 +48,7 @@ import static reactivefeign.java11.h2c.TestUtils.builderHttp2;
  */
 @EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
 @ContextConfiguration(classes={AllFeaturesTest.TestConfiguration.class})
-@ActiveProfiles("jetty-h2")
+@ActiveProfiles("jetty-h2c")
 public class AllFeaturesTest extends AllFeaturesFeignTest {
 
 	@Override
@@ -56,7 +57,7 @@ public class AllFeaturesTest extends AllFeaturesFeignTest {
 	}
 
 	@Configuration
-	@Profile("jetty-h2")
+	@Profile("jetty-h2c")
 	public static class TestConfiguration{
 
 		@Bean
@@ -65,21 +66,16 @@ public class AllFeaturesTest extends AllFeaturesFeignTest {
 			Http2 http2 = new Http2();
 			http2.setEnabled(true);
 			jettyReactiveWebServerFactory.setHttp2(http2);
-			jettyReactiveWebServerFactory.addServerCustomizers(serverJetty -> {
-				//remove old connectors
-				ServerConnector connector = (ServerConnector) serverJetty.getConnectors()[0];
-				serverJetty.removeConnector(connector);
-
+			jettyReactiveWebServerFactory.setServerCustomizers(singleton(server -> {
+				ServerConnector sc = (ServerConnector) server.getConnectors()[0];
 				HttpConfiguration httpConfig = new HttpConfiguration();
+				httpConfig.setIdleTimeout(0);
 				HTTP2CServerConnectionFactory http2CFactory = new HTTP2CServerConnectionFactory(httpConfig);
 				http2CFactory.setMaxConcurrentStreams(CALLS_NUMBER);
-				ServerConnector connectorH2c = new ServerConnector(serverJetty,
-						new HttpConnectionFactory(httpConfig),
-						http2CFactory
-				);
-				connectorH2c.setPort(connector.getPort());
-				serverJetty.addConnector(connectorH2c);
-			});
+				sc.addConnectionFactory(http2CFactory);
+
+				sc.addConnectionFactory(http2CFactory);
+			}));
 			return jettyReactiveWebServerFactory;
 		}
 	}

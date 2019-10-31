@@ -24,6 +24,7 @@ import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurity
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.boot.web.embedded.jetty.JettyReactiveWebServerFactory;
 import org.springframework.boot.web.reactive.server.ReactiveWebServerFactory;
+import org.springframework.boot.web.server.Http2;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -34,6 +35,7 @@ import reactivefeign.allfeatures.AllFeaturesFeign;
 import reactivefeign.allfeatures.AllFeaturesFeignTest;
 
 import static java.util.Collections.singleton;
+import static reactivefeign.ReactivityTest.CALLS_NUMBER;
 import static reactivefeign.jetty.h2c.TestUtils.builderHttp2;
 
 /**
@@ -58,15 +60,20 @@ public class AllFeaturesTest extends AllFeaturesFeignTest {
 		@Bean
 		public ReactiveWebServerFactory reactiveWebServerFactory(){
 			JettyReactiveWebServerFactory jettyReactiveWebServerFactory = new JettyReactiveWebServerFactory();
+			Http2 http2 = new Http2();
+			http2.setEnabled(true);
+			jettyReactiveWebServerFactory.setHttp2(http2);
 			jettyReactiveWebServerFactory.setServerCustomizers(singleton(server -> {
-						ServerConnector sc = (ServerConnector) server
-								.getConnectors()[0];
-						sc.addConnectionFactory(
-								new HTTP2CServerConnectionFactory(new HttpConfiguration())
-						);
-					}));
+				ServerConnector sc = (ServerConnector) server.getConnectors()[0];
+				HttpConfiguration httpConfig = new HttpConfiguration();
+				httpConfig.setIdleTimeout(0);
+				HTTP2CServerConnectionFactory http2CFactory = new HTTP2CServerConnectionFactory(httpConfig);
+				http2CFactory.setMaxConcurrentStreams(CALLS_NUMBER);
+				sc.addConnectionFactory(http2CFactory);
+
+				sc.addConnectionFactory(http2CFactory);
+			}));
 			return jettyReactiveWebServerFactory;
 		}
-
 	}
 }

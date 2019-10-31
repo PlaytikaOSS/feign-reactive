@@ -147,7 +147,8 @@ public class AllFeaturesController implements AllFeaturesMvc {
 
 	@Override
 	public Mono<String> mirrorBodyWithDelay(String body) {
-		return just(body).delayElement(Duration.ofMillis(500));
+		//TODO temporary while investigating
+		return just(body)/*.delayElement(Duration.ofMillis(500))*/;
 	}
 
 	@Override
