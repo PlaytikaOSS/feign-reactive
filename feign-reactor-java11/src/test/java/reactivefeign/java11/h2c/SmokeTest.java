@@ -20,7 +20,9 @@ import reactivefeign.testcase.IcecreamServiceApi;
 
 import java.util.function.Predicate;
 
+import static reactivefeign.ReactivityTest.CALLS_NUMBER;
 import static reactivefeign.java11.h2c.TestUtils.builderHttp2;
+import static reactivefeign.wiremock.WireMockServerConfigurations.h2cConfig;
 
 /**
  * @author Sergii Karpenko
@@ -29,7 +31,7 @@ public class SmokeTest extends reactivefeign.SmokeTest {
 
   @Override
   protected WireMockConfiguration wireMockConfig(){
-    return Http2cServerConfig.wireMockConfig();
+    return h2cConfig(true, CALLS_NUMBER);
   }
 
   @Override

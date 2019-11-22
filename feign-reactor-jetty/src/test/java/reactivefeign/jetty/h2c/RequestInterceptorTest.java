@@ -20,6 +20,7 @@ import reactivefeign.testcase.IcecreamServiceApi;
 import java.util.function.Predicate;
 
 import static reactivefeign.jetty.h2c.TestUtils.builderHttp2;
+import static reactivefeign.wiremock.WireMockServerConfigurations.h2cConfig;
 
 /**
  * @author Sergii Karpenko
@@ -28,7 +29,7 @@ public class RequestInterceptorTest extends reactivefeign.RequestInterceptorTest
 
   @Override
   protected WireMockConfiguration wireMockConfig(){
-    return Http2cServerConfig.wireMockConfig();
+    return h2cConfig();
   }
 
   @Override

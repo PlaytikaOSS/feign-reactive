@@ -17,8 +17,10 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
 
+import static reactivefeign.ReactivityTest.CALLS_NUMBER;
 import static reactivefeign.java11.h2c.TestUtils.builderHttp2;
 import static reactivefeign.java11.h2c.TestUtils.builderHttp2WithConnectTimeout;
+import static reactivefeign.wiremock.WireMockServerConfigurations.h2cConfig;
 
 /**
  * @author Sergii Karpenko
@@ -27,7 +29,7 @@ public class DefaultMethodTest extends reactivefeign.DefaultMethodTest {
 
   @Override
   protected WireMockConfiguration wireMockConfig(){
-    return Http2cServerConfig.wireMockConfig();
+    return h2cConfig(true, CALLS_NUMBER);
   }
 
   @Override

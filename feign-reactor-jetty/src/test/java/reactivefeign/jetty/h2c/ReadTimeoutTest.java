@@ -19,6 +19,8 @@ import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.jetty.JettyReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
 
+import static reactivefeign.wiremock.WireMockServerConfigurations.h2cConfig;
+
 /**
  * @author Sergii Karpenko
  */
@@ -26,7 +28,7 @@ public class ReadTimeoutTest extends reactivefeign.ReadTimeoutTest {
 
   @Override
   protected WireMockConfiguration wireMockConfig(){
-    return Http2cServerConfig.wireMockConfig();
+    return h2cConfig();
   }
 
   @Override

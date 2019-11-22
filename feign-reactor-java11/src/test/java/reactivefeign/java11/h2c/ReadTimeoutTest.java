@@ -19,6 +19,9 @@ import reactivefeign.java11.Java11ReactiveFeign;
 import reactivefeign.java11.Java11ReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
 
+import static reactivefeign.ReactivityTest.CALLS_NUMBER;
+import static reactivefeign.wiremock.WireMockServerConfigurations.h2cConfig;
+
 /**
  * @author Sergii Karpenko
  */
@@ -26,7 +29,7 @@ public class ReadTimeoutTest extends reactivefeign.ReadTimeoutTest {
 
   @Override
   protected WireMockConfiguration wireMockConfig(){
-    return Http2cServerConfig.wireMockConfig();
+    return h2cConfig(true, CALLS_NUMBER);
   }
 
   @Override

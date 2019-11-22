@@ -19,6 +19,7 @@ import reactivefeign.testcase.IcecreamServiceApi;
 
 import static reactivefeign.jetty.h2c.TestUtils.builderHttp2;
 import static reactivefeign.jetty.h2c.TestUtils.builderHttp2WithConnectTimeout;
+import static reactivefeign.wiremock.WireMockServerConfigurations.h2cConfig;
 
 /**
  * @author Sergii Karpenko
@@ -27,7 +28,7 @@ public class DefaultMethodTest extends reactivefeign.DefaultMethodTest {
 
   @Override
   protected WireMockConfiguration wireMockConfig(){
-    return Http2cServerConfig.wireMockConfig();
+    return h2cConfig();
   }
 
   @Override

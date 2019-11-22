@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Collections.emptyList;
+import static reactivefeign.ReactivityTest.DELAY_IN_MILLIS;
 import static reactor.core.publisher.Mono.just;
 
 @RestController
@@ -147,8 +148,8 @@ public class AllFeaturesController implements AllFeaturesMvc {
 
 	@Override
 	public Mono<String> mirrorBodyWithDelay(String body) {
-		//TODO temporary while investigating
-		return just(body)/*.delayElement(Duration.ofMillis(500))*/;
+		//TODO wait fix in Jetty and Undertow
+		return just(body)/*.delayElement(Duration.ofMillis(DELAY_IN_MILLIS))*/;
 	}
 
 	@Override

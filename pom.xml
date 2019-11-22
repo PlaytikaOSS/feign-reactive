@@ -51,16 +51,14 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
+        <feign-core.version>10.2.0</feign-core.version>
+
         <!--BOMs-->
         <spring-cloud-bom.version>Greenwich.SR3</spring-cloud-bom.version>
-
-        <!-- jetty related tests are failing if set bigger version of spring-boot-dependencies-->
-        <!-- related issue https://stackoverflow.com/questions/58050161/issue-with-jetty-http2-client#comment103051015_58050337 -->
         <spring-boot-dependencies-bom.version>2.1.9.RELEASE</spring-boot-dependencies-bom.version>
 
         <!--other-->
         <json-reactor.version>0.0.1</json-reactor.version>
-<!--        <jetty.version>9.4.22.v20191022</jetty.version>-->
 
         <!-- Tests -->
         <wiremock.version>2.25.0</wiremock.version>
@@ -100,28 +98,13 @@
     <dependencyManagement>
         <dependencies>
 
-            <!-- BOMs -->
-
-            <!-- TODO: remove as soon as jetty 9.4.22 will be part of spring dependency-->
-            <!--<dependency>-->
-            <!--    <groupId>org.eclipse.jetty</groupId>-->
-            <!--    <artifactId>jetty-bom</artifactId>-->
-            <!--    <version>${jetty.version}</version>-->
-            <!--    <scope>import</scope>-->
-            <!--    <type>pom</type>-->
-            <!--</dependency>-->
-
             <dependency>
                 <groupId>io.github.openfeign</groupId>
                 <artifactId>feign-core</artifactId>
-                <version>10.1.0</version>
-            </dependency>
-            <dependency>
-                <groupId>io.projectreactor</groupId>
-                <artifactId>reactor-core</artifactId>
-                <version>3.2.10.RELEASE</version>
+                <version>${feign-core.version}</version>
             </dependency>
 
+            <!-- BOMs -->
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>
@@ -177,6 +160,13 @@
                 <type>test-jar</type>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>com.playtika.reactivefeign</groupId>
+                <artifactId>feign-reactor-server-configurations</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
 
             <!-- Other -->
             <dependency>
@@ -221,6 +211,7 @@
             <name>Spring Snapshots</name>
             <url>http://repo.spring.io/snapshot</url>
         </repository>
+
     </repositories>
 
     <build>
