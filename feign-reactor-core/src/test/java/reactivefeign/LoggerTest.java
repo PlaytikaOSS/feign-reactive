@@ -38,6 +38,7 @@ import reactivefeign.testcase.domain.OrderGenerator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import javax.annotation.concurrent.NotThreadSafe;
 import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -49,9 +50,10 @@ import static org.mockito.Mockito.*;
 /**
  * @author Sergii Karpenko
  */
+@NotThreadSafe
 abstract public class LoggerTest {
 
-  public static final String LOGGER_NAME = DefaultReactiveLogger.class.getName();
+  private static final String LOGGER_NAME = DefaultReactiveLogger.class.getName();
 
   @Rule
   public WireMockClassRule wireMockRule = new WireMockClassRule(
@@ -193,9 +195,9 @@ abstract public class LoggerTest {
   }
 
   @Test
-  public void shouldLogNoBody() throws Exception {
+  public void shouldLogNoBody() {
 
-    Appender appender = createAppender("TestTimeoutAppender");
+    Appender appender = createAppender("TestPingAppender");
 
     Level originalLevel = setLogLevel(Level.TRACE);
 
@@ -235,7 +237,7 @@ abstract public class LoggerTest {
   @Test(expected = ReadTimeoutException.class)
   public void shouldLogTimeout() throws Exception {
 
-    Appender appender = createAppender("TestPingAppender");
+    Appender appender = createAppender("TestTimeoutAppender");
 
     Level originalLevel = setLogLevel(Level.TRACE);
 
