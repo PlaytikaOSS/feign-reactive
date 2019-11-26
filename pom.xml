@@ -64,7 +64,7 @@
         <guava.version>23.0</guava.version>
 
         <!-- Plugins -->
-        <jacoco-plugin.version>0.7.7.201606060606</jacoco-plugin.version>
+        <jacoco-plugin.version>0.8.5</jacoco-plugin.version>
         <coveralls-plugin.version>4.1.0</coveralls-plugin.version>
 
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
