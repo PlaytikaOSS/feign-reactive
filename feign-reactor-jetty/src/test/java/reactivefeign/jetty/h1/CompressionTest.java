@@ -14,9 +14,9 @@
 package reactivefeign.jetty.h1;
 
 import reactivefeign.ReactiveFeign;
-import reactivefeign.jetty.JettyReactiveFeign;
-import reactivefeign.jetty.JettyReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
+
+import static reactivefeign.jetty.h1.TestUtils.builderHttpWithAcceptCompressed;
 
 /**
  * @author Sergii Karpenko
@@ -25,8 +25,6 @@ public class CompressionTest extends reactivefeign.CompressionTest {
 
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder(boolean tryUseCompression) {
-    return JettyReactiveFeign.<IcecreamServiceApi>builder().options(
-            new JettyReactiveOptions.Builder().setAcceptCompressed(tryUseCompression).build()
-    );
+    return builderHttpWithAcceptCompressed(tryUseCompression);
   }
 }

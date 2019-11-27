@@ -14,7 +14,8 @@
 package reactivefeign.jetty.h1;
 
 import reactivefeign.ReactiveFeign;
-import reactivefeign.jetty.JettyReactiveFeign;
+
+import static reactivefeign.jetty.h1.TestUtils.builderHttp;
 
 /**
  * @author Sergii Karpenko
@@ -23,6 +24,6 @@ public class ContractTest extends reactivefeign.ContractTest {
 
   @Override
   protected <T> ReactiveFeign.Builder<T> builder() {
-    return JettyReactiveFeign.builder();
+    return builderHttp();
   }
 }

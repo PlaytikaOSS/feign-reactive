@@ -15,12 +15,15 @@ package reactivefeign.jetty.h1;
 
 import reactivefeign.ReactiveFeign;
 import reactivefeign.jetty.JettyReactiveFeign;
+import reactivefeign.jetty.JettyReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 public class ReactivityTest extends reactivefeign.ReactivityTest {
 
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
-    return JettyReactiveFeign.builder();
+    return JettyReactiveFeign.<IcecreamServiceApi>builder().options(
+            new JettyReactiveOptions.Builder()
+                    .setRequestTimeoutMillis(timeToCompleteReactively()).build());
   }
 }

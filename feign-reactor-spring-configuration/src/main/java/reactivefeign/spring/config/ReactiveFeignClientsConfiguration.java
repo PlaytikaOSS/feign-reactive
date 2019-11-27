@@ -21,6 +21,7 @@ import com.netflix.hystrix.HystrixCommand;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
 import feign.Contract;
 import io.micrometer.core.instrument.MeterRegistry;
+import org.eclipse.jetty.client.HttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -38,6 +39,9 @@ import reactivefeign.client.log.DefaultReactiveLogger;
 import reactivefeign.client.log.ReactiveLoggerListener;
 import reactivefeign.client.metrics.MicrometerReactiveLogger;
 import reactivefeign.cloud.CloudReactiveFeign;
+import reactivefeign.java11.Java11ReactiveFeign;
+import reactivefeign.jetty.JettyHttpClientFactory;
+import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.webclient.WebClientFeignCustomizer;
 import reactivefeign.webclient.WebReactiveFeign;
 
@@ -72,23 +76,53 @@ public class ReactiveFeignClientsConfiguration {
 	}
 
 
-	@Bean
-	@Scope("prototype")
-	@ConditionalOnClass(WebReactiveFeign.class)
-	@ConditionalOnMissingBean(ignoredType = "reactivefeign.cloud.CloudReactiveFeign.Builder")
-	public ReactiveFeignBuilder reactiveFeignBuilder(
-			WebClient.Builder builder,
-			@Autowired(required = false) WebClientFeignCustomizer webClientCustomizer) {
-		return webClientCustomizer != null
-				? WebReactiveFeign.builder(builder, webClientCustomizer)
-				: WebReactiveFeign.builder(builder);
+	@Configuration
+	@ConditionalOnClass({JettyReactiveFeign.class, HttpClient.class})
+	@ConditionalOnProperty(name = "reactive.feign.jetty", havingValue = "true")
+	protected static class ReactiveFeignJettyConfiguration {
+
+		@Bean
+		@Scope("prototype")
+		public ReactiveFeignBuilder reactiveFeignBuilder(
+				JettyHttpClientFactory jettyHttpClientFactory) {
+			return JettyReactiveFeign.builder(jettyHttpClientFactory);
+		}
 	}
 
-	@AutoConfigureAfter(ReactiveFeignClientsConfiguration.class)
 	@Configuration
+	@ConditionalOnClass({Java11ReactiveFeign.class, java.net.http.HttpClient.class})
+	@ConditionalOnProperty(name = "reactive.feign.java11", havingValue = "true")
+	protected static class ReactiveFeignJava11Configuration {
+
+		@Bean
+		@Scope("prototype")
+		public ReactiveFeignBuilder reactiveFeignBuilder(
+				java.net.http.HttpClient.Builder httpClientBuilder) {
+			return Java11ReactiveFeign.builder(httpClientBuilder);
+		}
+	}
+
+	@Configuration
+	@ConditionalOnClass({WebReactiveFeign.class, WebClient.class})
+	@ConditionalOnProperty(name = {"reactive.feign.jetty", "reactive.feign.java11"}, havingValue = "false", matchIfMissing = true)
+	protected static class ReactiveFeignWebConfiguration {
+
+		@Bean
+		@Scope("prototype")
+		public ReactiveFeignBuilder reactiveFeignBuilder(
+				WebClient.Builder builder,
+				@Autowired(required = false) WebClientFeignCustomizer webClientCustomizer) {
+			return webClientCustomizer != null
+					? WebReactiveFeign.builder(builder, webClientCustomizer)
+					: WebReactiveFeign.builder(builder);
+		}
+	}
+
+	@Configuration
+	@AutoConfigureAfter(ReactiveFeignWebConfiguration.class)
 	@ConditionalOnClass({HystrixCommand.class, LoadBalancerCommand.class, CloudReactiveFeign.class})
 	@ConditionalOnProperty(name = "reactive.feign.cloud.enabled", havingValue = "true", matchIfMissing = true)
-	protected static class ReactiveFeignClientsCloudConfiguration {
+	protected static class ReactiveFeignCloudConfiguration {
 
 		@Bean
 		@Scope("prototype")
@@ -111,9 +145,9 @@ public class ReactiveFeignClientsConfiguration {
 		public CloudReactiveFeign.Builder reactiveFeignCloudBuilder(
 				ReactiveFeignBuilder reactiveFeignBuilder,
 				@Value("${reactive.feign.hystrix.enabled:true}")
-				boolean enableHystrix,
+						boolean enableHystrix,
 				@Value("${reactive.feign.ribbon.enabled:true}")
-				boolean enableLoadBalancer) {
+						boolean enableLoadBalancer) {
 			CloudReactiveFeign.Builder cloudBuilder = CloudReactiveFeign.builder(reactiveFeignBuilder);
 			if(enableLoadBalancer){
 				cloudBuilder = cloudBuilder.enableLoadBalancer();
@@ -124,5 +158,4 @@ public class ReactiveFeignClientsConfiguration {
 			return cloudBuilder;
 		}
 	}
-
 }

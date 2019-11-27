@@ -19,6 +19,8 @@ import reactivefeign.testcase.IcecreamServiceApi;
 
 import java.util.function.Predicate;
 
+import static reactivefeign.jetty.h1.TestUtils.builderHttp;
+
 /**
  * @author Sergii Karpenko
  */
@@ -26,7 +28,7 @@ public class RequestInterceptorTest extends reactivefeign.RequestInterceptorTest
 
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
-    return JettyReactiveFeign.builder();
+    return builderHttp();
   }
 
   @Override

@@ -30,6 +30,7 @@ import reactivefeign.allfeatures.AllFeaturesFeignTest;
 import reactivefeign.spring.server.config.TestServerConfigurations;
 
 import static reactivefeign.java11.h2c.TestUtils.builderHttp2;
+import static reactivefeign.spring.server.config.TestServerConfigurations.JETTY_H2C;
 import static reactivefeign.spring.server.config.TestServerConfigurations.UNDERTOW_H2C;
 
 /**
@@ -39,7 +40,7 @@ import static reactivefeign.spring.server.config.TestServerConfigurations.UNDERT
  */
 @EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
 @ContextConfiguration(classes={TestServerConfigurations.class})
-@ActiveProfiles(UNDERTOW_H2C)
+@ActiveProfiles(JETTY_H2C)
 public class AllFeaturesTest extends AllFeaturesFeignTest {
 
 	@Value("${spring.profiles.active}")

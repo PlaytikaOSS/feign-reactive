@@ -52,8 +52,8 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
   private final ParameterizedTypeReference<Object> returnActualType;
 
   RestTemplateFakeReactiveHttpClient(MethodMetadata methodMetadata,
-      RestTemplate restTemplate,
-      boolean acceptGzip) {
+                                     RestTemplate restTemplate,
+                                     boolean acceptGzip) {
     this.restTemplate = restTemplate;
     this.acceptGzip = acceptGzip;
 
@@ -89,11 +89,12 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
         headers.add("Accept-Encoding", "gzip");
       }
 
-      ResponseEntity response =
-              restTemplate.exchange(request.uri(), HttpMethod.valueOf(request.method()),
-                      new HttpEntity<>(body, headers), responseType());
-
-      return Mono.just(new FakeReactiveHttpResponse(request, response, returnPublisherType));
+      return Mono.fromCallable(() -> {
+        ResponseEntity response = restTemplate.exchange(
+                request.uri(), HttpMethod.valueOf(request.method()),
+                new HttpEntity<>(body, headers), responseType());
+        return new FakeReactiveHttpResponse(request, response, returnPublisherType);
+      });
     })
             .onErrorResume(HttpStatusCodeException.class,
                     ex -> Mono.just(new ErrorReactiveHttpResponse(request, ex)))

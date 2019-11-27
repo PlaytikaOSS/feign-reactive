@@ -148,8 +148,7 @@ public class AllFeaturesController implements AllFeaturesMvc {
 
 	@Override
 	public Mono<String> mirrorBodyWithDelay(String body) {
-		//TODO wait fix in Jetty and Undertow
-		return just(body)/*.delayElement(Duration.ofMillis(DELAY_IN_MILLIS))*/;
+		return just(body).delayElement(Duration.ofMillis(DELAY_IN_MILLIS));
 	}
 
 	@Override

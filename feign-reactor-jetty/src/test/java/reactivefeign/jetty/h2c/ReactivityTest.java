@@ -15,9 +15,10 @@ package reactivefeign.jetty.h2c;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import reactivefeign.ReactiveFeign;
+import reactivefeign.jetty.JettyReactiveFeign;
+import reactivefeign.jetty.JettyReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
 
-import static reactivefeign.jetty.h2c.TestUtils.builderHttp2;
 import static reactivefeign.wiremock.WireMockServerConfigurations.h2cConfig;
 
 public class ReactivityTest extends reactivefeign.ReactivityTest {
@@ -29,6 +30,9 @@ public class ReactivityTest extends reactivefeign.ReactivityTest {
 
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
-    return builderHttp2();
+    return JettyReactiveFeign.<IcecreamServiceApi>builder().options(
+            new JettyReactiveOptions.Builder()
+                    .setRequestTimeoutMillis(timeToCompleteReactively())
+                    .setUseHttp2(true).build());
   }
 }

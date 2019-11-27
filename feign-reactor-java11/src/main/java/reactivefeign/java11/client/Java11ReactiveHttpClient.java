@@ -134,8 +134,7 @@ public class Java11ReactiveHttpClient implements ReactiveHttpClient {
 							jsonFactory, responseReader);
 				})
                 .onErrorMap(ex -> {
-                	if(ex instanceof CompletionException
-							&& ex.getCause() instanceof java.net.http.HttpTimeoutException){
+                	if(ex instanceof java.net.http.HttpTimeoutException){
                 		return new ReadTimeoutException(ex.getCause(), request);
 					} else {
                 		return new ReactiveFeignException(ex, request);

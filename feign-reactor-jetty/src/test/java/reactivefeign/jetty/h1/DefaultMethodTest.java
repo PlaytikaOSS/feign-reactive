@@ -18,6 +18,8 @@ import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.jetty.JettyReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
 
+import static reactivefeign.jetty.h1.TestUtils.builderHttp;
+
 /**
  * @author Sergii Karpenko
  */
@@ -25,7 +27,7 @@ public class DefaultMethodTest extends reactivefeign.DefaultMethodTest {
 
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
-    return JettyReactiveFeign.builder();
+    return builderHttp();
   }
 
   @Override

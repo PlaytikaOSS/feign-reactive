@@ -28,7 +28,9 @@ import reactivefeign.allfeatures.AllFeaturesFeign;
 import reactivefeign.allfeatures.AllFeaturesFeignTest;
 import reactivefeign.spring.server.config.TestServerConfigurations;
 
-import static reactivefeign.jetty.h2c.TestUtils.builderHttp2;
+import static reactivefeign.ReactivityTest.timeToCompleteReactively;
+import static reactivefeign.jetty.h2c.TestUtils.builderHttp2WithRequestTimeout;
+import static reactivefeign.spring.server.config.TestServerConfigurations.JETTY_H2C;
 import static reactivefeign.spring.server.config.TestServerConfigurations.UNDERTOW_H2C;
 
 /**
@@ -38,7 +40,7 @@ import static reactivefeign.spring.server.config.TestServerConfigurations.UNDERT
  */
 @EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
 @ContextConfiguration(classes={TestServerConfigurations.class})
-@ActiveProfiles(UNDERTOW_H2C)
+@ActiveProfiles(JETTY_H2C)
 public class AllFeaturesTest extends AllFeaturesFeignTest {
 
 	@Value("${spring.profiles.active:Unknown}")
@@ -46,7 +48,7 @@ public class AllFeaturesTest extends AllFeaturesFeignTest {
 
 	@Override
 	protected ReactiveFeign.Builder<AllFeaturesFeign> builder() {
-		return builderHttp2();
+		return builderHttp2WithRequestTimeout(timeToCompleteReactively());
 	}
 
 	@Test

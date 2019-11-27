@@ -53,13 +53,13 @@
 
         <!--BOMs-->
         <spring-cloud-bom.version>Greenwich.SR3</spring-cloud-bom.version>
-        <spring-boot-dependencies-bom.version>2.1.9.RELEASE</spring-boot-dependencies-bom.version>
+        <spring-boot-dependencies-bom.version>2.2.1.RELEASE</spring-boot-dependencies-bom.version>
 
         <!--other-->
         <json-reactor.version>0.0.1</json-reactor.version>
 
         <!-- Tests -->
-        <wiremock.version>2.25.0</wiremock.version>
+        <wiremock.version>2.25.1</wiremock.version>
         <awaitility.version>3.1.6</awaitility.version>
         <guava.version>23.0</guava.version>
 
@@ -96,8 +96,30 @@
     <dependencyManagement>
         <dependencies>
 
-            <!-- BOMs -->
+            <!--TODO temporarily while not included in spring-boot-dependencies-->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-web</artifactId>
+                <version>5.2.2.RELEASE</version>
+            </dependency>
 
+            <!--TODO temporarily while not included in spring-boot-dependencies-->
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-reactive-httpclient</artifactId>
+                <version>1.1.0</version>
+            </dependency>
+
+            <!--TODO temporarily while not included in spring-boot-dependencies-->
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-bom</artifactId>
+                <version>9.4.24.v20191120</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- BOMs -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -198,11 +220,17 @@
             <url>https://dl.bintray.com/kptfh/json-reactive</url>
         </repository>
 
-        <repository>
-            <id>spring-snapshots</id>
-            <name>Spring Snapshots</name>
-            <url>http://repo.spring.io/snapshot</url>
-        </repository>
+        <!--<repository>-->
+            <!--<id>spring-snapshots</id>-->
+            <!--<name>Spring Snapshots</name>-->
+            <!--<url>http://repo.spring.io/snapshot</url>-->
+        <!--</repository>-->
+
+        <!--<repository>-->
+            <!--<id>oss.sonatype.org</id>-->
+            <!--<name>OSS Maven2 Snapshot Repository</name>-->
+            <!--<url>https://oss.sonatype.org/content/repositories/jetty-snapshots</url>-->
+        <!--</repository>-->
 
     </repositories>
 

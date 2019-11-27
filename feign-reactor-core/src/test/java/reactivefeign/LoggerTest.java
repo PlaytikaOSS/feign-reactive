@@ -235,7 +235,7 @@ abstract public class LoggerTest {
   }
 
   @Test(expected = ReadTimeoutException.class)
-  public void shouldLogTimeout() throws Exception {
+  public void shouldLogTimeout() {
 
     Appender appender = createAppender("TestTimeoutAppender");
 
@@ -283,17 +283,17 @@ abstract public class LoggerTest {
     assertThat(events).element(index)
         .hasFieldOrPropertyWithValue("level", level)
         .extracting("message")
-        .extractingResultOf("getFormattedMessage")
-        .have(new Condition<>(o -> ((String) o).contains(message), "check message"));
+        .extracting("getFormattedMessage")
+        .has(new Condition<>(o -> ((String) o).contains(message), "check message"));
   }
 
   private void assertLogEvent(List<LogEvent> events, int index, Level level, String message1, String message2) {
     assertThat(events).element(index)
             .hasFieldOrPropertyWithValue("level", level)
             .extracting("message")
-            .extractingResultOf("getFormattedMessage")
-            .have(new Condition<>(o -> ((String) o).toLowerCase().contains(message1.toLowerCase()), "check message1"))
-            .have(new Condition<>(o -> ((String) o).toLowerCase().contains(message2.toLowerCase()), "check message2"));;
+            .extracting("getFormattedMessage")
+            .has(new Condition<>(o -> ((String) o).toLowerCase().contains(message1.toLowerCase()), "check message1"))
+            .has(new Condition<>(o -> ((String) o).toLowerCase().contains(message2.toLowerCase()), "check message2"));;
   }
 
   public Appender createAppender(String name) {

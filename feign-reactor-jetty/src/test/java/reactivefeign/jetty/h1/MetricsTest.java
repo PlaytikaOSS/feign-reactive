@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static reactivefeign.TestUtils.MAPPER;
+import static reactivefeign.jetty.h1.TestUtils.builderHttp;
 
 /**
  * @author Sergii Karpenko
@@ -31,7 +32,7 @@ public class MetricsTest extends reactivefeign.MetricsTest {
 
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
-    return JettyReactiveFeign.builder();
+    return builderHttp();
   }
 
   @Override

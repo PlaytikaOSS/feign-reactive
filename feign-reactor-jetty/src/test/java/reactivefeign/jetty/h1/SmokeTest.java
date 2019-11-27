@@ -15,10 +15,11 @@ package reactivefeign.jetty.h1;
 
 import com.fasterxml.jackson.core.io.JsonEOFException;
 import reactivefeign.ReactiveFeign;
-import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 import java.util.function.Predicate;
+
+import static reactivefeign.jetty.h1.TestUtils.builderHttp;
 
 /**
  * @author Sergii Karpenko
@@ -27,7 +28,7 @@ public class SmokeTest extends reactivefeign.SmokeTest {
 
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
-    return JettyReactiveFeign.builder();
+    return builderHttp();
   }
 
   @Override

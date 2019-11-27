@@ -36,7 +36,7 @@ abstract public class ReactivityTest {
 
   public static final int DELAY_IN_MILLIS = 500;
   public static final int CALLS_NUMBER = 500;
-  public static final int REACTIVE_GAIN_RATIO = 20;
+  public static final int REACTIVE_GAIN_RATIO = 50;
 
   @Rule
   public WireMockClassRule wireMockRule = new WireMockClassRule(
@@ -69,6 +69,9 @@ abstract public class ReactivityTest {
 
     AtomicInteger counter = new AtomicInteger();
 
+    //TODO temporary while jetty concurrent servlet initialization fixed
+    client.findFirstOrder().block();
+
     new Thread(() -> {
       for (int i = 0; i < CALLS_NUMBER; i++) {
         client.findFirstOrder()
@@ -81,11 +84,8 @@ abstract public class ReactivityTest {
             .until(() -> counter.get() == CALLS_NUMBER);
   }
 
-  private int timeToCompleteReactively(){
-    return CALLS_NUMBER * DELAY_IN_MILLIS / getReactiveGainRatio();
+  public static int timeToCompleteReactively(){
+    return CALLS_NUMBER * DELAY_IN_MILLIS / REACTIVE_GAIN_RATIO;
   }
 
-  protected int getReactiveGainRatio(){
-    return REACTIVE_GAIN_RATIO;
-  }
 }

@@ -14,8 +14,9 @@
 package reactivefeign.jetty.h1;
 
 import reactivefeign.ReactiveFeign;
-import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
+
+import static reactivefeign.jetty.h1.TestUtils.builderHttp;
 
 /**
  * @author Sergii Karpenko
@@ -24,7 +25,7 @@ public class RetryingTest extends reactivefeign.RetryingTest {
 
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
-    return JettyReactiveFeign.builder();
+    return builderHttp();
   }
 
 }

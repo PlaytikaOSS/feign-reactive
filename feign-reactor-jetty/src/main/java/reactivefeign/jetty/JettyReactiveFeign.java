@@ -23,8 +23,6 @@ import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.jetty.client.JettyReactiveHttpClient;
 
-import java.util.function.Function;
-
 /**
  * Reactive Jetty client based implementation of reactive Feign
  *
@@ -61,25 +59,25 @@ public final class JettyReactiveFeign {
         return builder(useHttp2 -> httpClient);
     }
 
-    public static <T> Builder<T> builder(Function<Boolean, HttpClient> httpClientFactory) {
+    public static <T> Builder<T> builder(JettyHttpClientFactory httpClientFactory) {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
         return new Builder<>(httpClientFactory, new JsonFactory(), objectMapper);
     }
 
-    public static <T> Builder<T> builder(Function<Boolean, HttpClient> httpClientFactory,
+    public static <T> Builder<T> builder(JettyHttpClientFactory httpClientFactory,
                                          JsonFactory jsonFactory, ObjectMapper objectMapper) {
         return new Builder<>(httpClientFactory, jsonFactory, objectMapper);
     }
 
     public static class Builder<T> extends ReactiveFeign.Builder<T> {
 
-        protected Function<Boolean, HttpClient> httpClientFactory;
+        protected JettyHttpClientFactory httpClientFactory;
         protected JsonFactory jsonFactory;
         private ObjectMapper objectMapper;
         protected JettyReactiveOptions options;
 
-        protected Builder(Function<Boolean, HttpClient> httpClientFactory, JsonFactory jsonFactory, ObjectMapper objectMapper) {
+        protected Builder(JettyHttpClientFactory httpClientFactory, JsonFactory jsonFactory, ObjectMapper objectMapper) {
             this.jsonFactory = jsonFactory;
             this.objectMapper = objectMapper;
             setHttpClient(httpClientFactory);
@@ -94,11 +92,11 @@ public final class JettyReactiveFeign {
             return this;
         }
 
-        protected void setHttpClient(Function<Boolean, HttpClient> httpClientFactory){
+        protected void setHttpClient(JettyHttpClientFactory httpClientFactory){
             this.httpClientFactory = httpClientFactory;
 
             boolean useHttp2 = ReactiveOptions.useHttp2(options);
-            HttpClient httpClient = httpClientFactory.apply(useHttp2);
+            HttpClient httpClient = httpClientFactory.build(useHttp2);
 
             if(useHttp2 && !(httpClient.getTransport() instanceof HttpClientTransportOverHTTP2)){
                 throw new IllegalArgumentException("HttpClient should use HttpClientTransportOverHTTP2");

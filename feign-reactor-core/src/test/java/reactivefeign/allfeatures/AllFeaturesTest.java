@@ -320,14 +320,6 @@ abstract public class AllFeaturesTest {
 				.until(() -> counter.get() == CALLS_NUMBER);
 	}
 
-	private int timeToCompleteReactively(){
-		return CALLS_NUMBER * DELAY_IN_MILLIS / getReactiveGainRatio();
-	}
-
-	protected int getReactiveGainRatio(){
-		return REACTIVE_GAIN_RATIO;
-	}
-
 	@Test
 	public void shouldMirrorIntegerStreamBody() {
 		Flux<Integer> result = client.mirrorIntegerBodyStream(
