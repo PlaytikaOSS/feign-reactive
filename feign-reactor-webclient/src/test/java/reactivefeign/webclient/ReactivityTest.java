@@ -13,7 +13,6 @@
  */
 package reactivefeign.webclient;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
 
@@ -24,8 +23,4 @@ public class ReactivityTest extends reactivefeign.ReactivityTest {
     return WebReactiveFeign.builder();
   }
 
-  @Override
-  public void shouldRunReactively() throws JsonProcessingException {
-    super.shouldRunReactively();
-  }
 }

@@ -16,7 +16,7 @@ package reactivefeign.rx2;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import org.awaitility.Duration;
-import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.rx2.testcase.IcecreamServiceApi;
@@ -36,11 +36,11 @@ import static org.awaitility.Awaitility.waitAtMost;
 public class ReactivityTest {
 
   public static final int DELAY_IN_MILLIS = 500;
-  public static final int CALLS_NUMBER = 100;
-  public static final int REACTIVE_GAIN_RATIO = 10;
+  public static final int CALLS_NUMBER = 500;
+  public static final int REACTIVE_GAIN_RATIO = 50;
 
-  @ClassRule
-  public static WireMockClassRule wireMockRule = new WireMockClassRule(
+  @Rule
+  public WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig()
           .asynchronousResponseEnabled(true)
           .dynamicPort());
