@@ -53,7 +53,7 @@
 
         <!--BOMs-->
         <spring-cloud-bom.version>Greenwich.SR3</spring-cloud-bom.version>
-        <spring-boot-dependencies-bom.version>2.1.9.RELEASE</spring-boot-dependencies-bom.version>
+        <spring-boot-dependencies-bom.version>2.2.1.RELEASE</spring-boot-dependencies-bom.version>
 
         <!--other-->
         <json-reactor.version>0.0.1</json-reactor.version>
