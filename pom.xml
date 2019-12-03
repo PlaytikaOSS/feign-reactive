@@ -59,7 +59,7 @@
         <json-reactor.version>0.0.1</json-reactor.version>
 
         <!-- Tests -->
-        <wiremock.version>2.25.0</wiremock.version>
+        <wiremock.version>2.25.1</wiremock.version>
         <awaitility.version>3.1.6</awaitility.version>
         <guava.version>23.0</guava.version>
 
