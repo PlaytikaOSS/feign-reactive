@@ -16,6 +16,7 @@ package reactivefeign;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.FeignException;
+import feign.Request;
 import feign.RetryableException;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
@@ -24,6 +25,8 @@ import org.junit.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactor.test.StepVerifier;
 
+import java.nio.charset.Charset;
+import java.util.Collections;
 import java.util.function.Predicate;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -128,11 +131,15 @@ public abstract class StatusHandlerTest {
         .statusHandler(compose(
             throwOnStatus(
                 status -> status == HttpStatus.SC_SERVICE_UNAVAILABLE,
-                (methodTag, response) -> new RetryableException(
-                        response.status(),
-                        "Should retry on next node",
-                        httpMethod(response.request().method()),
-                        null)),
+                (methodTag, response) -> {
+                  Request.HttpMethod httpMethod = httpMethod(response.request().method());
+                  Request request = Request.create(httpMethod, response.request().uri().toString(),
+                          Collections.emptyMap(), new byte[0], Charset.defaultCharset());
+                  return new RetryableException(
+                          response.status(),
+                          "Should retry on next node",
+                          httpMethod, null, request);
+                }),
             throwOnStatus(
                 status -> status == HttpStatus.SC_UNAUTHORIZED,
                 (methodTag, response) -> new RuntimeException("Should login", null))))

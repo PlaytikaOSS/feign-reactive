@@ -14,12 +14,16 @@
 package reactivefeign.rx2;
 
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import feign.Request;
 import feign.RetryableException;
 import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
 import reactivefeign.rx2.testcase.IcecreamServiceApi;
+
+import java.nio.charset.Charset;
+import java.util.Collections;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -53,10 +57,15 @@ public class StatusHandlerTest {
     IcecreamServiceApi client = builder()
         .statusHandler(throwOnStatus(
             status -> status == HttpStatus.SC_SERVICE_UNAVAILABLE,
-            (methodTag, response) -> new RetryableException(
-                    response.status(),
-                    "Should retry on next node",
-                    httpMethod(response.request().method()), null)))
+            (methodTag, response) -> {
+              Request.HttpMethod httpMethod = httpMethod(response.request().method());
+              Request request = Request.create(httpMethod, response.request().uri().toString(),
+                      Collections.emptyMap(), new byte[0], Charset.defaultCharset());
+              return new RetryableException(
+                      response.status(),
+                      "Should retry on next node",
+                      httpMethod, null, request);
+            }))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     client.findFirstOrder().test()

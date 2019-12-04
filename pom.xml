@@ -52,7 +52,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--BOMs-->
-        <spring-cloud-bom.version>Greenwich.SR3</spring-cloud-bom.version>
+        <spring-cloud-bom.version>Hoxton.RELEASE</spring-cloud-bom.version>
         <spring-boot-dependencies-bom.version>2.2.1.RELEASE</spring-boot-dependencies-bom.version>
 
         <!--other-->
