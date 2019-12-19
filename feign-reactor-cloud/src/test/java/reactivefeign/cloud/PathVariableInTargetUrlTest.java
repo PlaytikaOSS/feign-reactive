@@ -51,7 +51,7 @@ public class PathVariableInTargetUrlTest {
         TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder("shouldCorrectlyProcessPathVariableInUrl")
                 .enableLoadBalancer()
                 .disableHystrix()
-                .target(TestMonoInterface.class, "http://"+serviceName+"/mono/{id}");
+                .target(TestMonoInterface.class, serviceName, "http://"+serviceName+"/mono/{id}");
 
         StepVerifier.create(client.getMono(1))
                 .expectNext(body)

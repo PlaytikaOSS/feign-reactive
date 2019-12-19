@@ -21,7 +21,6 @@ import com.netflix.hystrix.HystrixCommand;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
 import feign.Contract;
 import io.micrometer.core.instrument.MeterRegistry;
-import org.eclipse.jetty.client.HttpClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -77,7 +76,7 @@ public class ReactiveFeignClientsConfiguration {
 
 
 	@Configuration
-	@ConditionalOnClass({JettyReactiveFeign.class, HttpClient.class})
+	@ConditionalOnClass({JettyReactiveFeign.class, org.eclipse.jetty.client.HttpClient.class})
 	@ConditionalOnProperty(name = "reactive.feign.jetty", havingValue = "true")
 	protected static class ReactiveFeignJettyConfiguration {
 

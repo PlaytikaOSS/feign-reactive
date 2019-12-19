@@ -17,6 +17,7 @@
 package reactivefeign.spring.config;
 
 import feign.Contract;
+import feign.Target;
 import feign.codec.ErrorDecoder;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
@@ -253,12 +254,6 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 		return context.getInstance(this.name, type);
 	}
 
-	protected ReactiveFeignBuilder loadBalance(ReactiveFeignBuilder<?> builder, ReactiveFeignContext context) {
-
-
-		return builder;
-	}
-
 	@Override
 	public Object getObject() throws Exception {
 		return getTarget();
@@ -272,6 +267,14 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 		ReactiveFeignContext context = applicationContext.getBean(ReactiveFeignContext.class);
 		ReactiveFeignBuilder builder = reactiveFeign(context);
 
+		builder = fallback(context, builder);
+
+		return StringUtils.hasText(this.url)
+				? (T) builder.target(type, buildUrl())
+				: (T) builder.target(type, this.name, buildUrl());
+	}
+
+	private String buildUrl() {
 		String url;
 		if (!StringUtils.hasText(this.url)) {
 			if (!this.name.startsWith("http")) {
@@ -280,7 +283,6 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 			else {
 				url = this.name;
 			}
-			builder = loadBalance(builder, context);
 		} else {
 			if(!this.url.startsWith("http")){
 				url = "http://" + this.url;
@@ -289,10 +291,7 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 			}
 		}
 		url += cleanPath();
-
-		builder = fallback(context, builder);
-
-		return (T) builder.target(this.type, url);
+		return url;
 	}
 
 	private <T> ReactiveFeignBuilder fallback(ReactiveFeignContext context, ReactiveFeignBuilder builder) {

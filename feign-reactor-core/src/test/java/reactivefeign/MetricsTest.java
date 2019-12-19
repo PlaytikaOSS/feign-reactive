@@ -17,6 +17,7 @@ package reactivefeign;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import feign.Target;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -56,6 +57,11 @@ abstract public class MetricsTest {
 
   abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder();
 
+  protected Target<IcecreamServiceApi> target(){
+    return new Target.HardCodedTarget<>(IcecreamServiceApi.class,
+            "http://"+getHost()+":" + wireMockRule.port());
+  }
+
   abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder(long readTimeoutInMillis);
 
   @Before
@@ -75,17 +81,12 @@ abstract public class MetricsTest {
 
     IcecreamServiceApi client = builder()
             .addLoggerListener(buildLoggerListener())
-            .target(IcecreamServiceApi.class,
-                    "http://"+getHost()+":" + wireMockRule.port());
+            .target(target());
 
     client.findOrder(20).block();
 
     assertThat(meterRegistry.get(DEFAULT_TIMER_NAME)
-            .tags(FEIGN_CLIENT_METHOD.getTagName(), "IcecreamServiceApi#findOrder(int)",
-                    URI_TEMPLATE.getTagName(), "http://" + getHost() + ":" + wireMockRule.port()+"/icecream/orders/{orderId}",
-                    HTTP_METHOD.getTagName(), "GET",
-                    HOST.getTagName(), "localhost",
-                    STATUS.getTagName(), "200")
+            .tagKeys(FEIGN_CLIENT_METHOD.getTagName())
             .timer().count()).isEqualTo(1L);
   }
 
@@ -106,8 +107,7 @@ abstract public class MetricsTest {
 
     IcecreamServiceApi client = builder()
             .addLoggerListener(buildLoggerListener())
-            .target(IcecreamServiceApi.class,
-                    "http://" + getHost() + ":" + wireMockRule.port());
+            .target(target());
 
     client.makeOrders(Flux.just(order1, order2)).collectList().block();
 
@@ -125,8 +125,7 @@ abstract public class MetricsTest {
 
     IcecreamServiceApi client = builder()
             .addLoggerListener(buildLoggerListener())
-            .target(IcecreamServiceApi.class,
-                    "http://" + getHost() + ":" + wireMockRule.port());
+            .target(target());
 
     client.ping().block();
 

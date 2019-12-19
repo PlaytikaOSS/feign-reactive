@@ -25,12 +25,9 @@ import reactivefeign.publisher.PublisherClientFactory;
 import reactivefeign.publisher.PublisherHttpClient;
 import reactivefeign.retry.ReactiveRetryPolicy;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static reactivefeign.methodhandler.PublisherClientMethodHandler.SUBSTITUTION_PATTERN;
 import static reactivefeign.retry.FilteredReactiveRetryPolicy.notRetryOn;
 import static reactivefeign.utils.FeignUtils.returnPublisherType;
 
@@ -192,22 +189,16 @@ public class CloudReactiveFeign {
                 @Override
                 public PublisherHttpClient create(MethodMetadata methodMetadata) {
                     PublisherHttpClient publisherClient = publisherClientFactory.create(methodMetadata);
-                    String serviceName = extractServiceName(target.url());
-                    return new RibbonPublisherClient(loadBalancerCommandFactory, serviceName,
-                            publisherClient, returnPublisherType(methodMetadata));
+                    if(!target.name().equals(target.url())){
+                        return new RibbonPublisherClient(loadBalancerCommandFactory, target.name(),
+                                publisherClient, returnPublisherType(methodMetadata));
+                    } else {
+                        return publisherClient;
+                    }
+
                 }
             };
         }
-
-        private String extractServiceName(String url){
-            try {
-                String substitutedUrl = url.replaceAll(SUBSTITUTION_PATTERN.toString(), "tempsubstitution");
-                return new URI(substitutedUrl).getHost();
-            } catch (URISyntaxException e) {
-                throw new IllegalArgumentException("Can't extract service name from url:"+url, e);
-            }
-        }
-
     }
 
     public interface SetterFactory {

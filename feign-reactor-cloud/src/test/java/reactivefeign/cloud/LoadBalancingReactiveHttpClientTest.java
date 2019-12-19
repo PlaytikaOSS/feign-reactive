@@ -77,7 +77,7 @@ public class LoadBalancingReactiveHttpClientTest {
         TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder("shouldLoadBalanceRequests")
                 .enableLoadBalancer()
                 .disableHystrix()
-                .target(TestMonoInterface.class, "http://" + serviceName);
+                .target(TestMonoInterface.class, serviceName, "http://" + serviceName);
 
         String result1 = client.getMono().block();
         String result2 = client.getMono().block();
@@ -99,7 +99,7 @@ public class LoadBalancingReactiveHttpClientTest {
         TestFluxInterface client = BuilderUtils.<TestFluxInterface>cloudBuilder("shouldLoadBalanceFluxRequests")
                 .enableLoadBalancer()
                 .disableHystrix()
-                .target(TestFluxInterface.class, "http://" + serviceName);
+                .target(TestFluxInterface.class, serviceName, "http://" + serviceName);
 
         List<Integer> result1 = client.getFlux().collectList().block();
         List<Integer> result2 = client.getFlux().collectList().block();
@@ -182,7 +182,7 @@ public class LoadBalancingReactiveHttpClientTest {
                 .enableLoadBalancer(ReactiveFeignClientFactory.DEFAULT, retryHandler)
                 .disableHystrix()
                 .retryWhen(retry(retryOnSame))
-                .target(TestMonoInterface.class, "http://" + serviceName);
+                .target(TestMonoInterface.class, serviceName, "http://" + serviceName);
 
         String result = client.getMono().block();
         assertThat(result).isEqualTo(body);
@@ -215,7 +215,7 @@ public class LoadBalancingReactiveHttpClientTest {
         TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder("loadBalancingWithRetryWithWarning")
                 .enableLoadBalancer(ReactiveFeignClientFactory.DEFAULT, retryHandler)
                 .disableHystrix()
-                .target(TestMonoInterface.class, "http://" + serviceName);
+                .target(TestMonoInterface.class, serviceName, "http://" + serviceName);
 
         String result = client.getMono().block();
         assertThat(result).isEqualTo(body);

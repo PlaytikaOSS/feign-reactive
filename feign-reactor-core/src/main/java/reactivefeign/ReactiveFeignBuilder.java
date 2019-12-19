@@ -89,6 +89,16 @@ public interface ReactiveFeignBuilder<T> {
         return target(new Target.HardCodedTarget<>(apiType, url));
     }
 
+    default T target(final Class<T> apiType, final String name, final String url) {
+        if(name.equals(url)){
+            throw new IllegalArgumentException(String.format("Name is equal to url: name=[%s], url=[%s]", name, url));
+        }
+        if(!url.contains(name)){
+            throw new IllegalArgumentException(String.format("Name should be part of url: name=[%s], url=[%s]", name, url));
+        }
+        return target(new Target.HardCodedTarget<>(apiType, name, url));
+    }
+
     /**
      * Defines target and builds client.
      *

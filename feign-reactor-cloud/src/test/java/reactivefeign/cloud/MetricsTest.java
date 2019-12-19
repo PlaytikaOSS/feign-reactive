@@ -20,6 +20,7 @@ import com.netflix.client.config.DefaultClientConfigImpl;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
+import feign.Target;
 import org.junit.BeforeClass;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.testcase.IcecreamServiceApi;
@@ -52,6 +53,11 @@ public class MetricsTest extends reactivefeign.MetricsTest {
   protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
     return BuilderUtils.<IcecreamServiceApi>cloudBuilderWithExecutionTimeoutDisabled("MetricsTest")
             .enableLoadBalancer();
+  }
+
+  @Override
+  protected Target<IcecreamServiceApi> target(){
+    return new Target.HardCodedTarget<>(IcecreamServiceApi.class, serviceName, "http://"+serviceName);
   }
 
   @Override

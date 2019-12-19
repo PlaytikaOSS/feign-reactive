@@ -24,6 +24,7 @@ import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
+import feign.Target;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -65,7 +66,7 @@ public class AllFeaturesTest extends reactivefeign.allfeatures.AllFeaturesTest {
 		return BuilderUtils.<AllFeaturesFeign>cloudBuilderWithExecutionTimeoutDisabled("AllFeaturesTest")
 				.enableLoadBalancer()
 				.decode404()
-				.target(AllFeaturesFeign.class, "http://"+serviceName);
+				.target(AllFeaturesFeign.class, serviceName, "http://"+serviceName);
 	}
 
 	@Override
