@@ -48,6 +48,14 @@ public final class Java11ReactiveFeign {
         return builder(httpClientBuilder, new JsonFactory(), objectMapper);
     }
 
+    public static <T> Builder<T> builder(HttpClientFeignCustomizer clientFeignCustomizer) {
+        HttpClient.Builder httpClientBuilder = HttpClient.newBuilder();
+        clientFeignCustomizer.accept(httpClientBuilder);
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        return builder(httpClientBuilder, new JsonFactory(), objectMapper);
+    }
+
     public static <T> Builder<T> builder(HttpClient.Builder httpClientBuilder, JsonFactory jsonFactory, ObjectMapper objectMapper) {
         return new Builder<>(httpClientBuilder, jsonFactory, objectMapper);
     }

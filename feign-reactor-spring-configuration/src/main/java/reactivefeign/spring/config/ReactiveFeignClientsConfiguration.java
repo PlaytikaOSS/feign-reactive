@@ -37,6 +37,7 @@ import reactivefeign.client.log.DefaultReactiveLogger;
 import reactivefeign.client.log.ReactiveLoggerListener;
 import reactivefeign.client.metrics.MicrometerReactiveLogger;
 import reactivefeign.cloud.CloudReactiveFeign;
+import reactivefeign.java11.HttpClientFeignCustomizer;
 import reactivefeign.java11.Java11ReactiveFeign;
 import reactivefeign.jetty.JettyHttpClientFactory;
 import reactivefeign.jetty.JettyReactiveFeign;
@@ -95,8 +96,10 @@ public class ReactiveFeignClientsConfiguration {
 		@Bean
 		@Scope("prototype")
 		public ReactiveFeignBuilder reactiveFeignBuilder(
-				/*java.net.http.HttpClient.Builder httpClientBuilder*/) {
-			return Java11ReactiveFeign.builder(/*httpClientBuilder*/);
+				@Autowired(required = false) HttpClientFeignCustomizer httpClientCustomizer) {
+			return httpClientCustomizer != null
+					? Java11ReactiveFeign.builder(httpClientCustomizer)
+					: Java11ReactiveFeign.builder();
 		}
 	}
 
