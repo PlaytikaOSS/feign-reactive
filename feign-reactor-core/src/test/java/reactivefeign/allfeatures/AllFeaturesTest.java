@@ -16,7 +16,6 @@
 
 package reactivefeign.allfeatures;
 
-import org.awaitility.Duration;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -316,7 +315,7 @@ abstract public class AllFeaturesTest {
 					.subscribe();
 		}
 
-		waitAtMost(new Duration(timeToCompleteReactively(), TimeUnit.MILLISECONDS))
+		waitAtMost(timeToCompleteReactively(), TimeUnit.MILLISECONDS)
 				.until(() -> counter.get() == CALLS_NUMBER);
 	}
 

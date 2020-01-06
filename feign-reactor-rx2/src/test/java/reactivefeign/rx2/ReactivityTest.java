@@ -15,7 +15,6 @@ package reactivefeign.rx2;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import org.awaitility.Duration;
 import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.ReactiveFeign;
@@ -80,7 +79,7 @@ public class ReactivityTest {
     }).start();
 
     int timeToCompleteReactively = CALLS_NUMBER * DELAY_IN_MILLIS / REACTIVE_GAIN_RATIO;
-    waitAtMost(new Duration(timeToCompleteReactively, TimeUnit.MILLISECONDS))
+    waitAtMost(timeToCompleteReactively, TimeUnit.MILLISECONDS)
         .until(() -> counter.get() == CALLS_NUMBER);
   }
 }

@@ -60,7 +60,7 @@
 
         <!-- Tests -->
         <wiremock.version>2.25.1</wiremock.version>
-        <awaitility.version>3.1.6</awaitility.version>
+        <awaitility.version>4.0.2</awaitility.version>
         <guava.version>23.0</guava.version>
 
         <!-- Plugins -->
