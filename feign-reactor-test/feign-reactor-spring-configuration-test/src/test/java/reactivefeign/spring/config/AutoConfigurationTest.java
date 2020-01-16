@@ -31,6 +31,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
+import reactivefeign.FallbackFactory;
 import reactivefeign.webclient.WebClientFeignCustomizer;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -61,6 +62,9 @@ public class AutoConfigurationTest {
 	@Autowired
 	TestReactiveFeignClient feignClient;
 
+	@Autowired
+	TestReactiveFeignClientFallbackFactory feignClientFallbackFactory;
+
 	@Test
 	public void shouldReturnBody() {
 		mockHttpServer.stubFor(WireMock.get(WireMock.urlPathMatching(TEST_URL))
@@ -82,6 +86,20 @@ public class AutoConfigurationTest {
 						.withStatus(598)));
 
 		Mono<String> result = feignClient.testMethod();
+
+		StepVerifier.create(result)
+				.expectNext(FALLBACK_TEXT)
+				.verifyComplete();
+	}
+
+	@Test
+	public void shouldReturnFallbackFromFactoryOnError() {
+		mockHttpServer.stubFor(get(urlPathMatching(TEST_URL))
+				.withHeader(CUSTOM, equalTo(HEADER))
+				.willReturn(aResponse()
+						.withStatus(598)));
+
+		Mono<String> result = feignClientFallbackFactory.testMethod();
 
 		StepVerifier.create(result)
 				.expectNext(FALLBACK_TEXT)
@@ -122,7 +140,28 @@ public class AutoConfigurationTest {
 		}
 	}
 
-	@EnableReactiveFeignClients(clients = AutoConfigurationTest.TestReactiveFeignClient.class)
+	@ReactiveFeignClient(name = "test-feign-client-fallback-factory", url = "localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}",
+			fallbackFactory = TestFallbackFactory.class)
+	public interface TestReactiveFeignClientFallbackFactory {
+
+		@GetMapping(path = TEST_URL)
+		Mono<String> testMethod();
+
+	}
+
+	public static class TestFallbackFactory implements FallbackFactory<TestReactiveFeignClientFallbackFactory> {
+
+		@Override
+		public TestReactiveFeignClientFallbackFactory apply(Throwable throwable) {
+			return () -> Mono.just(FALLBACK_TEXT);
+		}
+	}
+
+
+	@EnableReactiveFeignClients(clients = {
+			AutoConfigurationTest.TestReactiveFeignClient.class,
+			AutoConfigurationTest.TestReactiveFeignClientFallbackFactory.class
+	})
 	@EnableAutoConfiguration
 	@Configuration
 	public static class TestConfiguration{
@@ -130,6 +169,11 @@ public class AutoConfigurationTest {
 		@Bean
 		public TestFallback reactiveFallback(){
 			return new TestFallback();
+		}
+
+		@Bean
+		public TestFallbackFactory reactiveFallbackFactory(){
+			return new TestFallbackFactory();
 		}
 
 		@Bean

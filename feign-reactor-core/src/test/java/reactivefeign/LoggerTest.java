@@ -65,9 +65,7 @@ abstract public class LoggerTest {
 
   abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder(long readTimeoutInMillis);
 
-  protected String appenderPrefix(){
-    return "";
-  }
+  abstract protected String appenderPrefix();
 
   protected WireMockConfiguration wireMockConfig(){
     return WireMockConfiguration.wireMockConfig();
@@ -95,9 +93,8 @@ abstract public class LoggerTest {
 
     Mono<Bill> billMono = client.makeOrder(order);
 
-    // no logs before subscription
     ArgumentCaptor<LogEvent> argumentCaptor = ArgumentCaptor.forClass(LogEvent.class);
-    Mockito.verify(appender, never()).append(argumentCaptor.capture());
+    assertNoEventsBeforeSubscription(appender, argumentCaptor);
 
     billMono.block();
 
@@ -124,6 +121,7 @@ abstract public class LoggerTest {
         "[IcecreamServiceApi#makeOrder]<--- body takes");
 
     setLogLevel(originalLevel);
+    removeAppender(appender.getName());
   }
 
   @Test
@@ -151,9 +149,8 @@ abstract public class LoggerTest {
 
     Flux<Bill> billsFlux = client.makeOrders(Flux.just(order1, order2));
 
-    // no logs before subscription
     ArgumentCaptor<LogEvent> argumentCaptor = ArgumentCaptor.forClass(LogEvent.class);
-    Mockito.verify(appender, never()).append(argumentCaptor.capture());
+    assertNoEventsBeforeSubscription(appender, argumentCaptor);
 
     billsFlux.collectList().block();
 
@@ -188,6 +185,7 @@ abstract public class LoggerTest {
             "[IcecreamServiceApi#makeOrders]<--- body takes");
 
     setLogLevel(originalLevel);
+    removeAppender(appender.getName());
   }
 
   protected String fluxRequestBody(List<?> list) throws JsonProcessingException {
@@ -211,9 +209,8 @@ abstract public class LoggerTest {
 
     Mono<Void> ping = client.ping();
 
-    // no logs before subscription
     ArgumentCaptor<LogEvent> argumentCaptor = ArgumentCaptor.forClass(LogEvent.class);
-    Mockito.verify(appender, never()).append(argumentCaptor.capture());
+    assertNoEventsBeforeSubscription(appender, argumentCaptor);
 
     ping.block();
 
@@ -232,6 +229,7 @@ abstract public class LoggerTest {
             "[IcecreamServiceApi#ping]<--- headers takes");
 
     setLogLevel(originalLevel);
+    removeAppender(appender.getName());
   }
 
   @Test(expected = ReadTimeoutException.class)
@@ -248,15 +246,15 @@ abstract public class LoggerTest {
                     .withStatus(200)
                     .withHeader("Content-Type", "application/json")));
 
+    ArgumentCaptor<LogEvent> argumentCaptor = ArgumentCaptor.forClass(LogEvent.class);
+
     IcecreamServiceApi client = builder(readTimeoutInMillis)
             .target(IcecreamServiceApi.class,
                     "http://localhost:" + wireMockRule.port());
 
     Mono<Void> ping = client.ping();
 
-    // no logs before subscription
-    ArgumentCaptor<LogEvent> argumentCaptor = ArgumentCaptor.forClass(LogEvent.class);
-    Mockito.verify(appender, never()).append(argumentCaptor.capture());
+    assertNoEventsBeforeSubscription(appender, argumentCaptor);
 
     try {
       ping.block();
@@ -274,9 +272,18 @@ abstract public class LoggerTest {
       assertLogEvent(logEvents, 2, Level.ERROR,
               "[IcecreamServiceApi#ping]--->GET http://localhost");
 
-      setLogLevel(originalLevel);
       throw e;
     }
+    finally {
+      setLogLevel(originalLevel);
+      removeAppender(appender.getName());
+    }
+  }
+
+  private void assertNoEventsBeforeSubscription(Appender appender, ArgumentCaptor<LogEvent> argumentCaptor) {
+    Mockito.verify(appender, atLeast(0)).append(argumentCaptor.capture());
+    List<LogEvent> logEvents = argumentCaptor.getAllValues();
+    assertThat(logEvents).isEmpty();
   }
 
   private void assertLogEvent(List<LogEvent> events, int index, Level level, String message) {
@@ -302,6 +309,10 @@ abstract public class LoggerTest {
     when(appender.isStarted()).thenReturn(true);
     getLoggerConfig().addAppender(appender, Level.ALL, null);
     return appender;
+  }
+
+  public void removeAppender(String name) {
+    getLoggerConfig().removeAppender(name);
   }
 
   private static Level setLogLevel(Level logLevel) {

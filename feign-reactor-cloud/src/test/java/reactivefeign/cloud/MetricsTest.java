@@ -28,6 +28,9 @@ import reactivefeign.webclient.WebReactiveOptions;
 
 import java.util.Collections;
 
+import static reactivefeign.cloud.AllFeaturesTest.setupServersList;
+import static reactivefeign.cloud.BuilderUtils.TEST_CLIENT_FACTORY;
+
 /**
  * @author Sergii Karpenko
  */
@@ -36,12 +39,8 @@ public class MetricsTest extends reactivefeign.MetricsTest {
   private static String serviceName = "MetricsTest-loadBalancingDefaultPolicyRoundRobin";
 
   @BeforeClass
-  public static void setupServersList() throws ClientException {
-    DefaultClientConfigImpl clientConfig = new DefaultClientConfigImpl();
-    clientConfig.loadDefaultValues();
-    clientConfig.setProperty(CommonClientConfigKey.NFLoadBalancerClassName, BaseLoadBalancer.class.getName());
-    ILoadBalancer lb = ClientFactory.registerNamedLoadBalancerFromclientConfig(serviceName, clientConfig);
-    lb.addServers(Collections.singletonList(new Server("localhost", wireMockRule.port())));
+  public static void setUpServersList() throws ClientException {
+    setupServersList(serviceName, wireMockRule.port());
   }
 
   @Override
@@ -51,8 +50,8 @@ public class MetricsTest extends reactivefeign.MetricsTest {
 
   @Override
   protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
-    return BuilderUtils.<IcecreamServiceApi>cloudBuilderWithExecutionTimeoutDisabled("MetricsTest")
-            .enableLoadBalancer();
+    return BuilderUtils.<IcecreamServiceApi>cloudBuilderWithExecutionTimeoutDisabled()
+            .enableLoadBalancer(TEST_CLIENT_FACTORY);
   }
 
   @Override
@@ -62,8 +61,8 @@ public class MetricsTest extends reactivefeign.MetricsTest {
 
   @Override
   protected ReactiveFeignBuilder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
-    return BuilderUtils.<IcecreamServiceApi>cloudBuilderWithExecutionTimeoutDisabled("MetricsTest")
-            .enableLoadBalancer()
+    return BuilderUtils.<IcecreamServiceApi>cloudBuilderWithExecutionTimeoutDisabled()
+            .enableLoadBalancer(TEST_CLIENT_FACTORY)
             .options(new WebReactiveOptions.Builder().setReadTimeoutMillis(readTimeoutInMillis).build()
     );
   }

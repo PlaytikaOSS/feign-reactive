@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
+import reactivefeign.ReactiveFeignBuilder;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -43,13 +44,16 @@ public class HystrixCircuitBreakerFuncTest {
     @Value("${hystrix.command.default.circuitBreaker.requestVolumeThreshold}")
     private int HYSTRIX_VOLUME_THRESHOLD;
 
+    protected ReactiveFeignBuilder<TestCaller> cloudBuilderWithTimeoutDisabledAndCircuitBreakerDisabled(){
+        return BuilderUtils.cloudBuilder();
+    }
+
     @Test
     public void shouldReturnFallbackWithClosedCircuitAfterThreshold() {
         int callsNo = HYSTRIX_VOLUME_THRESHOLD + 10;
         mockResponseServiceUnavailable();
 
-        TestCaller testCaller = BuilderUtils.<TestCaller>cloudBuilderWithExecutionTimeoutDisabled(
-                "shouldReturnFallbackWithClosedCircuitAfterThreshold")
+        TestCaller testCaller = cloudBuilderWithTimeoutDisabledAndCircuitBreakerDisabled()
                 .fallback(() -> Mono.just(FALLBACK))
                 .target(TestCaller.class, "http://localhost:" + wireMockRule.port());
 
@@ -70,8 +74,7 @@ public class HystrixCircuitBreakerFuncTest {
         int callsNo = HYSTRIX_VOLUME_THRESHOLD + 10;
         mockResponseServiceUnavailable();
 
-        TestCaller testCaller = BuilderUtils.<TestCaller>cloudBuilderWithExecutionTimeoutDisabled(
-                "shouldNotOpenCircuitAfterThreshold")
+        TestCaller testCaller = cloudBuilderWithTimeoutDisabledAndCircuitBreakerDisabled()
                 .target(TestCaller.class, "http://localhost:" + wireMockRule.port());
 
         //check that circuit breaker DOESN'T open on volume threshold
@@ -100,7 +103,7 @@ public class HystrixCircuitBreakerFuncTest {
         stubFor(get(urlEqualTo(TEST_URL)).willReturn(aResponse().withStatus(503)));
     }
 
-    interface TestCaller {
+    public interface TestCaller {
         @RequestLine("GET " + TEST_URL)
         Mono<String> call();
     }

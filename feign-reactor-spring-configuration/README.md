@@ -25,7 +25,7 @@ To configure you feign client as cloud ready (Hystrix + Ribbon) you need to add
 
 This may be useful in case of tests:
 - set `reactive.feign.cloud.enabled` to `false` to disable cloud configuration for all clients
-- set `reactive.feign.ribbon.enabled` to `false` to disable ribbon configuration for all clients 
+- set `reactive.feign.loadbalancer.enabled` to `false` to disable loadbalancer configuration for all clients 
 - set `reactive.feign.hystrix.enabled` to `false` to disable hystrix configuration for all clients 
 - set `reactive.feign.logger.enabled` to `true` to enable default logger
 - set `reactive.feign.metrics.enabled` to `true` to enable default Micrometer logger. 
@@ -55,13 +55,13 @@ Here is the list of available properties:
 `@ReactiveFeignClient` annotation has `configuration` attribute for client specific configuration.
 
 Here is the list of bean classes that will be used by reactive feign client if they declared in configuration class:
-`ReactiveOptions.Builder`, `ReactiveRetryPolicy`, `List<Class<ReactiveHttpRequestInterceptor>>`, `ReactiveStatusHandler`,
+`ReactiveOptions.Builder`, `ReactiveRetryPolicies`, `List<Class<ReactiveHttpRequestInterceptor>>`, `ReactiveStatusHandler`,
 `feign.codec.ErrorDecoder`, `ReactiveLoggerListener`, `MicrometerReactiveLogger`
 
 ## Cloud specific configuration
 
 #### Ribbon
-`LoadBalancerCommandFactory` or `RetryHandler` beans defined in configuration will used to configure ribbon for corresponding client
+`ReactiveLoadBalancer.Factory` or `ReactiveRetryPolicies` beans defined in configuration will used to configure loadbalancer for corresponding client
 
 #### Hystrix
 `CloudReactiveFeign.SetterFactory` bean defined in configuration will be used to configure hystrix for client

@@ -18,10 +18,10 @@ import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
-import feign.RetryableException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import reactivefeign.publisher.retry.OutOfRetriesException;
 import reactivefeign.retry.BasicReactiveRetryPolicy;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.IceCreamOrder;
@@ -177,7 +177,7 @@ public abstract class RetryingTest {
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findOrder(1))
-        .expectErrorMatches(throwable -> throwable instanceof RetryableException)
+        .expectErrorMatches(throwable -> throwable instanceof OutOfRetriesException)
         .verify();
 
     assertThat(getEventsForPath(orderUrl).size()).isEqualTo(maxRetries + 1);
@@ -198,7 +198,7 @@ public abstract class RetryingTest {
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findOrder(1))
-        .expectErrorMatches(throwable -> throwable instanceof RetryableException)
+        .expectErrorMatches(throwable -> throwable instanceof OutOfRetriesException)
         .verify();
 
     assertThat(getEventsForPath(orderUrl).size()).isEqualTo(maxRetries + 1);

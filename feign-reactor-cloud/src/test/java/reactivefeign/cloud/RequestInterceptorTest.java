@@ -29,7 +29,7 @@ public class RequestInterceptorTest extends reactivefeign.RequestInterceptorTest
 
   @Override
   protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
-      return cloudBuilderWithExecutionTimeoutDisabled("RequestInterceptorTest");
+      return cloudBuilderWithExecutionTimeoutDisabled();
   }
 
   @Override

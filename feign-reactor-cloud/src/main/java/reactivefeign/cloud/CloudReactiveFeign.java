@@ -67,10 +67,6 @@ public class CloudReactiveFeign {
             return this;
         }
 
-        public Builder<T> enableLoadBalancer(){
-            return enableLoadBalancer(ReactiveFeignClientFactory.DEFAULT);
-        }
-
         public Builder<T> enableLoadBalancer(ReactiveFeignClientFactory clientFactory){
             return setLoadBalancerCommandFactory(serviceName ->
                     LoadBalancerCommand.builder()

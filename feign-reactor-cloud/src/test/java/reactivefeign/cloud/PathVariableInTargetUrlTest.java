@@ -14,32 +14,37 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
+import reactivefeign.ReactiveFeignBuilder;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.util.Collections.singletonList;
+import static reactivefeign.cloud.AllFeaturesTest.setupServersList;
+import static reactivefeign.cloud.BuilderUtils.TEST_CLIENT_FACTORY;
 
 public class PathVariableInTargetUrlTest {
 
     @ClassRule
     public static WireMockClassRule server1 = new WireMockClassRule(wireMockConfig().dynamicPort());
 
-    private static String serviceName = "PathVariableInTargetUrlTest";
+    protected static String serviceName = "PathVariableInTargetUrlTest";
 
     @BeforeClass
-    public static void setupServersList() throws ClientException {
-        DefaultClientConfigImpl clientConfig = new DefaultClientConfigImpl();
-        clientConfig.loadDefaultValues();
-        clientConfig.setProperty(CommonClientConfigKey.NFLoadBalancerClassName, BaseLoadBalancer.class.getName());
-        ILoadBalancer lb = ClientFactory.registerNamedLoadBalancerFromclientConfig(serviceName, clientConfig);
-        lb.addServers(singletonList(new Server("localhost", server1.port())));
+    public static void setUpServersList() throws ClientException {
+        setupServersList(serviceName, server1.port());
     }
 
     @Before
     public void resetServers() {
         server1.resetAll();
+    }
+
+    protected <T> ReactiveFeignBuilder<T> cloudBuilderWithLoadBalancerEnabled() {
+        return BuilderUtils.<T>cloudBuilder()
+                .enableLoadBalancer(TEST_CLIENT_FACTORY)
+                .disableHystrix();
     }
 
     @Test
@@ -48,9 +53,7 @@ public class PathVariableInTargetUrlTest {
         String body = "Success";
         mockSuccessMono(server1, body);
 
-        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder("shouldCorrectlyProcessPathVariableInUrl")
-                .enableLoadBalancer()
-                .disableHystrix()
+        TestMonoInterface client = this.<TestMonoInterface>cloudBuilderWithLoadBalancerEnabled()
                 .target(TestMonoInterface.class, serviceName, "http://"+serviceName+"/mono/{id}");
 
         StepVerifier.create(client.getMono(1))

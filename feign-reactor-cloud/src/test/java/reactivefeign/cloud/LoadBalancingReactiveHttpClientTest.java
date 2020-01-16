@@ -4,15 +4,9 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.netflix.client.ClientException;
-import com.netflix.client.ClientFactory;
 import com.netflix.client.DefaultLoadBalancerRetryHandler;
 import com.netflix.client.RequestSpecificRetryHandler;
 import com.netflix.client.RetryHandler;
-import com.netflix.client.config.CommonClientConfigKey;
-import com.netflix.client.config.DefaultClientConfigImpl;
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
 import feign.RequestLine;
 import feign.RetryableException;
 import org.junit.Before;
@@ -21,6 +15,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import reactivefeign.ReactiveFeignBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -30,10 +25,10 @@ import java.util.stream.Stream;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
-import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.hamcrest.Matchers.isA;
-import static reactivefeign.retry.BasicReactiveRetryPolicy.retry;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static reactivefeign.cloud.AllFeaturesTest.setupServersList;
+import static reactivefeign.cloud.BuilderUtils.TEST_CLIENT_FACTORY;
 
 /**
  * @author Sergii Karpenko
@@ -51,15 +46,28 @@ public class LoadBalancingReactiveHttpClientTest {
     @Rule
     public ExpectedException expectedException = ExpectedException.none();
 
-    private static String serviceName = "LoadBalancingReactiveHttpClientTest-loadBalancingDefaultPolicyRoundRobin";
+    protected static String serviceName = "LoadBalancingReactiveHttpClientTest-loadBalancingDefaultPolicyRoundRobin";
 
     @BeforeClass
-    public static void setupServersList() throws ClientException {
-        DefaultClientConfigImpl clientConfig = new DefaultClientConfigImpl();
-        clientConfig.loadDefaultValues();
-        clientConfig.setProperty(CommonClientConfigKey.NFLoadBalancerClassName, BaseLoadBalancer.class.getName());
-        ILoadBalancer lb = ClientFactory.registerNamedLoadBalancerFromclientConfig(serviceName, clientConfig);
-        lb.addServers(asList(new Server("localhost", server1.port()), new Server("localhost", server2.port())));
+    public static void setUpServersList() throws ClientException {
+        setupServersList(serviceName, server1.port(), server2.port());
+    }
+
+    protected <T> ReactiveFeignBuilder<T> cloudBuilderWithLoadBalancerEnabled() {
+        return BuilderUtils.<T>cloudBuilder()
+                .enableLoadBalancer(TEST_CLIENT_FACTORY)
+                .disableHystrix();
+    }
+
+    protected <T> ReactiveFeignBuilder<T> cloudBuilderWithLoadBalancerEnabled(
+            int retryOnSame, int retryOnNext) {
+
+        RetryHandler retryHandler = new RequestSpecificRetryHandler(true, true,
+                new DefaultLoadBalancerRetryHandler(retryOnSame, retryOnNext, true), null);
+
+        return BuilderUtils.<T>cloudBuilder()
+                .enableLoadBalancer(TEST_CLIENT_FACTORY, retryHandler)
+                .disableHystrix();
     }
 
     @Before
@@ -74,9 +82,7 @@ public class LoadBalancingReactiveHttpClientTest {
         mockSuccessMono(server1, body);
         mockSuccessMono(server2, body);
 
-        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder("shouldLoadBalanceRequests")
-                .enableLoadBalancer()
-                .disableHystrix()
+        TestMonoInterface client = this.<TestMonoInterface>cloudBuilderWithLoadBalancerEnabled()
                 .target(TestMonoInterface.class, serviceName, "http://" + serviceName);
 
         String result1 = client.getMono().block();
@@ -96,9 +102,7 @@ public class LoadBalancingReactiveHttpClientTest {
         mockSuccessFlux(server1, body);
         mockSuccessFlux(server2, body);
 
-        TestFluxInterface client = BuilderUtils.<TestFluxInterface>cloudBuilder("shouldLoadBalanceFluxRequests")
-                .enableLoadBalancer()
-                .disableHystrix()
+        TestFluxInterface client = this.<TestFluxInterface>cloudBuilderWithLoadBalancerEnabled()
                 .target(TestFluxInterface.class, serviceName, "http://" + serviceName);
 
         List<Integer> result1 = client.getFlux().collectList().block();
@@ -128,30 +132,37 @@ public class LoadBalancingReactiveHttpClientTest {
     @Test
     public void shouldRetryOnSameAndFail() {
 
-        expectedException.expect(RetryableException.class);
-
-        try {
+        assertThatThrownBy(() -> {
             loadBalancingWithRetry(2, 1, 0);
-        } catch (Throwable t) {
+        }).matches(t -> {
             assertThat(server1.getAllServeEvents().size() == 2
                     ^ server2.getAllServeEvents().size() == 2);
-            throw t;
-        }
+            return isOutOfRetries(t);
+        });
+    }
+
+    protected boolean isOutOfRetries(Throwable t) {
+        assertThat(t.getCause()).isInstanceOf(ClientException.class);
+        assertThat(t.getCause().getMessage()).contains("Number of retries exceeded");
+        return true;
+    }
+
+    protected boolean isOutOutOfRetries(Throwable t) {
+        assertThat(t.getCause()).isInstanceOf(ClientException.class);
+        assertThat(t.getCause().getMessage()).contains("Number of retries on next server exceeded");
+        return true;
     }
 
     @Test
-    public void shouldRetryOnNextAndFail() {
+    public void shouldRetryOnSameAndNextAndFail() {
 
-        expectedException.expect(RuntimeException.class);
-        expectedException.expectCause(isA(ClientException.class));
-
-        try {
+        assertThatThrownBy(() -> {
             loadBalancingWithRetry(2, 1, 1);
-        } catch (Throwable t) {
+        }).matches(t -> {
             assertThat(server1.getAllServeEvents().size() == 2
                     && server2.getAllServeEvents().size() == 2);
-            throw t;
-        }
+            return isOutOutOfRetries(t);
+        });
     }
 
     @Test
@@ -175,13 +186,7 @@ public class LoadBalancingReactiveHttpClientTest {
                             .withBody(body));
         });
 
-        RetryHandler retryHandler = new RequestSpecificRetryHandler(true, true,
-                new DefaultLoadBalancerRetryHandler(0, retryOnNext, true), null);
-
-        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder("loadBalancingWithRetry")
-                .enableLoadBalancer(ReactiveFeignClientFactory.DEFAULT, retryHandler)
-                .disableHystrix()
-                .retryWhen(retry(retryOnSame))
+        TestMonoInterface client = this.<TestMonoInterface>cloudBuilderWithLoadBalancerEnabled(retryOnSame, retryOnNext)
                 .target(TestMonoInterface.class, serviceName, "http://" + serviceName);
 
         String result = client.getMono().block();
@@ -209,12 +214,7 @@ public class LoadBalancingReactiveHttpClientTest {
                             .withBody(body));
         });
 
-        RetryHandler retryHandler = new RequestSpecificRetryHandler(true, true,
-                new DefaultLoadBalancerRetryHandler(retryOnSame, retryOnNext, true), null);
-
-        TestMonoInterface client = BuilderUtils.<TestMonoInterface>cloudBuilder("loadBalancingWithRetryWithWarning")
-                .enableLoadBalancer(ReactiveFeignClientFactory.DEFAULT, retryHandler)
-                .disableHystrix()
+        TestMonoInterface client = this.<TestMonoInterface>cloudBuilderWithLoadBalancerEnabled(retryOnSame, retryOnNext)
                 .target(TestMonoInterface.class, serviceName, "http://" + serviceName);
 
         String result = client.getMono().block();
@@ -260,13 +260,13 @@ public class LoadBalancingReactiveHttpClientTest {
     }
 
 
-    interface TestMonoInterface {
+    public interface TestMonoInterface {
 
         @RequestLine("GET "+MONO_URL)
         Mono<String> getMono();
     }
 
-    interface TestFluxInterface {
+    public interface TestFluxInterface {
 
         @RequestLine("GET "+FLUX_URL)
         Flux<Integer> getFlux();

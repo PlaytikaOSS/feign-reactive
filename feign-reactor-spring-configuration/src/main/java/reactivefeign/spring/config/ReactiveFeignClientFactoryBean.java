@@ -17,33 +17,21 @@
 package reactivefeign.spring.config;
 
 import feign.Contract;
-import feign.Target;
-import feign.codec.ErrorDecoder;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.NoSuchBeanDefinitionException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
-import org.springframework.validation.DataBinder;
 import reactivefeign.FallbackFactory;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveFeignBuilder;
-import reactivefeign.ReactiveOptions;
-import reactivefeign.client.ReactiveHttpRequestInterceptor;
-import reactivefeign.client.log.ReactiveLoggerListener;
-import reactivefeign.client.statushandler.ReactiveStatusHandler;
-import reactivefeign.client.statushandler.ReactiveStatusHandlers;
-import reactivefeign.retry.ReactiveRetryPolicy;
 
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
-
-import static java.util.Collections.emptyMap;
 
 /**
  *
@@ -81,181 +69,8 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 		this.applicationContext = context;
 	}
 
-	protected ReactiveFeignBuilder reactiveFeign(ReactiveFeignContext context) {
-		ReactiveFeignBuilder builder = get(context, ReactiveFeignBuilder.class)
-				// required values
-				.contract(get(context, Contract.class));
-
-		builder = configureReactiveFeign(context, builder);
-
-		return builder;
-	}
-
-	protected ReactiveFeignBuilder configureReactiveFeign(ReactiveFeignContext context, ReactiveFeignBuilder builder) {
-		ReactiveFeignClientProperties properties = applicationContext.getBean(ReactiveFeignClientProperties.class);
-		if (properties != null) {
-			Map<String, ReactiveFeignClientProperties.ReactiveFeignClientConfiguration<?>> config = properties.getConfig();
-			if (properties.isDefaultToProperties()) {
-				configureUsingConfiguration(context, builder);
-				configureUsingProperties(config.get(properties.getDefaultConfig()), builder);
-				configureUsingProperties(config.get(this.name), builder);
-			} else {
-				configureUsingProperties(config.get(properties.getDefaultConfig()), builder);
-				configureUsingProperties(config.get(this.name), builder);
-				configureUsingConfiguration(context, builder);
-			}
-		} else {
-			configureUsingConfiguration(context, builder);
-		}
-
-		for(ReactiveFeignConfigurator configurator : getAll(context, ReactiveFeignConfigurator.class).values()){
-			builder = configurator.configure(builder, this, context);
-		}
-		return builder;
-	}
-
-	protected void configureUsingConfiguration(ReactiveFeignContext context, ReactiveFeignBuilder builder) {
-
-		ReactiveOptions options = getOptional(context, ReactiveOptions.class);
-		if (options != null) {
-			builder.options(options);
-		}
-
-		ReactiveRetryPolicy retryer = getOptional(context, ReactiveRetryPolicy.class);
-		if (retryer != null) {
-			builder.retryWhen(retryer);
-		}
-
-		Map<String, ReactiveHttpRequestInterceptor> requestInterceptors = context.getInstances(
-				this.name, ReactiveHttpRequestInterceptor.class);
-		if (requestInterceptors != null) {
-			for(ReactiveHttpRequestInterceptor interceptor : requestInterceptors.values()){
-				builder.addRequestInterceptor(interceptor);
-			}
-		}
-
-		ReactiveStatusHandler statusHandler = getOptional(context, ReactiveStatusHandler.class);
-		if(statusHandler == null){
-			ErrorDecoder errorDecoder = getOptional(context, ErrorDecoder.class);
-			if(errorDecoder != null) {
-				statusHandler = ReactiveStatusHandlers.errorDecoder(errorDecoder);
-			}
-		}
-		if (statusHandler != null) {
-			builder.statusHandler(statusHandler);
-		}
-
-		getAll(context, ReactiveLoggerListener.class).values()
-				.forEach(builder::addLoggerListener);
-
-		if (decode404) {
-			builder.decode404();
-		}
-	}
-
-	protected void configureUsingProperties(ReactiveFeignClientProperties.ReactiveFeignClientConfiguration<?> config,
-											ReactiveFeignBuilder builder) {
-		if (config == null) {
-			return;
-		}
-
-		ReactiveOptions.Builder optionsBuilder = config.getOptions();
-		if(optionsBuilder != null){
-			builder.options(optionsBuilder.build());
-		}
-
-		if (config.getRetry() != null) {
-			ReactiveRetryPolicy retryPolicy = null;
-			if(config.getRetry().getPolicy() != null){
-				retryPolicy = getOrInstantiate(config.getRetry().getPolicy());
-			}
-			if(retryPolicy == null){
-				ReactiveRetryPolicy.Builder retryPolicyBuilder = getOrInstantiate(config.getRetry().getBuilder(), config.getRetry().getArgs());
-				retryPolicy = retryPolicyBuilder.build();
-			}
-			if(retryPolicy != null) {
-				builder.retryWhen(retryPolicy);
-			}
-		}
-
-		if (config.getRequestInterceptors() != null && !config.getRequestInterceptors().isEmpty()) {
-			// this will add request interceptor to builder, not replace existing
-			for (Class<ReactiveHttpRequestInterceptor> bean : config.getRequestInterceptors()) {
-				ReactiveHttpRequestInterceptor interceptor = getOrInstantiate(bean);
-				builder.addRequestInterceptor(interceptor);
-			}
-		}
-
-		if (config.getStatusHandler() != null) {
-			ReactiveStatusHandler statusHandler = getOrInstantiate(config.getStatusHandler());
-			builder.statusHandler(statusHandler);
-		} else if(config.getErrorDecoder() != null){
-			ErrorDecoder errorDecoder = getOrInstantiate(config.getErrorDecoder());
-			builder.statusHandler(ReactiveStatusHandlers.errorDecoder(errorDecoder));
-		}
-
-		if(config.getLogger() != null){
-			builder.addLoggerListener(getOrInstantiate(config.getLogger()));
-		}
-
-		if(config.getMetricsLogger() != null){
-			builder.addLoggerListener(getOrInstantiate(config.getMetricsLogger()));
-		}
-
-		if (config.getDecode404() != null) {
-			if (config.getDecode404()) {
-				builder.decode404();
-			}
-		}
-
-		if (Objects.nonNull(config.getContract())) {
-			builder.contract(getOrInstantiate(config.getContract()));
-		}
-	}
-
-	private <T> T getOrInstantiate(Class<T> tClass) {
-		try {
-			return applicationContext.getBean(tClass);
-		} catch (NoSuchBeanDefinitionException e) {
-			return BeanUtils.instantiateClass(tClass);
-		}
-	}
-
-	private <T> T getOrInstantiate(Class<T> tClass, Map args) {
-		try {
-			return applicationContext.getBean(tClass);
-		} catch (NoSuchBeanDefinitionException e) {
-			T bean = BeanUtils.instantiateClass(tClass);
-			if(args != null && !args.isEmpty()) {
-				DataBinder dataBinder = new DataBinder(bean);
-				dataBinder.bind(new MutablePropertyValues(args));
-				return (T) dataBinder.getTarget();
-			} else {
-				return bean;
-			}
-		}
-	}
-
-	protected <T> T get(ReactiveFeignContext context, Class<T> type) {
-		T instance = context.getInstance(this.name, type);
-		if (instance == null) {
-			throw new IllegalStateException("No bean found of type " + type + " for "
-					+ this.name);
-		}
-		return instance;
-	}
-
-	protected <T> Map<String, T> getAll(ReactiveFeignContext context, Class<T> type) {
-		Map<String, T> instances = context.getInstances(this.name, type);
-		return instances != null ? instances : emptyMap();
-	}
-
-	protected <T> T getOptional(ReactiveFeignContext context, Class<T> type) {
-		return context.getInstance(this.name, type);
-	}
-
 	@Override
-	public Object getObject() throws Exception {
+	public Object getObject() {
 		return getTarget();
 	}
 
@@ -264,14 +79,33 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 	 * @return a {@link ReactiveFeign} client created with the specified data and the context information
 	 */
 	private <T> T getTarget() {
-		ReactiveFeignContext context = applicationContext.getBean(ReactiveFeignContext.class);
-		ReactiveFeignBuilder builder = reactiveFeign(context);
+		ReactiveFeignNamedContext namedContext = new ReactiveFeignNamedContext(applicationContext, name);
+		ReactiveFeignBuilder builder = namedContext.get(ReactiveFeignBuilder.class)
+				.contract(namedContext.get(Contract.class));
 
-		builder = fallback(context, builder);
+		builder = applyConfigurators(builder, namedContext);
+
+		if (decode404) {
+			builder = builder.decode404();
+		}
+
+		builder = fallback(builder, namedContext);
 
 		return StringUtils.hasText(this.url)
 				? (T) builder.target(type, buildUrl())
 				: (T) builder.target(type, this.name, buildUrl());
+	}
+
+	protected ReactiveFeignBuilder applyConfigurators(ReactiveFeignBuilder builder, ReactiveFeignNamedContext namedContext) {
+		List<ReactiveFeignConfigurator> configurators = new ArrayList<>(
+				namedContext.getAll(ReactiveFeignConfigurator.class).values());
+		Collections.sort(configurators);
+
+		for (ReactiveFeignConfigurator configurator : configurators) {
+			builder = configurator.configure(builder, namedContext);
+		}
+
+		return builder;
 	}
 
 	private String buildUrl() {
@@ -294,15 +128,15 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 		return url;
 	}
 
-	private <T> ReactiveFeignBuilder fallback(ReactiveFeignContext context, ReactiveFeignBuilder builder) {
+	private <T> ReactiveFeignBuilder fallback(ReactiveFeignBuilder builder, ReactiveFeignNamedContext context) {
 		if(fallback != void.class){
-			Object fallbackInstance = getFromContext("fallback", getName(), context,
+			Object fallbackInstance = getFallbackFromContext("fallback", getName(), context,
 					this.fallback, this.type);
 			builder = builder.fallback(fallbackInstance);
 		}
 		if(fallbackFactory != void.class){
 			FallbackFactory<? extends T> fallbackFactoryInstance = (FallbackFactory<? extends T>)
-					getFromContext("fallbackFactory", getName(), context, fallbackFactory, FallbackFactory.class);
+					getFallbackFromContext("fallbackFactory", getName(), context, fallbackFactory, FallbackFactory.class);
 		/* We take a sample fallback from the fallback factory to check if it returns a fallback
 		that is compatible with the annotated feign interface. */
 			Object exampleFallback = fallbackFactoryInstance.apply(new RuntimeException());
@@ -321,9 +155,9 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 		return builder;
 	}
 
-	private <T> T getFromContext(String fallbackMechanism, String feignClientName, ReactiveFeignContext context,
-								 Class<?> beanType, Class<T> targetType) {
-		Object fallbackInstance = context.getInstance(feignClientName, beanType);
+	private <T> T getFallbackFromContext(String fallbackMechanism, String feignClientName, ReactiveFeignNamedContext context,
+										 Class<?> beanType, Class<T> targetType) {
+		Object fallbackInstance = context.getOptional(beanType);
 		if (fallbackInstance == null) {
 			throw new IllegalStateException(String.format(
 					"No " + fallbackMechanism + " instance of type %s found for feign client %s",

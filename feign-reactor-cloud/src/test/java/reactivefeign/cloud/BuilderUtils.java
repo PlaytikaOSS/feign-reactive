@@ -1,50 +1,70 @@
 package reactivefeign.cloud;
 
+import com.netflix.client.ClientFactory;
+import com.netflix.client.config.DefaultClientConfigImpl;
+import com.netflix.client.config.IClientConfig;
 import com.netflix.hystrix.HystrixCommandGroupKey;
 import com.netflix.hystrix.HystrixCommandKey;
 import com.netflix.hystrix.HystrixCommandProperties;
 import com.netflix.hystrix.HystrixObservableCommand;
+import com.netflix.loadbalancer.ILoadBalancer;
 import reactivefeign.webclient.WebReactiveFeign;
+
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static reactivefeign.ReactivityTest.CALLS_NUMBER;
 
 public class BuilderUtils {
 
+    private static final AtomicInteger uniqueHystrixCommandCounter = new AtomicInteger();
+
     static <T> CloudReactiveFeign.Builder<T> cloudBuilder(){
-        return cloudBuilder(null);
+        return cloudBuilderWithUniqueHystrixCommand(
+                HystrixCommandProperties.Setter()
+                        .withExecutionIsolationSemaphoreMaxConcurrentRequests(CALLS_NUMBER), null);
     }
 
-    static <T> CloudReactiveFeign.Builder<T> cloudBuilder(String hystrixGroupPrefix){
+    static <T> CloudReactiveFeign.Builder<T> cloudBuilderWithExecutionTimeoutDisabled() {
+        return cloudBuilderWithUniqueHystrixCommand(
+                HystrixCommandProperties.Setter()
+                        .withExecutionIsolationSemaphoreMaxConcurrentRequests(CALLS_NUMBER)
+                        .withExecutionTimeoutEnabled(false), null);
+    }
+
+    static <T> CloudReactiveFeign.Builder<T> cloudBuilderWithUniqueHystrixCommand(
+            HystrixCommandProperties.Setter commandPropertiesDefaults,
+            AtomicReference<HystrixCommandKey> lastCommandKey) {
+        int uniqueId = uniqueHystrixCommandCounter.incrementAndGet();
         return CloudReactiveFeign.<T>builder(WebReactiveFeign.builder())
                 .setHystrixCommandSetterFactory(
                         (target, methodMetadata) -> {
-                            String groupKey = hystrixGroupPrefix+"."+target.name();
-                            HystrixCommandKey commandKey = HystrixCommandKey.Factory.asKey(methodMetadata.configKey());
+                            HystrixCommandGroupKey groupKey = HystrixCommandGroupKey.Factory.asKey(
+                                    target.name() +"."+ uniqueId);
+                            HystrixCommandKey commandKey = HystrixCommandKey.Factory.asKey(
+                                    methodMetadata.configKey() +"."+ uniqueId);
+                            if(lastCommandKey != null) {
+                                lastCommandKey.set(commandKey);
+                            }
                             return HystrixObservableCommand.Setter
-                                    .withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
+                                    .withGroupKey(groupKey)
                                     .andCommandKey(commandKey)
-                                    .andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
-                                            .withExecutionIsolationSemaphoreMaxConcurrentRequests(CALLS_NUMBER)
-                                    );
+                                    .andCommandPropertiesDefaults(commandPropertiesDefaults);
                         }
                 );
     }
 
-    static <T> CloudReactiveFeign.Builder<T> cloudBuilderWithExecutionTimeoutDisabled(String hystrixGroupPrefix) {
-        return CloudReactiveFeign.<T>builder(WebReactiveFeign.builder())
-                .setHystrixCommandSetterFactory(
-                (target, methodMetadata) -> {
-                    String groupKey = hystrixGroupPrefix + target.name();
-                    HystrixCommandKey commandKey = HystrixCommandKey.Factory.asKey(methodMetadata.configKey());
-                    return HystrixObservableCommand.Setter
-                            .withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
-                            .andCommandKey(commandKey)
-                            .andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
-                                    .withExecutionIsolationSemaphoreMaxConcurrentRequests(CALLS_NUMBER)
-                                    .withExecutionTimeoutEnabled(false)
-                            );
-                }
-        );
-    }
+    public static final ReactiveFeignClientFactory TEST_CLIENT_FACTORY = new ReactiveFeignClientFactory(){
+
+        @Override
+        public ILoadBalancer loadBalancer(String name) {
+            return ClientFactory.getNamedLoadBalancer(name);
+        }
+
+        @Override
+        public IClientConfig clientConfig(String name) {
+            return DefaultClientConfigImpl.getClientConfigWithDefaultValues(name);
+        }
+    };
 
 }

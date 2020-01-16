@@ -27,7 +27,7 @@ public class ResponseMapperTest extends reactivefeign.ResponseMapperTest {
 
   @Override
   protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
-    return cloudBuilderWithExecutionTimeoutDisabled("ResponseMapperTest");
+    return cloudBuilderWithExecutionTimeoutDisabled();
   }
 
   @Override

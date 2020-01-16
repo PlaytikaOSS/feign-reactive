@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer;
 import org.springframework.cloud.openfeign.support.SpringMvcContract;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -88,20 +89,20 @@ public class ReactiveFeignClientsConfiguration {
 			}
 		}
 
-	@Configuration
-	@ConditionalOnClass({Java11ReactiveFeign.class, java.net.http.HttpClient.class})
-	@ConditionalOnProperty(name = "reactive.feign.java11", havingValue = "true")
-	protected static class ReactiveFeignJava11Configuration {
+		@Configuration
+		@ConditionalOnClass({Java11ReactiveFeign.class, java.net.http.HttpClient.class})
+		@ConditionalOnProperty(name = "reactive.feign.java11", havingValue = "true")
+		protected static class ReactiveFeignJava11Configuration {
 
-		@Bean
-		@Scope("prototype")
-		public ReactiveFeignBuilder reactiveFeignBuilder(
-				@Autowired(required = false) HttpClientFeignCustomizer httpClientCustomizer) {
-			return httpClientCustomizer != null
-					? Java11ReactiveFeign.builder(httpClientCustomizer)
-					: Java11ReactiveFeign.builder();
+			@Bean
+			@Scope("prototype")
+			public ReactiveFeignBuilder reactiveFeignBuilder(
+					@Autowired(required = false) HttpClientFeignCustomizer httpClientCustomizer) {
+				return httpClientCustomizer != null
+						? Java11ReactiveFeign.builder(httpClientCustomizer)
+						: Java11ReactiveFeign.builder();
+			}
 		}
-	}
 
 		@Configuration
 		@ConditionalOnClass({WebReactiveFeign.class, WebClient.class})
@@ -117,6 +118,23 @@ public class ReactiveFeignClientsConfiguration {
 						? WebReactiveFeign.builder(builder, webClientCustomizer)
 						: WebReactiveFeign.builder(builder);
 			}
+		}
+
+		@Bean
+		@Scope("prototype")
+		public ReactiveFeignConfigurator reactiveFeignBasicConfigurator(){
+			return new ReactiveFeignBasicConfigurator();
+		}
+	}
+
+	@Configuration
+	@ConditionalOnClass({CloudReactiveFeign.class, reactivefeign.cloud2.CloudReactiveFeign.class})
+	@ConditionalOnProperty(name = "reactive.feign.cloud.enabled", havingValue = "true")
+	protected static class ReactiveFeignCloudProtection {
+
+		@Bean
+		public Object reactiveFeignCloudProtector(){
+			throw new IllegalArgumentException("There are [reactivefeign.cloud] and [reactivefeign.cloud2] on classpath");
 		}
 	}
 
@@ -147,13 +165,45 @@ public class ReactiveFeignClientsConfiguration {
 		public CloudReactiveFeign.Builder reactiveFeignCloudBuilder(
 				ReactiveFeignBuilder reactiveFeignBuilder,
 				@Value("${reactive.feign.hystrix.enabled:true}")
-						boolean enableHystrix,
-				@Value("${reactive.feign.ribbon.enabled:true}")
-						boolean enableLoadBalancer) {
+						boolean enableHystrix) {
 			CloudReactiveFeign.Builder cloudBuilder = CloudReactiveFeign.builder(reactiveFeignBuilder);
-			if(enableLoadBalancer){
-				cloudBuilder = cloudBuilder.enableLoadBalancer();
+			if(!enableHystrix){
+				cloudBuilder = cloudBuilder.disableHystrix();
 			}
+			return cloudBuilder;
+		}
+	}
+
+	@Configuration
+	@AutoConfigureAfter(ReactiveFeignConfiguration.class)
+	@ConditionalOnClass({HystrixCommand.class, ReactiveLoadBalancer.class,
+			reactivefeign.cloud2.CloudReactiveFeign.class})
+	@ConditionalOnProperty(name = "reactive.feign.cloud.enabled", havingValue = "true", matchIfMissing = true)
+	protected static class ReactiveFeignCloud2Configuration {
+
+		@Bean
+		@Scope("prototype")
+		@ConditionalOnProperty(name = "reactive.feign.resilience.enabled", havingValue = "true", matchIfMissing = true)
+		public ReactiveFeignConfigurator reactiveFeignResilience4jConfigurator(){
+			return new ReactiveFeignResilience4jConfigurator();
+		}
+
+		@Bean
+		@Scope("prototype")
+		@ConditionalOnProperty(name = "reactive.feign.loadbalancer.enabled", havingValue = "true", matchIfMissing = true)
+		public ReactiveFeignConfigurator reactiveFeignLoadBalancerConfigurator(){
+			return new ReactiveFeignLoadBalancerConfigurator();
+		}
+
+		@Bean
+		@Primary
+		@Scope("prototype")
+		@ConditionalOnMissingBean
+		public reactivefeign.cloud2.CloudReactiveFeign.Builder reactiveFeignCloudBuilder(
+				ReactiveFeignBuilder reactiveFeignBuilder,
+				@Value("${reactive.feign.resilience.enabled:true}")
+						boolean enableHystrix) {
+			reactivefeign.cloud2.CloudReactiveFeign.Builder cloudBuilder = reactivefeign.cloud2.CloudReactiveFeign.builder(reactiveFeignBuilder);
 			if(!enableHystrix){
 				cloudBuilder = cloudBuilder.disableHystrix();
 			}

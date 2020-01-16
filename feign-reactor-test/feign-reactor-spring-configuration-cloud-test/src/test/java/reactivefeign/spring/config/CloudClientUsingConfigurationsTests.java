@@ -41,6 +41,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -57,6 +58,7 @@ import static reactivefeign.spring.config.AutoConfigurationTest.MOCK_SERVER_PORT
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = CloudClientUsingConfigurationsTests.Application.class, webEnvironment = WebEnvironment.NONE,
 		properties = "ribbon.listOfServers=localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}")
+@TestPropertySource("classpath:common.properties")
 @DirtiesContext
 public class CloudClientUsingConfigurationsTests {
 

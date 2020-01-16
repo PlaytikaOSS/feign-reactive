@@ -17,10 +17,8 @@
 
 package reactivefeign.spring.config;
 
-import com.netflix.client.ClientFactory;
 import com.netflix.client.DefaultLoadBalancerRetryHandler;
 import com.netflix.client.RetryHandler;
-import com.netflix.client.config.DefaultClientConfigImpl;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
@@ -29,56 +27,52 @@ import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.cloud.CloudReactiveFeign;
 import reactivefeign.cloud.LoadBalancerCommandFactory;
 
-public class ReactiveFeignRibbonConfigurator implements ReactiveFeignConfigurator{
+public class ReactiveFeignRibbonConfigurator extends AbstractReactiveFeignConfigurator{
 
-	@Override
-	public ReactiveFeignBuilder configure(
-			ReactiveFeignBuilder reactiveFeignBuilder,
-			ReactiveFeignClientFactoryBean factory, ReactiveFeignContext context) {
-		if (!(reactiveFeignBuilder instanceof CloudReactiveFeign.Builder)) {
-			throw new IllegalArgumentException("CloudReactiveFeign.Builder expected");
-		}
+    protected ReactiveFeignRibbonConfigurator() {
+        super(2);
+    }
 
-		CloudReactiveFeign.Builder cloudBuilder = (CloudReactiveFeign.Builder) reactiveFeignBuilder;
+    @Override
+    public ReactiveFeignBuilder configure(
+            ReactiveFeignBuilder builder,
+            ReactiveFeignNamedContext namedContext) {
+        if (!(builder instanceof CloudReactiveFeign.Builder)) {
+            throw new IllegalArgumentException("CloudReactiveFeign.Builder expected");
+        }
 
-		String clientName = factory.getName();
-		LoadBalancerCommandFactory balancerCommandFactory = context.getInstance(clientName, LoadBalancerCommandFactory.class);
-		if(balancerCommandFactory == null){
+        CloudReactiveFeign.Builder cloudBuilder = (CloudReactiveFeign.Builder) builder;
 
-            SpringClientFactory springClientFactory = context.getInstance(clientName, SpringClientFactory.class);
+        String clientName = namedContext.getClientName();
+        LoadBalancerCommandFactory balancerCommandFactory = namedContext.getOptional(LoadBalancerCommandFactory.class);
+        if(balancerCommandFactory == null){
 
-			balancerCommandFactory = serviceName -> {
+            SpringClientFactory springClientFactory = namedContext.getOptional(SpringClientFactory.class);
 
-                IClientConfig clientConfig;
-                ILoadBalancer namedLoadBalancer;
-                if(springClientFactory != null){
-                    clientConfig = springClientFactory.getClientConfig(clientName);
-                    namedLoadBalancer = springClientFactory.getLoadBalancer(clientName);
-                } else {
-                    clientConfig = DefaultClientConfigImpl.getClientConfigWithDefaultValues(clientName);
-                    namedLoadBalancer = ClientFactory.getNamedLoadBalancer(clientName);
-                }
+            balancerCommandFactory = serviceName -> {
 
-                RetryHandler retryHandler = getOrInstantiateRetryHandler(context, clientName, clientConfig);
+                IClientConfig clientConfig = springClientFactory.getClientConfig(clientName);
+                ILoadBalancer namedLoadBalancer = springClientFactory.getLoadBalancer(clientName);
+                RetryHandler retryHandler = getOrInstantiateRetryHandler(namedContext, clientConfig);
 
-				return LoadBalancerCommand.builder()
-						.withLoadBalancer(namedLoadBalancer)
-						.withRetryHandler(retryHandler)
-						.withClientConfig(clientConfig)
-						.build();
-			};
-		}
+                return LoadBalancerCommand.builder()
+                        .withLoadBalancer(namedLoadBalancer)
+                        .withRetryHandler(retryHandler)
+                        .withClientConfig(clientConfig)
+                        .build();
+            };
+        }
 
-		cloudBuilder = cloudBuilder.setLoadBalancerCommandFactory(balancerCommandFactory);
+        cloudBuilder = cloudBuilder.setLoadBalancerCommandFactory(balancerCommandFactory);
 
-		return cloudBuilder;
-	}
+        return cloudBuilder;
+    }
 
-	private RetryHandler getOrInstantiateRetryHandler(ReactiveFeignContext context, String clientName, IClientConfig clientConfig) {
-		RetryHandler retryHandler = context.getInstance(clientName, RetryHandler.class);
-		if(retryHandler == null){
-			retryHandler = new DefaultLoadBalancerRetryHandler(clientConfig);
-		}
-		return retryHandler;
-	}
+    private RetryHandler getOrInstantiateRetryHandler(ReactiveFeignNamedContext namedContext, IClientConfig clientConfig) {
+        RetryHandler retryHandler = namedContext.getOptional(RetryHandler.class);
+        if(retryHandler == null){
+            retryHandler = new DefaultLoadBalancerRetryHandler(clientConfig);
+        }
+        return retryHandler;
+    }
 }

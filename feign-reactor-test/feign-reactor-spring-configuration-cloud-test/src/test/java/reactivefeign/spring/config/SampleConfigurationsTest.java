@@ -46,6 +46,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReadTimeoutException;
 import reactivefeign.cloud.CloudReactiveFeign;
+import reactivefeign.publisher.retry.OutOfRetriesException;
 import reactivefeign.retry.BasicReactiveRetryPolicy;
 import reactivefeign.retry.ReactiveRetryPolicy;
 import reactivefeign.webclient.WebReactiveOptions;
@@ -68,7 +69,10 @@ import static reactivefeign.spring.config.AutoConfigurationTest.MOCK_SERVER_PORT
 @SpringBootTest(classes = SampleConfigurationsTest.Application.class, webEnvironment = WebEnvironment.NONE,
 		properties = "ribbon.listOfServers=localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}")
 @DirtiesContext
-@TestPropertySource("classpath:error-decoder.properties")
+@TestPropertySource(locations = {
+		"classpath:error-decoder.properties",
+		"classpath:common.properties"
+})
 public class SampleConfigurationsTest {
 
 	static final int VOLUME_THRESHOLD = 2;
@@ -92,6 +96,18 @@ public class SampleConfigurationsTest {
 	private ErrorDecoderSampleClient errorDecoderSampleClient;
 
 
+	protected boolean isOutOfRetries(Throwable t) {
+		assertThat(t.getCause()).isInstanceOf(ClientException.class);
+		assertThat(t.getCause().getMessage()).contains("Number of retries exceeded");
+		return true;
+	}
+
+	protected boolean isOutOutOfRetries(Throwable t) {
+		assertThat(t.getCause()).isInstanceOf(ClientException.class);
+		assertThat(t.getCause().getMessage()).contains("Number of retries on next server exceeded");
+		return true;
+	}
+
 	//this test checks that default readTimeoutMillis is overridden for each client
 	// (one in via properties file and other via configuration class)
 	@Test
@@ -107,7 +123,8 @@ public class SampleConfigurationsTest {
 							throwable instanceof HystrixRuntimeException
 							&& throwable.getCause() instanceof ClientException
 							&& throwable.getCause().getMessage().contains("Number of retries on next server exceeded")
-					        && throwable.getCause().getCause() instanceof ReadTimeoutException)
+							&& throwable.getCause().getCause() instanceof OutOfRetriesException
+					        && throwable.getCause().getCause().getCause() instanceof ReadTimeoutException)
 					.verify();
 		});
 	}

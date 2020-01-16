@@ -24,7 +24,6 @@ import com.netflix.hystrix.exception.HystrixRuntimeException;
 import com.netflix.loadbalancer.BaseLoadBalancer;
 import com.netflix.loadbalancer.ILoadBalancer;
 import com.netflix.loadbalancer.Server;
-import feign.Target;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -36,7 +35,10 @@ import reactivefeign.allfeatures.AllFeaturesApi;
 import reactivefeign.allfeatures.AllFeaturesController;
 import reactivefeign.allfeatures.AllFeaturesFeign;
 
-import static java.util.Arrays.asList;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+
+import static reactivefeign.cloud.BuilderUtils.TEST_CLIENT_FACTORY;
 
 /**
  * @author Sergii Karpenko
@@ -53,18 +55,23 @@ public class AllFeaturesTest extends reactivefeign.allfeatures.AllFeaturesTest {
 	private static final String serviceName = "testServiceName";
 
 	@BeforeClass
-	public static void setupServersList() throws ClientException {
+	public static void setUpServersList() throws ClientException {
+		setupServersList(serviceName, 8080);
+	}
+
+	static void setupServersList(String serviceName, int... ports) throws ClientException {
 		DefaultClientConfigImpl clientConfig = new DefaultClientConfigImpl();
 		clientConfig.loadDefaultValues();
 		clientConfig.setProperty(CommonClientConfigKey.NFLoadBalancerClassName, BaseLoadBalancer.class.getName());
 		ILoadBalancer lb = ClientFactory.registerNamedLoadBalancerFromclientConfig(serviceName, clientConfig);
-		lb.addServers(asList(new Server("localhost", 8080)));
+		lb.addServers(IntStream.of(ports).mapToObj(port -> new Server("localhost", port))
+				.collect(Collectors.toList()));
 	}
 
 	@Override
 	protected AllFeaturesApi buildClient() {
-		return BuilderUtils.<AllFeaturesFeign>cloudBuilderWithExecutionTimeoutDisabled("AllFeaturesTest")
-				.enableLoadBalancer()
+		return BuilderUtils.<AllFeaturesFeign>cloudBuilderWithExecutionTimeoutDisabled()
+				.enableLoadBalancer(TEST_CLIENT_FACTORY)
 				.decode404()
 				.target(AllFeaturesFeign.class, serviceName, "http://"+serviceName);
 	}

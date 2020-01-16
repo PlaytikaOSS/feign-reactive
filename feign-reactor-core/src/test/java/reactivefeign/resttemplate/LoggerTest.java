@@ -25,6 +25,11 @@ import reactivefeign.testcase.IcecreamServiceApi;
 public class LoggerTest extends reactivefeign.LoggerTest {
 
   @Override
+  protected String appenderPrefix(){
+    return "resttemplate_";
+  }
+
+  @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
     return RestTemplateFakeReactiveFeign.builder();
   }

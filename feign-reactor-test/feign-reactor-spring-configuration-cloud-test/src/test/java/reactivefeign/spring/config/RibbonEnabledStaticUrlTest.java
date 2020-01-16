@@ -17,7 +17,6 @@
 package reactivefeign.spring.config;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.netflix.client.ClientException;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -34,8 +33,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.util.stream.Stream;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,7 +47,9 @@ import static reactivefeign.spring.config.RibbonEnabledHystrixDisabledUsingPrope
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = RibbonEnabledStaticUrlTest.TestStaticUrlConfiguration.class,
 		        webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@TestPropertySource("classpath:ribbon-enabled-hystrix-disabled.properties")
+@TestPropertySource(locations = {
+		"classpath:ribbon-enabled-hystrix-disabled.properties",
+		"classpath:common.properties"})
 @DirtiesContext
 public class RibbonEnabledStaticUrlTest {
 

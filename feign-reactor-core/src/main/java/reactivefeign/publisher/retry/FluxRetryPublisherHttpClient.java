@@ -36,7 +36,7 @@ public class FluxRetryPublisherHttpClient extends RetryPublisherHttpClient {
 
   @Override
   public Publisher<Object> executeRequest(ReactiveHttpRequest request) {
-    Flux<Object> response = (Flux<Object>)publisherClient.executeRequest(request);
-    return response.retryWhen(retryFunction).onErrorMap(outOfRetries());
+    Flux<Object> response = Flux.from(publisherClient.executeRequest(request));
+    return response.retryWhen(wrapWithOutOfRetries(retryFunction, request));
   }
 }

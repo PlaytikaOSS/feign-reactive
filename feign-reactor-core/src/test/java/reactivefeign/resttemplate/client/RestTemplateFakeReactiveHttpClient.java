@@ -81,9 +81,9 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
     } else {
       bodyMono = Mono.just(request.body());
     }
-    bodyMono = bodyMono.switchIfEmpty(Mono.just(new byte[0]));
+    Mono<Object> bodyMonoFinal = bodyMono.switchIfEmpty(Mono.just(new byte[0]));
 
-    return bodyMono.<ReactiveHttpResponse>flatMap(body -> {
+    return Mono.defer(() -> bodyMonoFinal).<ReactiveHttpResponse>flatMap(body -> {
       MultiValueMap<String, String> headers = new LinkedMultiValueMap<>(request.headers());
       if (acceptGzip) {
         headers.add("Accept-Encoding", "gzip");

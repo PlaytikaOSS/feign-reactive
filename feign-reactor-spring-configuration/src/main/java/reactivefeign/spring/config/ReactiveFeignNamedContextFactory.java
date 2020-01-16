@@ -24,9 +24,9 @@ import org.springframework.cloud.context.named.NamedContextFactory;
  *
  * patterned after org.springframework.cloud.netflix.feign.FeignContext
  */
-public class ReactiveFeignContext extends NamedContextFactory<ReactiveFeignClientSpecification> {
+public class ReactiveFeignNamedContextFactory extends NamedContextFactory<ReactiveFeignClientSpecification> {
 
-	public ReactiveFeignContext() {
+	public ReactiveFeignNamedContextFactory() {
 		super(ReactiveFeignClientsConfiguration.class, "reactivefeign", "reactivefeign.client.name");
 	}
 

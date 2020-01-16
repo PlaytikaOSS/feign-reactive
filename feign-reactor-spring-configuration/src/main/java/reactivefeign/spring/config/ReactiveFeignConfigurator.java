@@ -19,7 +19,10 @@ package reactivefeign.spring.config;
 
 import reactivefeign.ReactiveFeignBuilder;
 
-interface ReactiveFeignConfigurator {
-	ReactiveFeignBuilder configure(ReactiveFeignBuilder feign,
-					ReactiveFeignClientFactoryBean factory, ReactiveFeignContext context);
+interface ReactiveFeignConfigurator extends Comparable<ReactiveFeignConfigurator>{
+
+	ReactiveFeignBuilder configure(
+			ReactiveFeignBuilder builder,
+			ReactiveFeignNamedContext namedContext);
+
 }

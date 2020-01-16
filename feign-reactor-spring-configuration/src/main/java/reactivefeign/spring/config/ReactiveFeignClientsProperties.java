@@ -14,13 +14,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
+public class ReactiveFeignClientsProperties<O extends ReactiveOptions.Builder> {
 
     private boolean defaultToProperties = true;
 
     private String defaultConfig = "default";
 
-    private Map<String, ReactiveFeignClientConfiguration<O>> config = new HashMap<>();
+    private Map<String, ReactiveFeignClientProperties<O>> config = new HashMap<>();
 
     public boolean isDefaultToProperties() {
         return defaultToProperties;
@@ -38,11 +38,11 @@ public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
         this.defaultConfig = defaultConfig;
     }
 
-    public Map<String, ReactiveFeignClientConfiguration<O>> getConfig() {
+    public Map<String, ReactiveFeignClientProperties<O>> getConfig() {
         return config;
     }
 
-    public void setConfig(Map<String, ReactiveFeignClientConfiguration<O>> config) {
+    public void setConfig(Map<String, ReactiveFeignClientProperties<O>> config) {
         this.config = config;
     }
 
@@ -50,7 +50,7 @@ public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ReactiveFeignClientProperties that = (ReactiveFeignClientProperties) o;
+        ReactiveFeignClientsProperties that = (ReactiveFeignClientsProperties) o;
         return defaultToProperties == that.defaultToProperties &&
                 Objects.equals(defaultConfig, that.defaultConfig) &&
                 Objects.equals(config, that.config);
@@ -61,11 +61,14 @@ public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
         return Objects.hash(defaultToProperties, defaultConfig, config);
     }
 
-    public static class ReactiveFeignClientConfiguration<O extends ReactiveOptions.Builder> {
+    public static class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
 
         private O options;
 
-        private RetryConfiguration retry;
+        //used for no cloud configuration
+        private RetryProperties retry;
+        private RetryProperties retryOnSame;
+        private RetryProperties retryOnNext;
 
         private Class<ReactiveStatusHandler> statusHandler;
 
@@ -89,12 +92,28 @@ public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
             this.options = options;
         }
 
-        public RetryConfiguration getRetry() {
+        public RetryProperties getRetry() {
             return retry;
         }
 
-        public void setRetry(RetryConfiguration retry) {
+        public RetryProperties getRetryOnSame() {
+            return retryOnSame;
+        }
+
+        public RetryProperties getRetryOnNext() {
+            return retryOnNext;
+        }
+
+        public void setRetry(RetryProperties retry) {
             this.retry = retry;
+        }
+
+        public void setRetryOnSame(RetryProperties retryOnSame) {
+            this.retryOnSame = retryOnSame;
+        }
+
+        public void setRetryOnNext(RetryProperties retryOnNext) {
+            this.retryOnNext = retryOnNext;
         }
 
         public Class<ReactiveStatusHandler> getStatusHandler() {
@@ -157,9 +176,10 @@ public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            ReactiveFeignClientConfiguration that = (ReactiveFeignClientConfiguration) o;
+            ReactiveFeignClientProperties that = (ReactiveFeignClientProperties) o;
             return Objects.equals(options, that.options) &&
-                    Objects.equals(retry, that.retry) &&
+                    Objects.equals(retryOnSame, that.retryOnSame) &&
+                    Objects.equals(retryOnNext, that.retryOnNext) &&
                     Objects.equals(statusHandler, that.statusHandler) &&
                     Objects.equals(errorDecoder, that.errorDecoder) &&
                     Objects.equals(requestInterceptors, that.requestInterceptors) &&
@@ -170,12 +190,12 @@ public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
 
         @Override
         public int hashCode() {
-            return Objects.hash(options, retry,
+            return Objects.hash(options, retryOnSame, retryOnNext,
                     statusHandler, errorDecoder, requestInterceptors, decode404, contract, logger);
         }
     }
 
-    public static class RetryConfiguration {
+    public static class RetryProperties {
         private Class<ReactiveRetryPolicy> policy;
         private Class<ReactiveRetryPolicy.Builder> builder;
         private Map args;
@@ -208,7 +228,7 @@ public class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
         public boolean equals(Object o) {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
-            RetryConfiguration that = (RetryConfiguration) o;
+            RetryProperties that = (RetryProperties) o;
             return Objects.equals(policy, that.policy) &&
                     Objects.equals(args, that.args);
         }

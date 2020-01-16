@@ -1,5 +1,6 @@
 package reactivefeign.methodhandler;
 
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 public class MonoMethodHandler implements MethodHandler {
@@ -14,7 +15,7 @@ public class MonoMethodHandler implements MethodHandler {
 	@SuppressWarnings("unchecked")
 	public Mono<Object> invoke(final Object[] argv) {
 		try {
-			return (Mono<Object>)methodHandler.invoke(argv);
+			return Mono.from((Publisher)methodHandler.invoke(argv));
 		} catch (Throwable throwable) {
 			return Mono.error(throwable);
 		}

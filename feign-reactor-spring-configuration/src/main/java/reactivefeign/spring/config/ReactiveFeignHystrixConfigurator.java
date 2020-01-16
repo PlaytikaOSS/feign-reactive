@@ -20,18 +20,23 @@ package reactivefeign.spring.config;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.cloud.CloudReactiveFeign;
 
-public class ReactiveFeignHystrixConfigurator implements ReactiveFeignConfigurator{
+public class ReactiveFeignHystrixConfigurator extends AbstractReactiveFeignConfigurator{
+
+	protected ReactiveFeignHystrixConfigurator() {
+		super(3);
+	}
 
 	@Override
-	public ReactiveFeignBuilder configure(ReactiveFeignBuilder reactiveFeignBuilder, ReactiveFeignClientFactoryBean factory, ReactiveFeignContext context) {
-		if (!(reactiveFeignBuilder instanceof CloudReactiveFeign.Builder)) {
+	public ReactiveFeignBuilder configure(
+            ReactiveFeignBuilder builder,
+            ReactiveFeignNamedContext namedContext) {
+		if (!(builder instanceof CloudReactiveFeign.Builder)) {
 			throw new IllegalArgumentException("CloudReactiveFeign.Builder expected");
 		}
 
-		CloudReactiveFeign.Builder cloudBuilder = (CloudReactiveFeign.Builder) reactiveFeignBuilder;
+		CloudReactiveFeign.Builder cloudBuilder = (CloudReactiveFeign.Builder) builder;
 
-		CloudReactiveFeign.SetterFactory setterFactory = context.getInstance(
-				factory.getName(), CloudReactiveFeign.SetterFactory.class);
+		CloudReactiveFeign.SetterFactory setterFactory = namedContext.getOptional(CloudReactiveFeign.SetterFactory.class);
 		if (setterFactory != null) {
 			cloudBuilder = cloudBuilder.setHystrixCommandSetterFactory(setterFactory);
 		}

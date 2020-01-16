@@ -51,7 +51,9 @@ import static reactivefeign.spring.config.RibbonEnabledHystrixDisabledUsingPrope
 @SpringBootTest(classes = RibbonEnabledHystrixDisabledUsingPropertiesTest.TestConfiguration.class,
 		        webEnvironment = SpringBootTest.WebEnvironment.NONE,
 		        properties = FEIGN_CLIENT_TEST_RIBBON+".ribbon.listOfServers=localhost:${"+MOCK_SERVER_1_PORT_PROPERTY+"}, localhost:${"+MOCK_SERVER_2_PORT_PROPERTY+"}")
-@TestPropertySource("classpath:ribbon-enabled-hystrix-disabled.properties")
+@TestPropertySource(locations = {
+		"classpath:ribbon-enabled-hystrix-disabled.properties",
+		"classpath:common.properties"})
 @DirtiesContext
 public class RibbonEnabledHystrixDisabledUsingPropertiesTest {
 

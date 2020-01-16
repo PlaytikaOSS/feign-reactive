@@ -16,8 +16,12 @@ package reactivefeign.publisher.retry;
 import feign.MethodMetadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactivefeign.client.ReactiveFeignException;
+import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.publisher.PublisherHttpClient;
+import reactor.core.Exceptions;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.function.Function;
 
@@ -34,7 +38,7 @@ abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
 
   private final String feignMethodTag;
   protected final PublisherHttpClient publisherClient;
-  protected final Function<Flux<Throwable>, Flux<?>> retryFunction;
+  protected final Function<Flux<Throwable>, Flux<Throwable>> retryFunction;
 
   protected RetryPublisherHttpClient(PublisherHttpClient publisherClient,
                                    MethodMetadata methodMetadata,
@@ -44,14 +48,26 @@ abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
     this.retryFunction = wrapWithLog(retryFunction, feignMethodTag);
   }
 
-  protected Function<Throwable, Throwable> outOfRetries() {
-    return throwable -> {
-      logger.error("[{}]---> USED ALL RETRIES", feignMethodTag, throwable);
-      return throwable;
-    };
+  protected Function<Flux<Throwable>, Flux<Throwable>> wrapWithOutOfRetries(
+          Function<Flux<Throwable>, Flux<Throwable>> retryFunction,
+          ReactiveHttpRequest request){
+     return throwableFlux -> retryFunction.apply(throwableFlux)
+             .onErrorResume(throwable -> Mono.just(new OutOfRetriesWrapper(throwable, request)))
+             .zipWith(Flux.range(1, Integer.MAX_VALUE), (throwable, index) -> {
+               if(throwable instanceof OutOfRetriesWrapper){
+                 if(index == 1){
+                   throw Exceptions.propagate(throwable.getCause());
+                 } else {
+                   logger.error("[{}]---> USED ALL RETRIES", feignMethodTag, throwable);
+                   throw Exceptions.propagate(new OutOfRetriesException(throwable.getCause(), request));
+                 }
+               } else {
+                 return throwable;
+               }
+             });
   }
 
-  protected static Function<Flux<Throwable>, Flux<?>> wrapWithLog(
+  protected static Function<Flux<Throwable>, Flux<Throwable>> wrapWithLog(
           Function<Flux<Throwable>, Flux<Throwable>> retryFunction,
           String feignMethodTag) {
     return throwableFlux -> retryFunction.apply(throwableFlux)
@@ -60,5 +76,12 @@ abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
                 logger.debug("[{}]---> RETRYING on error", feignMethodTag, throwable);
               }
             });
+  }
+
+  private static class OutOfRetriesWrapper extends ReactiveFeignException {
+
+      public OutOfRetriesWrapper(Throwable cause, ReactiveHttpRequest request) {
+          super(cause, request);
+      }
   }
 }

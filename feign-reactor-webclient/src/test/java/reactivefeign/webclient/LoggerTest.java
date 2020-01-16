@@ -22,6 +22,11 @@ import reactivefeign.testcase.IcecreamServiceApi;
 public class LoggerTest extends reactivefeign.LoggerTest {
 
   @Override
+  protected String appenderPrefix(){
+    return "webclient_";
+  }
+
+  @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
     return WebReactiveFeign.builder();
   }

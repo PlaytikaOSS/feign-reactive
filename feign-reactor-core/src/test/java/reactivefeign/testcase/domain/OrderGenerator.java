@@ -43,8 +43,6 @@ public class OrderGenerator {
     IntStream.rangeClosed(1, nbMixins).mapToObj(i -> this.peekMixin())
         .forEach(order::addMixin);
 
-    System.out.println("generated order:"+order);
-
     return order;
   }
 

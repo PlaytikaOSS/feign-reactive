@@ -27,9 +27,7 @@ import java.lang.annotation.Target;
 
 /**
  * Annotation for interfaces declaring that a REST client with that interface should be
- * created (e.g. for autowiring into another component). If ribbon is available it will be
- * used to load balance the backend requests, and the load balancer can be configured
- * using a <code>@RibbonClient</code> with the same name (i.e. value) as the feign client.
+ * created (e.g. for autowiring into another component).
  *
  * patterned after org.springframework.cloud.netflix.feign.FeignClient
  */
