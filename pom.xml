@@ -53,7 +53,7 @@
 
         <!--BOMs-->
         <spring-cloud-bom.version>Hoxton.SR1</spring-cloud-bom.version>
-        <spring-boot-dependencies-bom.version>2.2.1.RELEASE</spring-boot-dependencies-bom.version>
+        <spring-boot-dependencies-bom.version>2.2.3.RELEASE</spring-boot-dependencies-bom.version>
 
         <!--other-->
         <json-reactor.version>0.0.1</json-reactor.version>
