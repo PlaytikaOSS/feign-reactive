@@ -106,7 +106,7 @@
             <dependency>
                 <groupId>org.eclipse.jetty</groupId>
                 <artifactId>jetty-bom</artifactId>
-                <version>9.4.24.v20191120</version>
+                <version>9.4.26.v20200117</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
