@@ -9,6 +9,7 @@ import reactivefeign.cloud.CloudReactiveFeign;
 import reactivefeign.methodhandler.MethodHandler;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.context.Context;
 import rx.Observable;
 import rx.RxReactiveStreams;
 
@@ -51,46 +52,17 @@ public class HystrixMethodHandler implements MethodHandler {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Publisher<Object> invoke(final Object[] argv) {
-
-        Observable<Object> observable = new HystrixObservableCommand<Object>(hystrixObservableCommandSetter) {
-            @Override
-            protected Observable<Object> construct() {
-                Publisher publisher;
-                try {
-                    publisher = (Publisher) methodHandler.invoke(argv);
-                } catch (Throwable throwable) {
-                    publisher = Mono.error(throwable);
-                }
-                return RxReactiveStreams.toObservable(publisher);
-            }
-
-            @Override
-            protected Observable<Object> resumeWithFallback() {
-                if (fallbackFactory != null) {
-                    Object fallback = fallbackFactory.apply(getExecutionException());
-                    try {
-                        Object fallbackValue = getFallbackValue(fallback, method, argv);
-                        return RxReactiveStreams.toObservable((Publisher<Object>) fallbackValue);
-                    } catch (Throwable e) {
-                        return Observable.error(e);
-                    }
-
-                } else {
-                    return super.resumeWithFallback();
-                }
-            }
-        }.toObservable();
-
-        if(returnPublisherType == Mono.class){
-            return Mono.from(RxReactiveStreams.toPublisher(observable.toSingle()))
+        if(returnPublisherType == Mono.class) {
+            return Mono.subscriberContext()
+                    .flatMap(context -> Mono.from(RxReactiveStreams.toPublisher(getHystrixObservableCommand(context, argv).toSingle())))
                     .onErrorResume(
                             throwable -> throwable instanceof NoSuchElementException
                                          && throwable.getMessage().equals("Observable emitted no items"),
                             throwable -> Mono.empty());
-        } else if(returnPublisherType == Flux.class){
-            return Flux.from(RxReactiveStreams.toPublisher(observable));
+        } else if(returnPublisherType == Flux.class) {
+            return Mono.subscriberContext()
+                    .flatMapMany(context -> Flux.from(RxReactiveStreams.toPublisher(getHystrixObservableCommand(context, argv))));
         } else {
             throw new IllegalArgumentException("Unknown returnPublisherType: " + returnPublisherType);
         }
@@ -98,5 +70,44 @@ public class HystrixMethodHandler implements MethodHandler {
 
     protected Object getFallbackValue(Object target, Method method, Object[] argv) throws Throwable {
         return method.invoke(target, argv);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Observable<Object> getHystrixObservableCommand(final Context context, final Object[] argv) {
+        return new HystrixObservableCommand<Object>(hystrixObservableCommandSetter) {
+
+            @Override
+            protected Observable<Object> construct() {
+                try {
+                    Publisher publisher = (Publisher) methodHandler.invoke(argv);
+                    return RxReactiveStreams.toObservable(withContext(publisher));
+                } catch (Throwable throwable) {
+                    return Observable.error(throwable);
+                }
+            }
+
+            @Override
+            protected Observable<Object> resumeWithFallback() {
+                if (fallbackFactory != null) {
+                    Object fallback = fallbackFactory.apply(getExecutionException());
+                    try {
+                        Publisher fallbackValue = ((Publisher) getFallbackValue(fallback, method, argv));
+                        return RxReactiveStreams.toObservable(withContext(fallbackValue));
+                    } catch (Throwable throwable) {
+                        return Observable.error(throwable);
+                    }
+                } else {
+                    return super.resumeWithFallback();
+                }
+            }
+
+            private <T extends Publisher> T withContext(T publisher) {
+                if (returnPublisherType == Mono.class) {
+                    return (T) ((Mono) publisher).subscriberContext(context);
+                } else {
+                    return (T) ((Flux) publisher).subscriberContext(context);
+                }
+            }
+        }.toObservable();
     }
 }
