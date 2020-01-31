@@ -54,10 +54,6 @@ public class ReactiveFeignNamedContext {
         return clientName;
     }
 
-    public ApplicationContext getApplicationContext() {
-        return applicationContext;
-    }
-
     public List<ReactiveFeignClientsProperties.ReactiveFeignClientProperties<?>> getConfigs(){
         ReactiveFeignClientsProperties properties = getProperties();
         Map<String, ReactiveFeignClientsProperties.ReactiveFeignClientProperties<?>> config = properties.getConfig();

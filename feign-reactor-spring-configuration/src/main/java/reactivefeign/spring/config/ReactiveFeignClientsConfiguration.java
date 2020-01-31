@@ -26,6 +26,7 @@ import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer;
 import org.springframework.cloud.openfeign.support.SpringMvcContract;
 import org.springframework.context.annotation.Bean;
@@ -176,16 +177,16 @@ public class ReactiveFeignClientsConfiguration {
 
 	@Configuration
 	@AutoConfigureAfter(ReactiveFeignConfiguration.class)
-	@ConditionalOnClass({HystrixCommand.class, ReactiveLoadBalancer.class,
+	@ConditionalOnClass({ReactiveCircuitBreakerFactory.class, ReactiveLoadBalancer.class,
 			reactivefeign.cloud2.CloudReactiveFeign.class})
 	@ConditionalOnProperty(name = "reactive.feign.cloud.enabled", havingValue = "true", matchIfMissing = true)
 	protected static class ReactiveFeignCloud2Configuration {
 
 		@Bean
 		@Scope("prototype")
-		@ConditionalOnProperty(name = "reactive.feign.resilience.enabled", havingValue = "true", matchIfMissing = true)
+		@ConditionalOnProperty(name = "reactive.feign.circuit.breaker.enabled", havingValue = "true", matchIfMissing = true)
 		public ReactiveFeignConfigurator reactiveFeignResilience4jConfigurator(){
-			return new ReactiveFeignResilience4jConfigurator();
+			return new ReactiveFeignCircuitBreakerConfigurator();
 		}
 
 		@Bean
@@ -200,14 +201,8 @@ public class ReactiveFeignClientsConfiguration {
 		@Scope("prototype")
 		@ConditionalOnMissingBean
 		public reactivefeign.cloud2.CloudReactiveFeign.Builder reactiveFeignCloudBuilder(
-				ReactiveFeignBuilder reactiveFeignBuilder,
-				@Value("${reactive.feign.resilience.enabled:true}")
-						boolean enableHystrix) {
-			reactivefeign.cloud2.CloudReactiveFeign.Builder cloudBuilder = reactivefeign.cloud2.CloudReactiveFeign.builder(reactiveFeignBuilder);
-			if(!enableHystrix){
-				cloudBuilder = cloudBuilder.disableHystrix();
-			}
-			return cloudBuilder;
+				ReactiveFeignBuilder reactiveFeignBuilder) {
+			return reactivefeign.cloud2.CloudReactiveFeign.builder(reactiveFeignBuilder);
 		}
 	}
 }

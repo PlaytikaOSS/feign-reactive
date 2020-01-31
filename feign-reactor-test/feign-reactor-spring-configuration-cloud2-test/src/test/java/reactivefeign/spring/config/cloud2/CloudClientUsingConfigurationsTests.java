@@ -17,13 +17,7 @@
 package reactivefeign.spring.config.cloud2;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixCommandKey;
-import com.netflix.hystrix.HystrixCommandProperties;
-import com.netflix.hystrix.HystrixObservableCommand;
 import feign.FeignException;
-import feign.MethodMetadata;
-import feign.Target;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -33,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
+import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
@@ -40,9 +35,9 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import reactivefeign.cloud2.CloudReactiveFeign;
 import reactivefeign.publisher.retry.OutOfRetriesException;
 import reactivefeign.spring.config.EnableReactiveFeignClients;
+import reactivefeign.spring.config.ReactiveFeignCircuitBreakerCustomizer;
 import reactivefeign.spring.config.ReactiveFeignClient;
 import reactivefeign.spring.config.ReactiveRetryPolicies;
 import reactor.core.publisher.Mono;
@@ -52,6 +47,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 import static reactivefeign.retry.BasicReactiveRetryPolicy.retry;
+import static reactivefeign.spring.config.cloud2.AutoConfigurationTest.CIRCUIT_BREAKER_TIMEOUT_DISABLED_CONFIGURATION_CUSTOMIZER;
 import static reactivefeign.spring.config.cloud2.AutoConfigurationTest.MOCK_SERVER_PORT_PROPERTY;
 import static reactivefeign.spring.config.cloud2.CloudClientUsingConfigurationsTests.BAR;
 import static reactivefeign.spring.config.cloud2.CloudClientUsingConfigurationsTests.FOO;
@@ -95,10 +91,10 @@ public class CloudClientUsingConfigurationsTests {
 	}
 
 	@Test
-	public void shouldRetryAndFailOnRibbon() {
+	public void shouldRetryAndFailOnLoadBalancer() {
 		mockHttpServer.stubFor(get(urlPathMatching("/foo"))
 				.willReturn(aResponse()
-						.withFixedDelay(600)
+						.withFixedDelay(200)
 						.withStatus(503)));
 
 		StepVerifier.create(fooClient.foo())
@@ -156,43 +152,14 @@ public class CloudClientUsingConfigurationsTests {
 			return new ReactiveRetryPolicies.Builder()
 					.retryOnNext(retry(1)).build();
 		}
-
-		@Bean
-		CloudReactiveFeign.SetterFactory setterFactory() {
-			return new CloudReactiveFeign.SetterFactory() {
-				@Override
-				public HystrixObservableCommand.Setter create(Target<?> target, MethodMetadata methodMetadata) {
-					String groupKey = target.name();
-					HystrixCommandKey commandKey = HystrixCommandKey.Factory.asKey(methodMetadata.configKey());
-					return HystrixObservableCommand.Setter
-							.withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
-							.andCommandKey(commandKey)
-							.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
-									.withExecutionTimeoutEnabled(false)
-							);
-				}
-			};
-		}
 	}
 
 	@Configuration
 	protected static class BarConfiguration {
 
 		@Bean
-		CloudReactiveFeign.SetterFactory setterFactory() {
-			return new CloudReactiveFeign.SetterFactory() {
-				@Override
-				public HystrixObservableCommand.Setter create(Target<?> target, MethodMetadata methodMetadata) {
-					String groupKey = target.name();
-					HystrixCommandKey commandKey = HystrixCommandKey.Factory.asKey(methodMetadata.configKey());
-					return HystrixObservableCommand.Setter
-							.withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
-							.andCommandKey(commandKey)
-							.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
-									.withExecutionTimeoutEnabled(false)
-							);
-				}
-			};
+		public ReactiveFeignCircuitBreakerCustomizer<Resilience4JConfigBuilder, Resilience4JConfigBuilder.Resilience4JCircuitBreakerConfiguration> defaultCustomizer() {
+			return CIRCUIT_BREAKER_TIMEOUT_DISABLED_CONFIGURATION_CUSTOMIZER;
 		}
 	}
 }

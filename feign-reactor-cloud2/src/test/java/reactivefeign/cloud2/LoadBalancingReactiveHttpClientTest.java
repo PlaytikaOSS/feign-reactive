@@ -9,6 +9,7 @@ import org.springframework.cloud.loadbalancer.core.RoundRobinLoadBalancer;
 import org.springframework.cloud.loadbalancer.support.ServiceInstanceListSuppliers;
 import org.springframework.cloud.loadbalancer.support.SimpleObjectProvider;
 import reactivefeign.ReactiveFeignBuilder;
+import reactivefeign.cloud.common.AbstractLoadBalancingReactiveHttpClientTest;
 import reactivefeign.publisher.retry.OutOfRetriesException;
 
 import java.net.URI;
@@ -20,7 +21,7 @@ import static reactivefeign.retry.BasicReactiveRetryPolicy.retry;
 /**
  * @author Sergii Karpenko
  */
-public class LoadBalancingReactiveHttpClientTest extends reactivefeign.cloud.LoadBalancingReactiveHttpClientTest{
+public class LoadBalancingReactiveHttpClientTest extends AbstractLoadBalancingReactiveHttpClientTest {
 
     private static ReactiveLoadBalancer.Factory<ServiceInstance> loadBalancerFactory;
 
@@ -41,8 +42,7 @@ public class LoadBalancingReactiveHttpClientTest extends reactivefeign.cloud.Loa
     @Override
     protected <T> ReactiveFeignBuilder<T> cloudBuilderWithLoadBalancerEnabled() {
         return BuilderUtils.<T>cloudBuilder()
-                .enableLoadBalancer(loadBalancerFactory)
-                .disableHystrix();
+                .enableLoadBalancer(loadBalancerFactory);
     }
 
     @Override
@@ -51,8 +51,7 @@ public class LoadBalancingReactiveHttpClientTest extends reactivefeign.cloud.Loa
         return BuilderUtils.<T>cloudBuilder()
                 .enableLoadBalancer(loadBalancerFactory)
                 .retryOnSame(retry(retryOnSame))
-                .retryOnNext(retry(retryOnNext))
-                .disableHystrix();
+                .retryOnNext(retry(retryOnNext));
     }
 
     @Override

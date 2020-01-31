@@ -3,7 +3,7 @@ package reactivefeign.cloud2.methodhandler;
 import feign.MethodMetadata;
 import feign.Target;
 import org.springframework.lang.Nullable;
-import reactivefeign.cloud2.CloudReactiveFeign;
+import reactivefeign.cloud2.ReactiveFeignCircuitBreakerFactory;
 import reactivefeign.methodhandler.MethodHandler;
 import reactivefeign.methodhandler.MethodHandlerFactory;
 
@@ -12,18 +12,18 @@ import java.util.function.Function;
 
 import static feign.Util.checkNotNull;
 
-public class HystrixMethodHandlerFactory implements MethodHandlerFactory {
+public class CircuitBreakerMethodHandlerFactory implements MethodHandlerFactory {
 
     private final MethodHandlerFactory methodHandlerFactory;
-    private final CloudReactiveFeign.SetterFactory commandSetterFactory;
+    private final ReactiveFeignCircuitBreakerFactory reactiveFeignCircuitBreakerFactory;
     private final Function<Throwable, Object> fallbackFactory;
     private Target target;
 
-    public HystrixMethodHandlerFactory(MethodHandlerFactory methodHandlerFactory,
-                                       CloudReactiveFeign.SetterFactory commandSetterFactory,
-                                       @Nullable Function<Throwable, Object> fallbackFactory) {
+    public CircuitBreakerMethodHandlerFactory(MethodHandlerFactory methodHandlerFactory,
+                                              ReactiveFeignCircuitBreakerFactory reactiveFeignCircuitBreakerFactory,
+                                              @Nullable Function<Throwable, Object> fallbackFactory) {
         this.methodHandlerFactory = checkNotNull(methodHandlerFactory, "methodHandlerFactory must not be null");
-        this.commandSetterFactory = checkNotNull(commandSetterFactory, "hystrixObservableCommandSetter must not be null");
+        this.reactiveFeignCircuitBreakerFactory = checkNotNull(reactiveFeignCircuitBreakerFactory, "reactiveFeignCircuitBreakerFactory must not be null");
         this.fallbackFactory = fallbackFactory;
     }
 
@@ -35,10 +35,10 @@ public class HystrixMethodHandlerFactory implements MethodHandlerFactory {
 
     @Override
     public MethodHandler create(final MethodMetadata metadata) {
-        return new HystrixMethodHandler(
+        return new CircuitBreakerMethodHandler(
                 target, metadata,
                 methodHandlerFactory.create(metadata),
-                commandSetterFactory,
+                reactiveFeignCircuitBreakerFactory,
                 fallbackFactory);
     }
 

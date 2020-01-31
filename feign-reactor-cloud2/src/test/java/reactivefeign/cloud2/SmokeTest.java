@@ -26,11 +26,11 @@ public class SmokeTest extends reactivefeign.SmokeTest {
 
   @Override
   protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
-    return BuilderUtils.cloudBuilderWithExecutionTimeoutDisabled();
+    return BuilderUtils.cloudBuilder();
   }
 
   @Override
   protected Predicate<Throwable> corruptedJsonError() {
-    return throwable -> throwable.getCause() instanceof DecodingException;
+    return throwable -> throwable instanceof DecodingException;
   }
 }

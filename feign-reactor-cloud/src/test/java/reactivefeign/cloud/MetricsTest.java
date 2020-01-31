@@ -13,20 +13,11 @@
  */
 package reactivefeign.cloud;
 
-import com.netflix.client.ClientException;
-import com.netflix.client.ClientFactory;
-import com.netflix.client.config.CommonClientConfigKey;
-import com.netflix.client.config.DefaultClientConfigImpl;
-import com.netflix.loadbalancer.BaseLoadBalancer;
-import com.netflix.loadbalancer.ILoadBalancer;
-import com.netflix.loadbalancer.Server;
 import feign.Target;
 import org.junit.BeforeClass;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.webclient.WebReactiveOptions;
-
-import java.util.Collections;
 
 import static reactivefeign.cloud.AllFeaturesTest.setupServersList;
 import static reactivefeign.cloud.BuilderUtils.TEST_CLIENT_FACTORY;
@@ -39,7 +30,7 @@ public class MetricsTest extends reactivefeign.MetricsTest {
   private static String serviceName = "MetricsTest-loadBalancingDefaultPolicyRoundRobin";
 
   @BeforeClass
-  public static void setUpServersList() throws ClientException {
+  public static void setUpServersList() {
     setupServersList(serviceName, wireMockRule.port());
   }
 

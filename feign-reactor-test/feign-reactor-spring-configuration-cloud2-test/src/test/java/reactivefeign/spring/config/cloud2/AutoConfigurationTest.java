@@ -17,12 +17,8 @@
 package reactivefeign.spring.config.cloud2;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixCommandKey;
-import com.netflix.hystrix.HystrixCommandProperties;
-import com.netflix.hystrix.HystrixObservableCommand;
-import feign.MethodMetadata;
-import feign.Target;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -31,6 +27,9 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JCircuitBreakerFactory;
+import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
+import org.springframework.cloud.client.circuitbreaker.Customizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
@@ -38,11 +37,13 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import reactivefeign.cloud2.CloudReactiveFeign;
 import reactivefeign.spring.config.EnableReactiveFeignClients;
+import reactivefeign.spring.config.ReactiveFeignCircuitBreakerCustomizer;
 import reactivefeign.spring.config.ReactiveFeignClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
+import java.time.Duration;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -72,6 +73,20 @@ public class AutoConfigurationTest {
 	private static final String TEST_URL = "/testUrl";
 	private static final String BODY_TEXT = "test";
 
+	static final Customizer<ReactiveResilience4JCircuitBreakerFactory> SHORT_TIMEOUT_CUSTOMIZER = factory ->
+			factory.configureDefault(
+					id -> new Resilience4JConfigBuilder(id)
+							.circuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
+							.timeLimiterConfig(TimeLimiterConfig.custom()
+									.timeoutDuration(Duration.ofMillis(100)).build()).build());
+
+	static final ReactiveFeignCircuitBreakerCustomizer<Resilience4JConfigBuilder, Resilience4JConfigBuilder.Resilience4JCircuitBreakerConfiguration>
+			CIRCUIT_BREAKER_TIMEOUT_DISABLED_CONFIGURATION_CUSTOMIZER
+			= configBuilder -> configBuilder
+			.circuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
+			.timeLimiterConfig(TimeLimiterConfig.custom()
+					.timeoutDuration(Duration.ofSeconds(100)).build());
+
 	private static WireMockServer mockHttpServer = new WireMockServer(wireMockConfig().dynamicPort());
 
 	@Autowired
@@ -95,7 +110,7 @@ public class AutoConfigurationTest {
 	}
 
 	@Test
-	public void shouldFailOnDefaultHystrixTimeout() {
+	public void shouldFailOnDefaultCircuitBreakerTimeout() {
 		mockHttpServer.stubFor(get(urlPathMatching(TEST_URL))
 				.willReturn(aResponse()
 						.withFixedDelay(2000)
@@ -146,7 +161,7 @@ public class AutoConfigurationTest {
 	}
 
 	@ReactiveFeignClient(name = TEST_FEIGN_CLIENT_W_PARAM, path = "test/{id}",
-			configuration = HystrixTimeoutDisabledConfiguration.class)
+			configuration = CircuitBreakerTimeoutDisabledConfiguration.class)
 	public interface TestReactiveFeignClientWithParamInPath {
 
 		@GetMapping(path = TEST_URL)
@@ -158,26 +173,19 @@ public class AutoConfigurationTest {
 			TestReactiveFeignClientWithParamInPath.class})
 	@EnableAutoConfiguration
 	@Configuration
-	public static class TestConfiguration{}
+	public static class TestConfiguration{
+		@Bean
+		public Customizer<ReactiveResilience4JCircuitBreakerFactory> defaultCustomizer() {
+			return SHORT_TIMEOUT_CUSTOMIZER;
+		}
+	}
 
 	@Configuration
-	protected static class HystrixTimeoutDisabledConfiguration {
+	protected static class CircuitBreakerTimeoutDisabledConfiguration {
 
 		@Bean
-		CloudReactiveFeign.SetterFactory setterFactory() {
-			return new CloudReactiveFeign.SetterFactory() {
-				@Override
-				public HystrixObservableCommand.Setter create(Target<?> target, MethodMetadata methodMetadata) {
-					String groupKey = target.name();
-					HystrixCommandKey commandKey = HystrixCommandKey.Factory.asKey(methodMetadata.configKey());
-					return HystrixObservableCommand.Setter
-							.withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
-							.andCommandKey(commandKey)
-							.andCommandPropertiesDefaults(HystrixCommandProperties.Setter()
-									.withExecutionTimeoutEnabled(false)
-							);
-				}
-			};
+		public ReactiveFeignCircuitBreakerCustomizer<Resilience4JConfigBuilder, Resilience4JConfigBuilder.Resilience4JCircuitBreakerConfiguration> defaultCustomizer() {
+			return CIRCUIT_BREAKER_TIMEOUT_DISABLED_CONFIGURATION_CUSTOMIZER;
 		}
 	}
 }

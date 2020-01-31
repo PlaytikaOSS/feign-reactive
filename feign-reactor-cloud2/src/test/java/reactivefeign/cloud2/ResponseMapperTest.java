@@ -16,8 +16,6 @@ package reactivefeign.cloud2;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.testcase.IcecreamServiceApi;
 
-import java.util.function.Predicate;
-
 /**
  * @author Sergii Karpenko
  */
@@ -25,11 +23,7 @@ public class ResponseMapperTest extends reactivefeign.ResponseMapperTest {
 
   @Override
   protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
-    return BuilderUtils.cloudBuilderWithExecutionTimeoutDisabled();
+    return BuilderUtils.cloudBuilder();
   }
 
-  @Override
-  protected Predicate<Throwable> errorPredicate() {
-    return throwable -> throwable.getCause().getMessage().equals("XTRW");
-  }
 }

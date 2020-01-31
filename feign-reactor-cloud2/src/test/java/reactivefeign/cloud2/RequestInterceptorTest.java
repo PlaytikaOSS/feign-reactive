@@ -13,12 +13,8 @@
  */
 package reactivefeign.cloud2;
 
-import com.netflix.hystrix.exception.HystrixRuntimeException;
-import feign.FeignException;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.testcase.IcecreamServiceApi;
-
-import java.util.function.Predicate;
 
 /**
  * @author Sergii Karpenko
@@ -27,12 +23,7 @@ public class RequestInterceptorTest extends reactivefeign.RequestInterceptorTest
 
   @Override
   protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
-      return BuilderUtils.cloudBuilderWithExecutionTimeoutDisabled();
+      return BuilderUtils.cloudBuilder();
   }
 
-  @Override
-  protected Predicate<Throwable> notAuthorizedException() {
-    return throwable -> throwable instanceof HystrixRuntimeException
-            && throwable.getCause() instanceof FeignException;
-  }
 }

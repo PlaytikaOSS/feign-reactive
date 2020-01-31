@@ -2,7 +2,6 @@ package reactivefeign.cloud.methodhandler;
 
 import feign.MethodMetadata;
 import feign.Target;
-import org.springframework.lang.Nullable;
 import reactivefeign.cloud.CloudReactiveFeign;
 import reactivefeign.methodhandler.MethodHandler;
 import reactivefeign.methodhandler.MethodHandlerFactory;
@@ -21,7 +20,7 @@ public class HystrixMethodHandlerFactory implements MethodHandlerFactory {
 
     public HystrixMethodHandlerFactory(MethodHandlerFactory methodHandlerFactory,
                                        CloudReactiveFeign.SetterFactory commandSetterFactory,
-                                       @Nullable Function<Throwable, Object> fallbackFactory) {
+                                       Function<Throwable, Object> fallbackFactory) {
         this.methodHandlerFactory = checkNotNull(methodHandlerFactory, "methodHandlerFactory must not be null");
         this.commandSetterFactory = checkNotNull(commandSetterFactory, "hystrixObservableCommandSetter must not be null");
         this.fallbackFactory = fallbackFactory;

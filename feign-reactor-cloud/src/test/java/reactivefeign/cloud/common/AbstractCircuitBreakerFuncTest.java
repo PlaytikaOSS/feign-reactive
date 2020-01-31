@@ -1,16 +1,10 @@
-package reactivefeign.cloud;
+package reactivefeign.cloud.common;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import com.netflix.hystrix.exception.HystrixRuntimeException;
+import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import feign.RequestLine;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
 import reactivefeign.ReactiveFeignBuilder;
 import reactor.core.publisher.Mono;
 
@@ -21,36 +15,24 @@ import java.util.stream.IntStream;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringRunner.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,
-        classes = {HystrixCircuitBreakerFuncTest.class},
-        properties = {
-                "hystrix.command.default.circuitBreaker.requestVolumeThreshold=3",
-                "hystrix.command.default.circuitBreaker.enabled=false",
-                "hystrix.command.default.execution.timeout.enabled=false"
-        })
-@EnableAutoConfiguration
-public class HystrixCircuitBreakerFuncTest {
+abstract public class AbstractCircuitBreakerFuncTest {
+
+    protected static final int VOLUME_THRESHOLD = 3;
     private static final String TEST_URL = "/call";
     private static final String FALLBACK = "fallback";
-    private static final String CIRCUIT_IS_OPEN = "short-circuited";
-    private static final String NO_FALLBACK = "and no fallback available";
 
     @Rule
-    public WireMockClassRule wireMockRule = new WireMockClassRule(
+    public WireMockRule wireMockRule = new WireMockRule(
             WireMockConfiguration.wireMockConfig()
                     .dynamicPort());
 
-    @Value("${hystrix.command.default.circuitBreaker.requestVolumeThreshold}")
-    private int HYSTRIX_VOLUME_THRESHOLD;
+    abstract protected ReactiveFeignBuilder<TestCaller> cloudBuilderWithTimeoutDisabledAndCircuitBreakerDisabled();
 
-    protected ReactiveFeignBuilder<TestCaller> cloudBuilderWithTimeoutDisabledAndCircuitBreakerDisabled(){
-        return BuilderUtils.cloudBuilder();
-    }
+    abstract protected void assertCircuitBreakerClosed(Throwable throwable);
 
     @Test
     public void shouldReturnFallbackWithClosedCircuitAfterThreshold() {
-        int callsNo = HYSTRIX_VOLUME_THRESHOLD + 10;
+        int callsNo = VOLUME_THRESHOLD + 10;
         mockResponseServiceUnavailable();
 
         TestCaller testCaller = cloudBuilderWithTimeoutDisabledAndCircuitBreakerDisabled()
@@ -71,7 +53,7 @@ public class HystrixCircuitBreakerFuncTest {
 
     @Test
     public void shouldNotOpenCircuitAfterThreshold() {
-        int callsNo = HYSTRIX_VOLUME_THRESHOLD + 10;
+        int callsNo = VOLUME_THRESHOLD + 10;
         mockResponseServiceUnavailable();
 
         TestCaller testCaller = cloudBuilderWithTimeoutDisabledAndCircuitBreakerDisabled()
@@ -88,12 +70,10 @@ public class HystrixCircuitBreakerFuncTest {
 
         // all exceptions before and after volume threshold are the same
         Throwable firstError = (Throwable) results.get(0);
-        assertThat(firstError).isInstanceOf(HystrixRuntimeException.class);
-        assertThat(firstError.getMessage()).contains(NO_FALLBACK).doesNotContain(CIRCUIT_IS_OPEN);
+        assertCircuitBreakerClosed(firstError);
 
         Throwable lastError = (Throwable) results.get(results.size() - 1);
-        assertThat(lastError).isInstanceOf(HystrixRuntimeException.class);
-        assertThat(lastError.getMessage()).contains(NO_FALLBACK).doesNotContain(CIRCUIT_IS_OPEN);
+        assertCircuitBreakerClosed(lastError);
 
         // assert circuit is still closed, so all requests went to server
         verify(exactly(callsNo), getRequestedFor(urlEqualTo(TEST_URL)));

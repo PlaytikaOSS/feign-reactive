@@ -1,8 +1,5 @@
 package reactivefeign.cloud2;
 
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixCommandKey;
-import com.netflix.hystrix.HystrixObservableCommand;
 import feign.Contract;
 import feign.MethodMetadata;
 import feign.Target;
@@ -17,7 +14,7 @@ import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.client.log.ReactiveLoggerListener;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
-import reactivefeign.cloud2.methodhandler.HystrixMethodHandlerFactory;
+import reactivefeign.cloud2.methodhandler.CircuitBreakerMethodHandlerFactory;
 import reactivefeign.cloud2.publisher.LoadBalancerPublisherClient;
 import reactivefeign.methodhandler.MethodHandlerFactory;
 import reactivefeign.publisher.PublisherClientFactory;
@@ -31,7 +28,7 @@ import static reactivefeign.ReactiveFeign.Builder.retry;
 
 /**
  * Allows to specify load balancer {@link ReactiveLoadBalancer.Factory<ServiceInstance>}
- * and HystrixObservableCommand.Setter with fallback factory.
+ * and ReactiveCircuitBreakerFactory with fallback factory.
  *
  * @author Sergii Karpenko
  */
@@ -46,8 +43,7 @@ public class CloudReactiveFeign {
     public static class Builder<T> implements ReactiveFeignBuilder<T> {
 
         private ReactiveFeignBuilder<T> builder;
-        private boolean hystrixEnabled = true;
-        private SetterFactory commandSetterFactory = new DefaultSetterFactory();
+        private ReactiveFeignCircuitBreakerFactory circuitBreakerFactory;
         private FallbackFactory<T> fallbackFactory;
         private ReactiveLoadBalancer.Factory<ServiceInstance> loadBalancerFactory;
         private ReactiveRetryPolicy retryOnNextPolicy;
@@ -56,13 +52,8 @@ public class CloudReactiveFeign {
             this.builder = builder;
         }
 
-        public Builder<T> disableHystrix() {
-            this.hystrixEnabled = false;
-            return this;
-        }
-
-        public Builder<T> setHystrixCommandSetterFactory(SetterFactory commandSetterFactory) {
-            this.commandSetterFactory = commandSetterFactory;
+        public Builder<T> enableCircuitBreaker(ReactiveFeignCircuitBreakerFactory circuitBreakerFactory) {
+            this.circuitBreakerFactory = circuitBreakerFactory;
             return this;
         }
 
@@ -154,13 +145,15 @@ public class CloudReactiveFeign {
 
         @Override
         public MethodHandlerFactory buildReactiveMethodHandlerFactory(PublisherClientFactory reactiveClientFactory) {
-            MethodHandlerFactory methodHandlerFactory = builder.buildReactiveMethodHandlerFactory(reactiveClientFactory);
-            return hystrixEnabled
-                    ? new HystrixMethodHandlerFactory(
-                    methodHandlerFactory,
-                    commandSetterFactory,
-                    (Function<Throwable, Object>) fallbackFactory)
-                    : methodHandlerFactory;
+            if(circuitBreakerFactory == null){
+                builder.fallbackFactory(fallbackFactory);
+                return builder.buildReactiveMethodHandlerFactory(reactiveClientFactory);
+            } else {
+                return new CircuitBreakerMethodHandlerFactory(
+                        builder.buildReactiveMethodHandlerFactory(reactiveClientFactory),
+                        circuitBreakerFactory,
+                        (Function<Throwable, Object>) fallbackFactory);
+            }
         }
 
         @Override
@@ -196,21 +189,6 @@ public class CloudReactiveFeign {
 
                 }
             };
-        }
-    }
-
-    public interface SetterFactory {
-        HystrixObservableCommand.Setter create(Target<?> target, MethodMetadata methodMetadata);
-    }
-
-    public static class DefaultSetterFactory implements SetterFactory {
-        @Override
-        public HystrixObservableCommand.Setter create(Target<?> target, MethodMetadata methodMetadata) {
-            String groupKey = target.name();
-            String commandKey = methodMetadata.configKey();
-            return HystrixObservableCommand.Setter
-                    .withGroupKey(HystrixCommandGroupKey.Factory.asKey(groupKey))
-                    .andCommandKey(HystrixCommandKey.Factory.asKey(commandKey));
         }
     }
 

@@ -55,17 +55,22 @@ public class AllFeaturesTest extends reactivefeign.allfeatures.AllFeaturesTest {
 	private static final String serviceName = "testServiceName";
 
 	@BeforeClass
-	public static void setUpServersList() throws ClientException {
+	public static void setUpServersList() {
 		setupServersList(serviceName, 8080);
 	}
 
-	static void setupServersList(String serviceName, int... ports) throws ClientException {
+	static void setupServersList(String serviceName, int... ports) {
 		DefaultClientConfigImpl clientConfig = new DefaultClientConfigImpl();
 		clientConfig.loadDefaultValues();
 		clientConfig.setProperty(CommonClientConfigKey.NFLoadBalancerClassName, BaseLoadBalancer.class.getName());
-		ILoadBalancer lb = ClientFactory.registerNamedLoadBalancerFromclientConfig(serviceName, clientConfig);
-		lb.addServers(IntStream.of(ports).mapToObj(port -> new Server("localhost", port))
-				.collect(Collectors.toList()));
+		try {
+			ILoadBalancer lb = ClientFactory.registerNamedLoadBalancerFromclientConfig(serviceName, clientConfig);
+			lb.addServers(IntStream.of(ports).mapToObj(port -> new Server("localhost", port))
+					.collect(Collectors.toList()));
+
+		} catch (ClientException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override

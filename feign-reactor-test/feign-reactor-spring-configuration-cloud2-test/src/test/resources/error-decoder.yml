@@ -1,0 +1,19 @@
+#reactive.feign.client.config:
+#  default:
+#    options.readTimeoutMillis: 1000
+#  rfgn-proper:
+#    options:
+#      readTimeoutMillis: 300
+#    retryOnSame:
+#      builder: reactivefeign.retry.BasicReactiveRetryPolicy.Builder
+#      args:
+#        maxRetries: 1
+#        backoffInMs: 10
+#  rfgn-errordecoder:
+#    errorDecoder: reactivefeign.spring.config.cloud2.ErrorDecoder
+#
+#resilience4j.circuitbreaker:
+#  configs:
+#    default:
+#      ignoreExceptions:
+#        - reactivefeign.spring.config.cloud2.ErrorDecoder.ClientError

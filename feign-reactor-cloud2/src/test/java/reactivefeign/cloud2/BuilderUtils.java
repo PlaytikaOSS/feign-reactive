@@ -1,53 +1,54 @@
 package reactivefeign.cloud2;
 
-import com.netflix.hystrix.HystrixCommandGroupKey;
-import com.netflix.hystrix.HystrixCommandKey;
-import com.netflix.hystrix.HystrixCommandProperties;
-import com.netflix.hystrix.HystrixObservableCommand;
+import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
+import org.springframework.cloud.client.circuitbreaker.ConfigBuilder;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
 import reactivefeign.webclient.WebReactiveFeign;
 
+import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-
-import static reactivefeign.ReactivityTest.CALLS_NUMBER;
+import java.util.function.Consumer;
 
 public class BuilderUtils {
 
-    private static final AtomicInteger uniqueHystrixCommandCounter = new AtomicInteger();
+    private static final AtomicInteger uniqueCircuitBreakerCounter = new AtomicInteger();
 
     static <T> CloudReactiveFeign.Builder<T> cloudBuilder(){
-        return cloudBuilderWithUniqueHystrixCommand(
-                HystrixCommandProperties.Setter()
-                        .withExecutionIsolationSemaphoreMaxConcurrentRequests(CALLS_NUMBER), null);
+        return CloudReactiveFeign.<T>builder(WebReactiveFeign.builder());
     }
 
-    static <T> CloudReactiveFeign.Builder<T> cloudBuilderWithExecutionTimeoutDisabled() {
-        return cloudBuilderWithUniqueHystrixCommand(
-                HystrixCommandProperties.Setter()
-                        .withExecutionIsolationSemaphoreMaxConcurrentRequests(CALLS_NUMBER)
-                        .withExecutionTimeoutEnabled(false), null);
+    static <T> CloudReactiveFeign.Builder<T> cloudBuilder(ReactiveCircuitBreakerFactory circuitBreakerFactory){
+        return cloudBuilderWithUniqueCircuitBreaker(
+                circuitBreakerFactory, null, null);
     }
 
-    static <T> CloudReactiveFeign.Builder<T> cloudBuilderWithUniqueHystrixCommand(
-            HystrixCommandProperties.Setter commandPropertiesDefaults,
-            AtomicReference<HystrixCommandKey> lastCommandKey) {
-        int uniqueId = uniqueHystrixCommandCounter.incrementAndGet();
+    static <T> CloudReactiveFeign.Builder<T> cloudBuilderWithExecutionTimeoutDisabled(
+            ReactiveCircuitBreakerFactory circuitBreakerFactory,
+            AtomicReference<String> lastCircuitBreakerKey) {
+        return cloudBuilderWithUniqueCircuitBreaker(circuitBreakerFactory,
+                configBuilder -> ((Resilience4JConfigBuilder)configBuilder).timeLimiterConfig(
+                        TimeLimiterConfig.custom().timeoutDuration(Duration.ofMillis(Long.MAX_VALUE)).build()),
+                lastCircuitBreakerKey);
+    }
+
+    static <T> CloudReactiveFeign.Builder<T> cloudBuilderWithUniqueCircuitBreaker(
+            ReactiveCircuitBreakerFactory circuitBreakerFactory,
+            Consumer<ConfigBuilder> customizer,
+            AtomicReference<String> lastCircuitBreakerId) {
+        int uniqueId = uniqueCircuitBreakerCounter.incrementAndGet();
         return CloudReactiveFeign.<T>builder(WebReactiveFeign.builder())
-                .setHystrixCommandSetterFactory(
-                        (target, methodMetadata) -> {
-                            HystrixCommandGroupKey groupKey = HystrixCommandGroupKey.Factory.asKey(
-                                    target.name() +"."+ uniqueId);
-                            HystrixCommandKey commandKey = HystrixCommandKey.Factory.asKey(
-                                    methodMetadata.configKey() +"."+ uniqueId);
-                            if(lastCommandKey != null) {
-                                lastCommandKey.set(commandKey);
-                            }
-                            return HystrixObservableCommand.Setter
-                                    .withGroupKey(groupKey)
-                                    .andCommandKey(commandKey)
-                                    .andCommandPropertiesDefaults(commandPropertiesDefaults);
-                        }
-                );
+                .enableCircuitBreaker(circuitBreakerId -> {
+                    String uniqueCircuitBreakerId = circuitBreakerId + "."+uniqueId;
+                    if(lastCircuitBreakerId != null) {
+                        lastCircuitBreakerId.set(uniqueCircuitBreakerId);
+                    }
+                    if(customizer != null) {
+                        circuitBreakerFactory.configure(customizer, uniqueCircuitBreakerId);
+                    }
+                    return circuitBreakerFactory.create(uniqueCircuitBreakerId);
+                });
     }
 
 }

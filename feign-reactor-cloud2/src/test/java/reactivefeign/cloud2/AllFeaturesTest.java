@@ -16,7 +16,6 @@
 
 package reactivefeign.cloud2;
 
-import com.netflix.hystrix.exception.HystrixRuntimeException;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -24,7 +23,10 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JCircuitBreakerFactory;
 import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.circuitbreaker.NoFallbackAvailableException;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer;
 import reactivefeign.allfeatures.AllFeaturesApi;
 import reactivefeign.allfeatures.AllFeaturesController;
@@ -45,15 +47,17 @@ public class AllFeaturesTest extends reactivefeign.allfeatures.AllFeaturesTest {
 	private static final String serviceName = "testServiceName";
 
 	private static ReactiveLoadBalancer.Factory<ServiceInstance> loadBalancerFactory;
+	private static ReactiveCircuitBreakerFactory circuitBreakerFactory;
 
 	@BeforeClass
 	public static void setupServersList() {
 		loadBalancerFactory = LoadBalancingReactiveHttpClientTest.loadBalancerFactory(serviceName, 8080);
+		circuitBreakerFactory = new ReactiveResilience4JCircuitBreakerFactory();
 	}
 
 	@Override
 	protected AllFeaturesApi buildClient() {
-		return BuilderUtils.<AllFeaturesFeign>cloudBuilderWithExecutionTimeoutDisabled()
+		return BuilderUtils.<AllFeaturesFeign>cloudBuilderWithExecutionTimeoutDisabled(circuitBreakerFactory, null)
 				.enableLoadBalancer(loadBalancerFactory)
 				.decode404()
 				.target(AllFeaturesFeign.class, serviceName, "http://"+serviceName);
@@ -64,7 +68,7 @@ public class AllFeaturesTest extends reactivefeign.allfeatures.AllFeaturesTest {
 		throw new UnsupportedOperationException();
 	}
 
-	@Test(expected = HystrixRuntimeException.class)
+	@Test(expected = NoFallbackAvailableException.class)
 	public void shouldFailIfNoSubstitutionForPath(){
 		super.shouldFailIfNoSubstitutionForPath();
 	}

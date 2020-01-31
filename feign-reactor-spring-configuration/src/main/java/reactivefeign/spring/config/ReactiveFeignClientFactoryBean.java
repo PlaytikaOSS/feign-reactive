@@ -130,46 +130,38 @@ class ReactiveFeignClientFactoryBean implements FactoryBean<Object>, Initializin
 
 	private <T> ReactiveFeignBuilder fallback(ReactiveFeignBuilder builder, ReactiveFeignNamedContext context) {
 		if(fallback != void.class){
-			Object fallbackInstance = getFallbackFromContext("fallback", getName(), context,
-					this.fallback, this.type);
+			Object fallbackInstance = getFallbackFromContext(
+					"fallback", context, this.fallback, this.type);
 			builder = builder.fallback(fallbackInstance);
+			return builder;
 		}
 		if(fallbackFactory != void.class){
-			FallbackFactory<? extends T> fallbackFactoryInstance = (FallbackFactory<? extends T>)
-					getFallbackFromContext("fallbackFactory", getName(), context, fallbackFactory, FallbackFactory.class);
-		/* We take a sample fallback from the fallback factory to check if it returns a fallback
-		that is compatible with the annotated feign interface. */
-			Object exampleFallback = fallbackFactoryInstance.apply(new RuntimeException());
-			Assert.notNull(exampleFallback,
-					String.format(
-							"Incompatible fallbackFactory instance for feign client %s. Factory may not produce null!",
-							getName()));
-			if (!this.type.isAssignableFrom(exampleFallback.getClass())) {
-				throw new IllegalStateException(
-						String.format(
-								"Incompatible fallbackFactory instance for feign client %s. Factory produces instances of '%s', but should produce instances of '%s'",
-								getName(), exampleFallback.getClass(), this.type));
-			}
+			FallbackFactory<? extends T> fallbackFactoryInstance = (FallbackFactory<? extends T>)getFallbackFromContext(
+							"fallbackFactory", context, fallbackFactory, FallbackFactory.class);
+			builder = builder.fallbackFactory(fallbackFactoryInstance);
+			return builder;
+		}
+
+		FallbackFactory<? extends T> fallbackFactoryInstance = context.getOptional(FallbackFactory.class);
+		if(fallbackFactoryInstance != null) {
 			builder = builder.fallbackFactory(fallbackFactoryInstance);
 		}
 		return builder;
 	}
 
-	private <T> T getFallbackFromContext(String fallbackMechanism, String feignClientName, ReactiveFeignNamedContext context,
+	private <T> T getFallbackFromContext(String fallbackMechanism, ReactiveFeignNamedContext context,
 										 Class<?> beanType, Class<T> targetType) {
 		Object fallbackInstance = context.getOptional(beanType);
-		if (fallbackInstance == null) {
-			throw new IllegalStateException(String.format(
-					"No " + fallbackMechanism + " instance of type %s found for feign client %s",
-					beanType, feignClientName));
-		}
-
 		if (!targetType.isAssignableFrom(beanType)) {
 			throw new IllegalStateException(
 					String.format(
 							"Incompatible " + fallbackMechanism + " instance. Fallback/fallbackFactory of type %s is not assignable to %s for feign client %s",
-							beanType, targetType, feignClientName));
+							beanType, targetType, context.getClientName()));
 		}
+		if(fallbackInstance == null){
+			fallbackInstance = context.getOrInstantiate(beanType);
+		}
+
 		return (T) fallbackInstance;
 	}
 

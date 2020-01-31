@@ -41,7 +41,7 @@ import java.util.stream.Stream;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
-import static reactivefeign.spring.config.cloud2.LoadBalancerEnabledHystrixDisabledUsingPropertiesTest.*;
+import static reactivefeign.spring.config.cloud2.LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest.*;
 
 /**
  * @author Sergii Karpenko
@@ -57,10 +57,10 @@ import static reactivefeign.spring.config.cloud2.LoadBalancerEnabledHystrixDisab
 				"spring.cloud.discovery.client.simple.instances."+ FEIGN_CLIENT_TEST_LB +"[1].uri=http://localhost:${"+MOCK_SERVER_2_PORT_PROPERTY+"}",
 		})
 @TestPropertySource(locations = {
-        "classpath:lb-enabled-hystrix-disabled.properties",
+        "classpath:lb-enabled-cb-disabled.properties",
 		"classpath:common.properties"})
 @DirtiesContext
-public class LoadBalancerEnabledHystrixDisabledUsingPropertiesTest {
+public class LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest {
 
 	static final String MOCK_SERVER_1_PORT_PROPERTY = "mock.server1.port";
 	static final String MOCK_SERVER_2_PORT_PROPERTY = "mock.server2.port";
@@ -88,7 +88,7 @@ public class LoadBalancerEnabledHystrixDisabledUsingPropertiesTest {
 		Mono<String> result = feignClient.testMethod();
 
 		StepVerifier.create(result)
-				.expectError(OutOfRetriesException.class)
+				.expectErrorMatches(throwable -> throwable instanceof OutOfRetriesException)
 				.verify();
 
 		assertThat(mockHttpServer1.getAllServeEvents().size()).isEqualTo(1);
@@ -124,7 +124,7 @@ public class LoadBalancerEnabledHystrixDisabledUsingPropertiesTest {
 
 	}
 
-	@EnableReactiveFeignClients(clients = LoadBalancerEnabledHystrixDisabledUsingPropertiesTest.TestReactiveFeignClient.class)
+	@EnableReactiveFeignClients(clients = LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest.TestReactiveFeignClient.class)
 	@EnableAutoConfiguration
 	@Configuration
 	public static class TestConfiguration{}

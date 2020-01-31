@@ -179,6 +179,24 @@
                 <version>${project.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.netflix.hystrix</groupId>
+                        <artifactId>hystrix-core</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.netflix.ribbon</groupId>
+                        <artifactId>ribbon</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.netflix.ribbon</groupId>
+                        <artifactId>ribbon-httpclient</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.netflix.ribbon</groupId>
+                        <artifactId>ribbon-core</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.playtika.reactivefeign</groupId>

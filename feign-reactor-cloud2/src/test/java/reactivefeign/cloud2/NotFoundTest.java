@@ -23,6 +23,6 @@ public class NotFoundTest extends reactivefeign.NotFoundTest {
 
   @Override
   protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
-    return BuilderUtils.cloudBuilderWithExecutionTimeoutDisabled();
+    return BuilderUtils.cloudBuilder();
   }
 }

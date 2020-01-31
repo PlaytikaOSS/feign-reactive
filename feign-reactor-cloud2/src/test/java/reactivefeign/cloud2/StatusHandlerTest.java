@@ -13,13 +13,8 @@
  */
 package reactivefeign.cloud2;
 
-import com.netflix.hystrix.exception.HystrixRuntimeException;
-import feign.FeignException;
-import feign.RetryableException;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.testcase.IcecreamServiceApi;
-
-import java.util.function.Predicate;
 
 /**
  * @author Sergii Karpenko
@@ -28,30 +23,7 @@ public class StatusHandlerTest extends reactivefeign.StatusHandlerTest {
 
   @Override
   protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
-    return BuilderUtils.cloudBuilderWithExecutionTimeoutDisabled();
+    return BuilderUtils.cloudBuilder();
   }
 
-  @Override
-  protected Predicate<Throwable> customException(){
-    return throwable -> throwable instanceof HystrixRuntimeException
-            && throwable.getCause() instanceof UnsupportedOperationException;
-  }
-
-  @Override
-  protected Predicate<Throwable> feignDefaultException(){
-    return throwable -> throwable instanceof HystrixRuntimeException
-            && throwable.getCause() instanceof FeignException;
-  }
-
-  @Override
-  protected Predicate<Throwable> customException1(){
-    return throwable -> throwable instanceof HystrixRuntimeException
-            && throwable.getCause() instanceof RetryableException;
-  }
-
-  @Override
-  protected Predicate<Throwable> customException2(){
-    return throwable -> throwable instanceof HystrixRuntimeException
-            && throwable.getCause() instanceof RuntimeException;
-  }
 }

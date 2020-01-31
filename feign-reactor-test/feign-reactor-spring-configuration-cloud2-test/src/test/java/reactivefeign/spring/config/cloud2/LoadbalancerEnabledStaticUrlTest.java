@@ -38,7 +38,7 @@ import reactor.test.StepVerifier;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
-import static reactivefeign.spring.config.cloud2.LoadBalancerEnabledHystrixDisabledUsingPropertiesTest.FEIGN_CLIENT_TEST_LB;
+import static reactivefeign.spring.config.cloud2.LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest.FEIGN_CLIENT_TEST_LB;
 
 /**
  * @author Sergii Karpenko
@@ -50,7 +50,7 @@ import static reactivefeign.spring.config.cloud2.LoadBalancerEnabledHystrixDisab
 @SpringBootTest(classes = LoadbalancerEnabledStaticUrlTest.TestStaticUrlConfiguration.class,
 		        webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @TestPropertySource(locations = {
-		"classpath:lb-enabled-hystrix-disabled.properties",
+		"classpath:lb-enabled-cb-disabled.properties",
 		"classpath:common.properties"
 })
 @DirtiesContext

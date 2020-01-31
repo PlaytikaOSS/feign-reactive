@@ -43,6 +43,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import reactivefeign.FallbackFactory;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReadTimeoutException;
 import reactivefeign.cloud.CloudReactiveFeign;
@@ -66,7 +67,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static reactivefeign.spring.config.AutoConfigurationTest.MOCK_SERVER_PORT_PROPERTY;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = SampleConfigurationsTest.Application.class, webEnvironment = WebEnvironment.NONE,
+@SpringBootTest(classes = SampleConfigurationsTest.TestConfiguration.class, webEnvironment = WebEnvironment.NONE,
 		properties = "ribbon.listOfServers=localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}")
 @DirtiesContext
 @TestPropertySource(locations = {
@@ -93,20 +94,10 @@ public class SampleConfigurationsTest {
 	private FallbackSampleClient fallbackSampleClient;
 
 	@Autowired
+	private FallbackFactorySampleClient fallbackFactorySampleClient;
+
+	@Autowired
 	private ErrorDecoderSampleClient errorDecoderSampleClient;
-
-
-	protected boolean isOutOfRetries(Throwable t) {
-		assertThat(t.getCause()).isInstanceOf(ClientException.class);
-		assertThat(t.getCause().getMessage()).contains("Number of retries exceeded");
-		return true;
-	}
-
-	protected boolean isOutOutOfRetries(Throwable t) {
-		assertThat(t.getCause()).isInstanceOf(ClientException.class);
-		assertThat(t.getCause().getMessage()).contains("Number of retries on next server exceeded");
-		return true;
-	}
 
 	//this test checks that default readTimeoutMillis is overridden for each client
 	// (one in via properties file and other via configuration class)
@@ -144,8 +135,29 @@ public class SampleConfigurationsTest {
 				.verifyComplete();
 
 		//wait for circuit breaker updated its status
-		Thread.sleep(5);
+		Thread.sleep(UPDATE_INTERVAL);
 		assertThat(HystrixCircuitBreaker.Factory.getInstance(asKey("FallbackSampleClient#sampleMethod()"))
+				.isOpen())
+				.isTrue();
+	}
+
+	@Test
+	public void shouldReturnFallbackFromFactoryAndOpenCircuitBreaker() throws InterruptedException {
+		mockHttpServer.stubFor(get(urlPathMatching("/sampleUrl"))
+				.willReturn(aResponse()
+						.withStatus(503)));
+
+		Mono<Object[]> results = Mono.zip(
+				IntStream.range(0, VOLUME_THRESHOLD + 1).mapToObj(i -> fallbackFactorySampleClient.sampleMethod()).collect(Collectors.toList()),
+				objects -> objects);
+
+		StepVerifier.create(results)
+				.expectNextMatches(objects -> Stream.of(objects).allMatch(FALLBACK_VALUE::equals))
+				.verifyComplete();
+
+		//wait for circuit breaker updated its status
+		Thread.sleep(UPDATE_INTERVAL);
+		assertThat(HystrixCircuitBreaker.Factory.getInstance(asKey("FallbackFactorySampleClient#sampleMethod()"))
 				.isOpen())
 				.isTrue();
 	}
@@ -173,7 +185,7 @@ public class SampleConfigurationsTest {
 
 		assertThat(mockHttpServer.getAllServeEvents().size()).isEqualTo(VOLUME_THRESHOLD + 1);
 		//wait for circuit breaker updated its status
-		Thread.sleep(5);
+		Thread.sleep(UPDATE_INTERVAL);
 		assertThat(HystrixCircuitBreaker.Factory.getInstance(asKey("ErrorDecoderSampleClient#sampleMethod()"))
 				.isOpen())
 				.isFalse();
@@ -201,7 +213,7 @@ public class SampleConfigurationsTest {
 		assertThat(results.get(results.size() - 1)).isInstanceOf(HystrixRuntimeException.class);
 
 		//wait for circuit breaker updated its status
-		Thread.sleep(5);
+		Thread.sleep(UPDATE_INTERVAL);
 		assertThat(HystrixCircuitBreaker.Factory.getInstance(asKey("ErrorDecoderSampleClient#sampleMethod()"))
 				.isOpen())
 				.isTrue();
@@ -230,6 +242,21 @@ public class SampleConfigurationsTest {
 		Mono<String> sampleMethod();
 	}
 
+	@ReactiveFeignClient(name = "rfgn-fallback-factory",
+			fallbackFactory = TestFallbackFactory.class)
+	protected interface FallbackFactorySampleClient {
+		@RequestMapping(method = RequestMethod.GET, value = "/sampleUrl")
+		Mono<String> sampleMethod();
+	}
+
+	private static class TestFallbackFactory implements FallbackFactory<FallbackFactorySampleClient>{
+
+		@Override
+		public FallbackFactorySampleClient apply(Throwable throwable) {
+			return () -> Mono.just(FALLBACK_VALUE);
+		}
+	}
+
 	@ReactiveFeignClient(name = "rfgn-errordecoder")
 	protected interface ErrorDecoderSampleClient {
 		@RequestMapping(method = RequestMethod.GET, value = "/sampleUrl")
@@ -242,8 +269,9 @@ public class SampleConfigurationsTest {
 			clients = {PropertiesSampleClient.class,
 					ConfigsSampleClient.class,
 					FallbackSampleClient.class,
+					FallbackFactorySampleClient.class,
 					ErrorDecoderSampleClient.class})
-	protected static class Application {
+	protected static class TestConfiguration {
 	}
 
 	@Configuration

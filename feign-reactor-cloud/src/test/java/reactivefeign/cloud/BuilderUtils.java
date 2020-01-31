@@ -34,21 +34,20 @@ public class BuilderUtils {
 
     static <T> CloudReactiveFeign.Builder<T> cloudBuilderWithUniqueHystrixCommand(
             HystrixCommandProperties.Setter commandPropertiesDefaults,
-            AtomicReference<HystrixCommandKey> lastCommandKey) {
+            AtomicReference<String> lastCommandKey) {
         int uniqueId = uniqueHystrixCommandCounter.incrementAndGet();
         return CloudReactiveFeign.<T>builder(WebReactiveFeign.builder())
                 .setHystrixCommandSetterFactory(
                         (target, methodMetadata) -> {
                             HystrixCommandGroupKey groupKey = HystrixCommandGroupKey.Factory.asKey(
                                     target.name() +"."+ uniqueId);
-                            HystrixCommandKey commandKey = HystrixCommandKey.Factory.asKey(
-                                    methodMetadata.configKey() +"."+ uniqueId);
+                            String circuitBreakerId = methodMetadata.configKey() + "." + uniqueId;
                             if(lastCommandKey != null) {
-                                lastCommandKey.set(commandKey);
+                                lastCommandKey.set(circuitBreakerId);
                             }
                             return HystrixObservableCommand.Setter
                                     .withGroupKey(groupKey)
-                                    .andCommandKey(commandKey)
+                                    .andCommandKey(HystrixCommandKey.Factory.asKey(circuitBreakerId))
                                     .andCommandPropertiesDefaults(commandPropertiesDefaults);
                         }
                 );

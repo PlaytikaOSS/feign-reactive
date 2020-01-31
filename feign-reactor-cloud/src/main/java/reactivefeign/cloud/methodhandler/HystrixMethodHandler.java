@@ -4,7 +4,6 @@ import com.netflix.hystrix.HystrixObservableCommand;
 import feign.MethodMetadata;
 import feign.Target;
 import org.reactivestreams.Publisher;
-import org.springframework.lang.Nullable;
 import reactivefeign.cloud.CloudReactiveFeign;
 import reactivefeign.methodhandler.MethodHandler;
 import reactor.core.publisher.Flux;
@@ -36,7 +35,7 @@ public class HystrixMethodHandler implements MethodHandler {
             Target target, MethodMetadata methodMetadata,
             MethodHandler methodHandler,
             CloudReactiveFeign.SetterFactory setterFactory,
-            @Nullable Function<Throwable, Object> fallbackFactory) {
+            Function<Throwable, Object> fallbackFactory) {
         checkNotNull(target, "target must be not null");
 
         checkNotNull(methodMetadata, "methodMetadata must be not null");
