@@ -60,17 +60,22 @@ public class AllFeaturesTest extends reactivefeign.allfeatures.AllFeaturesTest {
 	}
 
 	static void setupServersList(String serviceName, int... ports) {
-		DefaultClientConfigImpl clientConfig = new DefaultClientConfigImpl();
-		clientConfig.loadDefaultValues();
-		clientConfig.setProperty(CommonClientConfigKey.NFLoadBalancerClassName, BaseLoadBalancer.class.getName());
+		ILoadBalancer lb;
 		try {
-			ILoadBalancer lb = ClientFactory.registerNamedLoadBalancerFromclientConfig(serviceName, clientConfig);
-			lb.addServers(IntStream.of(ports).mapToObj(port -> new Server("localhost", port))
-					.collect(Collectors.toList()));
-
+			DefaultClientConfigImpl clientConfig = new DefaultClientConfigImpl();
+			clientConfig.loadDefaultValues();
+			clientConfig.setProperty(CommonClientConfigKey.NFLoadBalancerClassName, BaseLoadBalancer.class.getName());
+			lb = ClientFactory.registerNamedLoadBalancerFromclientConfig(serviceName, clientConfig);
 		} catch (ClientException e) {
-			throw new RuntimeException(e);
+			if(e.getErrorMessage().contains("LoadBalancer for name RequestInterceptorTest already exists")){
+				lb = ClientFactory.getNamedLoadBalancer(serviceName);
+			} else {
+				throw new RuntimeException(e);
+			}
 		}
+
+		lb.addServers(IntStream.of(ports).mapToObj(port -> new Server("localhost", port))
+				.collect(Collectors.toList()));
 	}
 
 	@Override

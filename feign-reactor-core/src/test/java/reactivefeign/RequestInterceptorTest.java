@@ -16,8 +16,6 @@ package reactivefeign;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import feign.FeignException;
-import org.apache.http.HttpStatus;
 import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
@@ -27,8 +25,6 @@ import reactivefeign.utils.Pair;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import reactor.util.context.Context;
-
-import java.util.function.Predicate;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static java.util.Collections.singletonList;
@@ -51,6 +47,11 @@ abstract public class RequestInterceptorTest {
     return WireMockConfiguration.wireMockConfig();
   }
 
+  protected IcecreamServiceApi target(ReactiveFeignBuilder<IcecreamServiceApi> builder){
+    return builder.target(IcecreamServiceApi.class,
+            "http://localhost:" + wireMockRule.port());
+  }
+
   @Test
   public void shouldInterceptRequestAndSetAuthHeader() throws JsonProcessingException {
 
@@ -61,33 +62,18 @@ abstract public class RequestInterceptorTest {
 
     wireMockRule.stubFor(get(urlEqualTo(orderUrl))
             .withHeader("Accept", equalTo("application/json"))
-            .willReturn(aResponse().withStatus(HttpStatus.SC_UNAUTHORIZED)))
-            .setPriority(100);
-
-    wireMockRule.stubFor(get(urlEqualTo(orderUrl))
-            .withHeader("Accept", equalTo("application/json"))
             .withHeader("Authorization", equalTo("Bearer mytoken123"))
             .willReturn(aResponse().withStatus(200)
                     .withHeader("Content-Type", "application/json")
                     .withBody(orderStr)))
             .setPriority(1);
 
-    IcecreamServiceApi clientWithoutAuth = builder()
-            .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
-
-    StepVerifier.create(clientWithoutAuth.findFirstOrder())
-            .expectErrorMatches(notAuthorizedException())
-            .verify();
-
-    IcecreamServiceApi clientWithAuth = builder()
-            .addRequestInterceptor(addHeaders(singletonList(new Pair<>("Authorization", "Bearer mytoken123"))))
-            .target(IcecreamServiceApi.class,
-                    "http://localhost:" + wireMockRule.port());
+    IcecreamServiceApi clientWithAuth = target(builder()
+            .addRequestInterceptor(addHeaders(singletonList(new Pair<>("Authorization", "Bearer mytoken123")))));
 
     StepVerifier.create(clientWithAuth.findFirstOrder())
             .expectNextMatches(equalsComparingFieldByFieldRecursively(orderGenerated))
             .verifyComplete();
-
   }
 
   @Test
@@ -100,34 +86,20 @@ abstract public class RequestInterceptorTest {
 
     wireMockRule.stubFor(get(urlEqualTo(orderUrl))
             .withHeader("Accept", equalTo("application/json"))
-            .willReturn(aResponse().withStatus(HttpStatus.SC_UNAUTHORIZED)))
-            .setPriority(100);
-
-    wireMockRule.stubFor(get(urlEqualTo(orderUrl))
-            .withHeader("Accept", equalTo("application/json"))
             .withHeader("Authorization", equalTo("Bearer mytoken123"))
             .willReturn(aResponse().withStatus(200)
                     .withHeader("Content-Type", "application/json")
                     .withBody(orderStr)))
             .setPriority(1);
 
-    IcecreamServiceApi clientWithoutAuth = builder()
-            .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
-
-    StepVerifier.create(clientWithoutAuth.findFirstOrder())
-            .expectErrorMatches(notAuthorizedException())
-            .verify();
-
     String authHeader = "Authorization";
-    IcecreamServiceApi clientWithAuth = builder()
+    IcecreamServiceApi clientWithAuth = target(builder()
             .addRequestInterceptor(request -> Mono
                     .subscriberContext()
                     .map(ctx -> {
                       addOrdered(request.headers(), authHeader, ctx.get(authHeader));
                       return request;
-                    }))
-            .target(IcecreamServiceApi.class,
-                    "http://localhost:" + wireMockRule.port());
+                    })));
 
     Mono<IceCreamOrder> firstOrder = clientWithAuth.findFirstOrder()
             .subscriberContext(Context.of(authHeader, "Bearer mytoken123"));
@@ -136,9 +108,5 @@ abstract public class RequestInterceptorTest {
             .expectNextMatches(equalsComparingFieldByFieldRecursively(orderGenerated))
             .verifyComplete();
 
-  }
-
-  protected Predicate<Throwable> notAuthorizedException() {
-    return throwable -> throwable instanceof FeignException;
   }
 }

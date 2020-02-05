@@ -14,10 +14,7 @@
 package reactivefeign.jetty.h1;
 
 import reactivefeign.ReactiveFeign;
-import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
-
-import java.util.function.Predicate;
 
 import static reactivefeign.jetty.h1.TestUtils.builderHttp;
 
@@ -31,8 +28,4 @@ public class RequestInterceptorTest extends reactivefeign.RequestInterceptorTest
     return builderHttp();
   }
 
-  @Override
-  protected Predicate<Throwable> notAuthorizedException() {
-    return throwable -> throwable instanceof org.eclipse.jetty.client.HttpResponseException;
-  }
 }

@@ -19,6 +19,7 @@ import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 import static feign.Util.checkNotNull;
+import static reactivefeign.cloud.SubscriberContextUtils.withContext;
 import static reactivefeign.utils.FeignUtils.findMethodInTarget;
 
 /**
@@ -79,7 +80,7 @@ public class HystrixMethodHandler implements MethodHandler {
             protected Observable<Object> construct() {
                 try {
                     Publisher publisher = (Publisher) methodHandler.invoke(argv);
-                    return RxReactiveStreams.toObservable(withContext(publisher));
+                    return RxReactiveStreams.toObservable(withContext(publisher, returnPublisherType, context));
                 } catch (Throwable throwable) {
                     return Observable.error(throwable);
                 }
@@ -91,7 +92,7 @@ public class HystrixMethodHandler implements MethodHandler {
                     Object fallback = fallbackFactory.apply(getExecutionException());
                     try {
                         Publisher fallbackValue = ((Publisher) getFallbackValue(fallback, method, argv));
-                        return RxReactiveStreams.toObservable(withContext(fallbackValue));
+                        return RxReactiveStreams.toObservable(withContext(fallbackValue, returnPublisherType, context));
                     } catch (Throwable throwable) {
                         return Observable.error(throwable);
                     }
@@ -100,13 +101,7 @@ public class HystrixMethodHandler implements MethodHandler {
                 }
             }
 
-            private <T extends Publisher> T withContext(T publisher) {
-                if (returnPublisherType == Mono.class) {
-                    return (T) ((Mono) publisher).subscriberContext(context);
-                } else {
-                    return (T) ((Flux) publisher).subscriberContext(context);
-                }
-            }
         }.toObservable();
     }
+
 }

@@ -13,17 +13,42 @@
  */
 package reactivefeign.cloud2;
 
+import org.junit.Before;
+import org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JCircuitBreakerFactory;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.testcase.IcecreamServiceApi;
+
+import static reactivefeign.cloud2.LoadBalancingReactiveHttpClientTest.loadBalancerFactory;
 
 /**
  * @author Sergii Karpenko
  */
 public class RequestInterceptorTest extends reactivefeign.RequestInterceptorTest {
 
-  @Override
-  protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
-      return BuilderUtils.cloudBuilder();
-  }
+    protected static String serviceName = "RequestInterceptorTest";
+
+    private ReactiveResilience4JCircuitBreakerFactory circuitBreakerFactory
+            = new ReactiveResilience4JCircuitBreakerFactory();
+
+    private ReactiveLoadBalancer.Factory<ServiceInstance> lbFactory;
+
+    @Before
+    public void setupServersList() {
+        lbFactory = loadBalancerFactory(serviceName, wireMockRule.port());
+    }
+
+    @Override
+    protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
+        return reactivefeign.cloud2.BuilderUtils.<IcecreamServiceApi>
+                cloudBuilderWithExecutionTimeoutDisabled(circuitBreakerFactory, null)
+                .enableLoadBalancer(lbFactory);
+    }
+
+    @Override
+    protected IcecreamServiceApi target(ReactiveFeignBuilder<IcecreamServiceApi> builder){
+        return builder.target(IcecreamServiceApi.class, serviceName, "http://" + serviceName);
+    }
 
 }

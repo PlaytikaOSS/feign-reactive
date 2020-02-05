@@ -13,38 +13,33 @@
  */
 package reactivefeign.cloud;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.netflix.hystrix.exception.HystrixRuntimeException;
-import feign.FeignException;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.Before;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.testcase.IcecreamServiceApi;
 
-import java.util.function.Predicate;
-
-import static reactivefeign.cloud.BuilderUtils.cloudBuilderWithExecutionTimeoutDisabled;
+import static reactivefeign.cloud.AllFeaturesTest.setupServersList;
+import static reactivefeign.cloud.BuilderUtils.TEST_CLIENT_FACTORY;
 
 /**
  * @author Sergii Karpenko
  */
 public class RequestInterceptorTest extends reactivefeign.RequestInterceptorTest {
 
-  @Override
-  protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
-      return cloudBuilderWithExecutionTimeoutDisabled();
-  }
+    protected static String serviceName = "RequestInterceptorTest";
 
-  @Override
-  protected Predicate<Throwable> notAuthorizedException() {
-    return throwable -> throwable instanceof HystrixRuntimeException
-            && throwable.getCause() instanceof FeignException;
-  }
+    @Before
+    public void setUpServersList() {
+        setupServersList(serviceName, wireMockRule.port());
+    }
 
-  //TODO pass subscriberContext through hystrix and ribbon
-  @Ignore
-  @Test
-  public void shouldInterceptRequestAndSetAuthHeaderFromSubscriberContext() {
+    @Override
+    protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
+        return BuilderUtils.<IcecreamServiceApi>cloudBuilderWithExecutionTimeoutDisabled()
+                .enableLoadBalancer(TEST_CLIENT_FACTORY);
+    }
 
-  }
+    @Override
+    protected IcecreamServiceApi target(ReactiveFeignBuilder<IcecreamServiceApi> builder){
+        return builder.target(IcecreamServiceApi.class, serviceName, "http://" + serviceName);
+    }
 }

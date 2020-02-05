@@ -37,8 +37,4 @@ public class RequestInterceptorTest extends reactivefeign.RequestInterceptorTest
     return builderHttp2();
   }
 
-  @Override
-  protected Predicate<Throwable> notAuthorizedException() {
-    return throwable -> throwable instanceof org.eclipse.jetty.client.HttpResponseException;
-  }
 }
