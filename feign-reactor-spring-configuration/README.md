@@ -20,12 +20,14 @@ See example in [sample project](https://github.com/kptfh/feign-reactive-sample/b
 
 In cloudless mode you need to specify `url` attribute.
 
+# Cloud (Hystrix + Ribbon)
+
 To configure you feign client as cloud ready (Hystrix + Ribbon) you need to add 
 `feign-reactor-cloud` module to your classpath.
 
 This may be useful in case of tests:
 - set `reactive.feign.cloud.enabled` to `false` to disable cloud configuration for all clients
-- set `reactive.feign.loadbalancer.enabled` to `false` to disable loadbalancer configuration for all clients 
+- set `reactive.feign.ribbon.enabled` to `false` to disable loadbalancer configuration for all clients 
 - set `reactive.feign.hystrix.enabled` to `false` to disable hystrix configuration for all clients 
 - set `reactive.feign.logger.enabled` to `true` to enable default logger
 - set `reactive.feign.metrics.enabled` to `true` to enable default Micrometer logger. 
@@ -77,4 +79,35 @@ Here is the list of bean classes that will be used by reactive feign client if t
 - If you need to override default hystrix timeout the only way to do it is to specify it 
 in `CloudReactiveFeign.SetterFactory` bean in client configuration. `HystrixObservableCommand` has `SEMAPHORE` as default isolation strategy.
 And Spring does not provide ability to configure execution timeout for this strategy via properties.  
+     
+# Cloud2 (CircuitBreaker + LoadBalancer)
+
+In Spring Cloud  2.2.0 more generic abstraction vere introduced for cloud environment. 
+`CircuitBreaker` is the replacement of `Hystrix` (now is one of implementations)
+`LoadBalancer` is use instead of `Ribbon`
+
+So below are the differences with old `cloud` module.
+
+To configure you feign client as cloud ready (CircuitBreaker + LoadBalancer) you need to add 
+`feign-reactor-cloud2` module to your classpath and exclude `feign-reactor-cloud`.
+
+This may be useful in case of tests:
+- set `reactive.feign.loadbalancer.enabled` to `false` to disable loadbalancer configuration for all clients 
+- set `reactive.feign.circuit.breaker.enabled` to `false` to disable hystrix configuration for all clients 
+
+## application.properties configuration
+
+As for now `LoadBalance` doesnt have it's retry configuration so here is the list of new properties:
+- `retryOnSame` : configure number of retries for the same server (check `ReactiveFeignClientProperties.RetryConfiguration` for details) 
+- `retryOnNext` : configure number of retries for the next server (check `ReactiveFeignClientProperties.RetryConfiguration` for details)
+
+## Configuration via configuration class
+
+To configure `LoadBalancer` define your own `ReactiveLoadBalancer.Factory` bean in feign client configuration.
+
+To configure `CircuitBreaker` you may use `ReactiveFeignCircuitBreakerFactory` bean 
+or `ReactiveCircuitBreakerFactory` with `ReactiveFeignCircuitBreakerCustomizer` bean defined in feign client configuration.
+
+Note: It's highly recommended to switch to `cloud2` module as we'll stop support of `cloud` module in some time.
+There is an option to switch to `cloud2` with well known Ribbon and Hystrix implementations.   
      
