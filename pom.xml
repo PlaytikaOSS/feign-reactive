@@ -93,7 +93,7 @@
             <dependency>
                 <groupId>org.springframework</groupId>
                 <artifactId>spring-web</artifactId>
-                <version>5.2.3.RELEASE</version>
+                <version>5.2.4.RELEASE</version>
             </dependency>
 
             <!--TODO temporarily while not included in spring-boot-dependencies-->
