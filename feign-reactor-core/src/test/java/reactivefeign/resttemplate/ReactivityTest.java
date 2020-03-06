@@ -19,6 +19,8 @@ import org.junit.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 public class ReactivityTest extends reactivefeign.ReactivityTest {
 
@@ -31,5 +33,12 @@ public class ReactivityTest extends reactivefeign.ReactivityTest {
   @Override
   public void shouldRunReactively() throws JsonProcessingException {
     super.shouldRunReactively();
+  }
+
+  //to not detect blocking calls
+  private Scheduler scheduler = Schedulers.newBoundedElastic(4, CALLS_NUMBER, "test");
+  @Override
+  protected Scheduler testScheduler(){
+    return scheduler;
   }
 }

@@ -18,6 +18,8 @@ import reactivefeign.ReactiveFeign;
 import reactivefeign.client.ReactiveFeignException;
 import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 import java.util.function.Predicate;
 
@@ -34,5 +36,11 @@ public class SmokeTest extends reactivefeign.SmokeTest {
   protected Predicate<Throwable> corruptedJsonError() {
     return throwable -> throwable instanceof ReactiveFeignException
             && throwable.getCause().getCause() instanceof HttpMessageNotReadableException;
+  }
+
+  //to not detect blocking calls
+  @Override
+  protected Scheduler testScheduler(){
+    return Schedulers.elastic();
   }
 }

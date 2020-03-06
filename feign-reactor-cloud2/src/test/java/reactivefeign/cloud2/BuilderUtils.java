@@ -29,7 +29,7 @@ public class BuilderUtils {
             AtomicReference<String> lastCircuitBreakerKey) {
         return cloudBuilderWithUniqueCircuitBreaker(circuitBreakerFactory,
                 configBuilder -> ((Resilience4JConfigBuilder)configBuilder).timeLimiterConfig(
-                        TimeLimiterConfig.custom().timeoutDuration(Duration.ofMillis(Long.MAX_VALUE)).build()),
+                        TimeLimiterConfig.custom().timeoutDuration(Duration.ofMinutes(10)).build()),
                 lastCircuitBreakerKey);
     }
 

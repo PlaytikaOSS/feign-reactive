@@ -21,6 +21,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.lang.reflect.InvocationTargetException;
@@ -30,7 +31,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 /**
  * @author Sergii Karpenko
  */
-public abstract class FallbackTest {
+public abstract class FallbackTest extends BaseReactorTest {
 
   public static final String fallbackValue = "fallback";
   public static final TestInterface FALLBACK = new TestInterface() {
@@ -71,11 +72,11 @@ public abstract class FallbackTest {
             .fallback(FALLBACK)
             .target(TestInterface.class, "http://localhost:" + wireMockRule.port());
 
-    StepVerifier.create(client.getMono())
+    StepVerifier.create(client.getMono().subscribeOn(testScheduler()))
             .expectNext(fallbackValue)
             .verifyComplete();
 
-    StepVerifier.create(client.getFlux())
+    StepVerifier.create(client.getFlux().subscribeOn(testScheduler()))
             .expectNext(1)
             .expectNext(2)
             .expectNext(3)
@@ -100,7 +101,7 @@ public abstract class FallbackTest {
             })
             .target(TestInterface.class, "http://localhost:" + wireMockRule.port());
 
-    StepVerifier.create(client.getMono())
+    StepVerifier.create(client.getMono().subscribeOn(testScheduler()))
             .expectErrorMatches(throwable -> throwable instanceof InvocationTargetException)
             .verify();
   }

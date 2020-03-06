@@ -15,6 +15,8 @@ package reactivefeign.resttemplate;
 
 import reactivefeign.ReactiveFeign;
 import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * @author Sergii Karpenko
@@ -24,5 +26,11 @@ public class FallbackTest extends reactivefeign.FallbackTest {
   @Override
   protected ReactiveFeign.Builder<TestInterface> builder() {
     return RestTemplateFakeReactiveFeign.builder();
+  }
+
+  //to not detect blocking calls
+  @Override
+  protected Scheduler testScheduler(){
+    return Schedulers.elastic();
   }
 }

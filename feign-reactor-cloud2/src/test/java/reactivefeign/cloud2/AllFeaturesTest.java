@@ -28,6 +28,7 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.circuitbreaker.NoFallbackAvailableException;
 import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer;
+import org.springframework.test.context.ActiveProfiles;
 import reactivefeign.allfeatures.AllFeaturesApi;
 import reactivefeign.allfeatures.AllFeaturesController;
 import reactivefeign.allfeatures.AllFeaturesFeign;
@@ -42,6 +43,7 @@ import reactivefeign.allfeatures.AllFeaturesFeign;
 		classes = {AllFeaturesController.class, reactivefeign.allfeatures.AllFeaturesTest.TestConfiguration.class },
 		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
+@ActiveProfiles("netty")
 public class AllFeaturesTest extends reactivefeign.allfeatures.AllFeaturesTest {
 
 	private static final String serviceName = "testServiceName";

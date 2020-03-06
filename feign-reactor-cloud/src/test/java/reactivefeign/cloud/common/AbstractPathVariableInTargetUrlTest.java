@@ -6,6 +6,7 @@ import feign.RequestLine;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
+import reactivefeign.BaseReactorTest;
 import reactivefeign.ReactiveFeignBuilder;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -13,7 +14,7 @@ import reactor.test.StepVerifier;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 
-abstract public class AbstractPathVariableInTargetUrlTest {
+abstract public class AbstractPathVariableInTargetUrlTest extends BaseReactorTest {
 
     @ClassRule
     public static WireMockClassRule server1 = new WireMockClassRule(wireMockConfig().dynamicPort());
@@ -36,7 +37,7 @@ abstract public class AbstractPathVariableInTargetUrlTest {
         TestMonoInterface client = this.<TestMonoInterface>cloudBuilderWithLoadBalancerEnabled()
                 .target(TestMonoInterface.class, serviceName, "http://"+serviceName+"/mono/{id}");
 
-        StepVerifier.create(client.getMono(1))
+        StepVerifier.create(client.getMono(1).subscribeOn(testScheduler()))
                 .expectNext(body)
                 .verifyComplete();
     }

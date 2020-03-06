@@ -13,19 +13,12 @@
  */
 package reactivefeign.java11.h2c;
 
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 import static reactivefeign.java11.h2c.TestUtils.builderHttp2;
-import static reactivefeign.wiremock.WireMockServerConfigurations.h2cConfig;
 
 public class ReactivityTest extends reactivefeign.ReactivityTest {
-
-  @Override
-  protected WireMockConfiguration wireMockConfig(){
-    return h2cConfig(true, CALLS_NUMBER);
-  }
 
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {

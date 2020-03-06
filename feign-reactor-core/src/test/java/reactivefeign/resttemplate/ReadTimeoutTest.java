@@ -17,6 +17,8 @@ import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
 import reactivefeign.resttemplate.client.RestTemplateReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * @author Sergii Karpenko
@@ -28,5 +30,11 @@ public class ReadTimeoutTest extends reactivefeign.ReadTimeoutTest {
     return RestTemplateFakeReactiveFeign.<IcecreamServiceApi>builder().options(
             new RestTemplateReactiveOptions.Builder().setReadTimeoutMillis(readTimeoutInMillis).build()
     );
+  }
+
+  //to not detect blocking calls
+  @Override
+  protected Scheduler testScheduler(){
+    return Schedulers.elastic();
   }
 }

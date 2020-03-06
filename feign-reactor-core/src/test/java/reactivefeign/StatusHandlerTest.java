@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.nio.charset.Charset;
@@ -37,7 +38,7 @@ import static reactivefeign.utils.FeignUtils.httpMethod;
 /**
  * @author Sergii Karpenko
  */
-public abstract class StatusHandlerTest {
+public abstract class StatusHandlerTest extends BaseReactorTest {
 
   @Rule
   public WireMockClassRule wireMockRule = new WireMockClassRule(
@@ -68,7 +69,7 @@ public abstract class StatusHandlerTest {
         .withHeader("Accept", equalTo("application/json"))
         .willReturn(aResponse().withStatus(HttpStatus.SC_SERVICE_UNAVAILABLE)));
 
-    StepVerifier.create(client.findFirstOrder())
+    StepVerifier.create(client.findFirstOrder().subscribeOn(testScheduler()))
         .expectErrorMatches(customException())
         .verify();
 
@@ -95,7 +96,7 @@ public abstract class StatusHandlerTest {
     wireMockRule.stubFor(get(urlEqualTo("/icecream/mixins"))
             .willReturn(aResponse().withStatus(HttpStatus.SC_SERVICE_UNAVAILABLE)));
 
-    StepVerifier.create(client.getAvailableMixins())
+    StepVerifier.create(client.getAvailableMixins().subscribeOn(testScheduler()))
             .expectErrorMatches(customException())
             .verify();
 
@@ -145,7 +146,7 @@ public abstract class StatusHandlerTest {
                 (methodTag, response) -> new RuntimeException("Should login", null))))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
-    StepVerifier.create(client.findFirstOrder())
+    StepVerifier.create(client.findFirstOrder().subscribeOn(testScheduler()))
         .expectErrorMatches(customException1())
         .verify();
 

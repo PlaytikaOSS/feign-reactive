@@ -23,6 +23,7 @@ import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.OrderGenerator;
 import reactivefeign.utils.Pair;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 import reactor.util.context.Context;
 
@@ -35,7 +36,7 @@ import static reactivefeign.utils.MultiValueMapUtils.addOrdered;
 /**
  * @author Sergii Karpenko
  */
-abstract public class RequestInterceptorTest {
+abstract public class RequestInterceptorTest extends BaseReactorTest {
 
   @Rule
   public WireMockClassRule wireMockRule = new WireMockClassRule(
@@ -71,7 +72,7 @@ abstract public class RequestInterceptorTest {
     IcecreamServiceApi clientWithAuth = target(builder()
             .addRequestInterceptor(addHeaders(singletonList(new Pair<>("Authorization", "Bearer mytoken123")))));
 
-    StepVerifier.create(clientWithAuth.findFirstOrder())
+    StepVerifier.create(clientWithAuth.findFirstOrder().subscribeOn(testScheduler()))
             .expectNextMatches(equalsComparingFieldByFieldRecursively(orderGenerated))
             .verifyComplete();
   }
@@ -102,7 +103,8 @@ abstract public class RequestInterceptorTest {
                     })));
 
     Mono<IceCreamOrder> firstOrder = clientWithAuth.findFirstOrder()
-            .subscriberContext(Context.of(authHeader, "Bearer mytoken123"));
+            .subscriberContext(Context.of(authHeader, "Bearer mytoken123"))
+            .subscribeOn(testScheduler());
 
     StepVerifier.create(firstOrder)
             .expectNextMatches(equalsComparingFieldByFieldRecursively(orderGenerated))

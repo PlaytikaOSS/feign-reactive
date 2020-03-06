@@ -18,11 +18,13 @@ import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
 import reactivefeign.resttemplate.client.RestTemplateReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * @author Sergii Karpenko
  */
-public class LoggerTest extends reactivefeign.LoggerTest {
+public class LoggerTest extends reactivefeign.LoggerTest<LoggerTest.IcecreamServiceApiRestTemplate> {
 
   @Override
   protected String appenderPrefix(){
@@ -30,15 +32,27 @@ public class LoggerTest extends reactivefeign.LoggerTest {
   }
 
   @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
+  protected ReactiveFeign.Builder<IcecreamServiceApiRestTemplate> builder() {
     return RestTemplateFakeReactiveFeign.builder();
   }
 
   @Override
-  protected ReactiveFeignBuilder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
-    return RestTemplateFakeReactiveFeign.<IcecreamServiceApi>builder().options(
+  protected ReactiveFeignBuilder<IcecreamServiceApiRestTemplate> builder(long readTimeoutInMillis) {
+    return RestTemplateFakeReactiveFeign.<IcecreamServiceApiRestTemplate>builder().options(
             new RestTemplateReactiveOptions.Builder().setReadTimeoutMillis(readTimeoutInMillis).build()
     );
   }
 
+  @Override
+  protected Class<IcecreamServiceApiRestTemplate> target(){
+    return IcecreamServiceApiRestTemplate.class;
+  }
+
+  interface IcecreamServiceApiRestTemplate extends IcecreamServiceApi{}
+
+  //to not detect blocking calls
+  @Override
+  protected Scheduler testScheduler(){
+    return Schedulers.elastic();
+  }
 }

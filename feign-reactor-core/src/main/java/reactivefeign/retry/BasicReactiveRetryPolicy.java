@@ -14,6 +14,8 @@
 package reactivefeign.retry;
 
 import feign.RetryableException;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.Clock;
 import java.util.Date;
@@ -27,7 +29,8 @@ public class BasicReactiveRetryPolicy extends SimpleReactiveRetryPolicy{
   private final long periodInMs;
   private final Clock clock;
 
-  private BasicReactiveRetryPolicy(int maxRetries, long periodInMs, Clock clock){
+  private BasicReactiveRetryPolicy(int maxRetries, long periodInMs, Clock clock, Scheduler scheduler){
+    super(scheduler);
     this.maxRetries = maxRetries;
     this.periodInMs = periodInMs;
     this.clock = clock;
@@ -39,6 +42,10 @@ public class BasicReactiveRetryPolicy extends SimpleReactiveRetryPolicy{
 
   public static SimpleReactiveRetryPolicy retryWithBackoff(int maxRetries, long periodInMs) {
     return new BasicReactiveRetryPolicy.Builder().setMaxRetries(maxRetries).setBackoffInMs(periodInMs).build();
+  }
+
+  public static SimpleReactiveRetryPolicy retryWithBackoff(int maxRetries, long periodInMs, Scheduler scheduler) {
+    return new Builder().setMaxRetries(maxRetries).setBackoffInMs(periodInMs).setScheduler(scheduler).build();
   }
 
   @Override
@@ -69,6 +76,7 @@ public class BasicReactiveRetryPolicy extends SimpleReactiveRetryPolicy{
   public static class Builder implements ReactiveRetryPolicy.Builder{
     private int maxRetries;
     private long backoffInMs = 0;
+    private Scheduler scheduler = Schedulers.parallel();
     private Clock clock = Clock.systemUTC();
 
     public Builder setMaxRetries(int maxRetries) {
@@ -86,8 +94,13 @@ public class BasicReactiveRetryPolicy extends SimpleReactiveRetryPolicy{
       return this;
     }
 
+    Builder setScheduler(Scheduler scheduler) {
+      this.scheduler = scheduler;
+      return this;
+    }
+
     public BasicReactiveRetryPolicy build(){
-      return new BasicReactiveRetryPolicy(maxRetries, backoffInMs, clock);
+      return new BasicReactiveRetryPolicy(maxRetries, backoffInMs, clock, scheduler);
     }
   }
 }

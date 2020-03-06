@@ -25,6 +25,7 @@ import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.Mixin;
 import reactivefeign.testcase.domain.OrderGenerator;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.util.stream.Stream;
@@ -35,7 +36,7 @@ import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
 /**
  * @author Sergii Karpenko
  */
-abstract public class DefaultMethodTest {
+abstract public class DefaultMethodTest extends BaseReactorTest {
 
   @Rule
   public WireMockClassRule wireMockRule = new WireMockClassRule(
@@ -69,7 +70,7 @@ abstract public class DefaultMethodTest {
     IcecreamServiceApi client = builder()
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
-    StepVerifier.create(client.findFirstOrder())
+    StepVerifier.create(client.findFirstOrder().subscribeOn(testScheduler()))
         .expectNextMatches(equalsComparingFieldByFieldRecursively(orderGenerated))
         .verifyComplete();
   }

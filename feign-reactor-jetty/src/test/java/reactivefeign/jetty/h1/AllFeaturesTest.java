@@ -24,6 +24,9 @@ import reactivefeign.ReactiveFeign;
 import reactivefeign.allfeatures.AllFeaturesFeign;
 import reactivefeign.allfeatures.AllFeaturesFeignTest;
 import reactivefeign.jetty.JettyReactiveFeign;
+import reactivefeign.jetty.JettyReactiveOptions;
+
+import static reactivefeign.ReactivityTest.timeToCompleteReactively;
 
 /**
  * @author Sergii Karpenko
@@ -36,6 +39,8 @@ public class AllFeaturesTest extends AllFeaturesFeignTest {
 
 	@Override
 	protected ReactiveFeign.Builder<AllFeaturesFeign> builder() {
-		return JettyReactiveFeign.builder();
+		return JettyReactiveFeign.<AllFeaturesFeign>builder()
+				.options(new JettyReactiveOptions.Builder()
+				.setRequestTimeoutMillis(timeToCompleteReactively()).build());
 	}
 }

@@ -10,6 +10,7 @@ import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import reactivefeign.BaseReactorTest;
 import reactivefeign.ReactiveFeignBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -26,7 +27,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * @author Sergii Karpenko
  */
-abstract public class AbstractLoadBalancingReactiveHttpClientTest {
+abstract public class AbstractLoadBalancingReactiveHttpClientTest extends BaseReactorTest {
 
     public static final String MONO_URL = "/mono";
     public static final String FLUX_URL = "/flux";
@@ -61,8 +62,8 @@ abstract public class AbstractLoadBalancingReactiveHttpClientTest {
         TestMonoInterface client = this.<TestMonoInterface>cloudBuilderWithLoadBalancerEnabled()
                 .target(TestMonoInterface.class, serviceName, "http://" + serviceName);
 
-        String result1 = client.getMono().block();
-        String result2 = client.getMono().block();
+        String result1 = client.getMono().subscribeOn(testScheduler()).block();
+        String result2 = client.getMono().subscribeOn(testScheduler()).block();
 
         assertThat(result1)
                 .isEqualTo(result2)
@@ -81,8 +82,8 @@ abstract public class AbstractLoadBalancingReactiveHttpClientTest {
         TestFluxInterface client = this.<TestFluxInterface>cloudBuilderWithLoadBalancerEnabled()
                 .target(TestFluxInterface.class, serviceName, "http://" + serviceName);
 
-        List<Integer> result1 = client.getFlux().collectList().block();
-        List<Integer> result2 = client.getFlux().collectList().block();
+        List<Integer> result1 = client.getFlux().collectList().subscribeOn(testScheduler()).block();
+        List<Integer> result2 = client.getFlux().collectList().subscribeOn(testScheduler()).block();
 
         assertThat(result1)
                 .isEqualTo(result2);
@@ -157,7 +158,7 @@ abstract public class AbstractLoadBalancingReactiveHttpClientTest {
         TestMonoInterface client = this.<TestMonoInterface>cloudBuilderWithLoadBalancerEnabled(retryOnSame, retryOnNext)
                 .target(TestMonoInterface.class, serviceName, "http://" + serviceName);
 
-        String result = client.getMono().block();
+        String result = client.getMono().subscribeOn(testScheduler()).block();
         assertThat(result).isEqualTo(body);
     }
 

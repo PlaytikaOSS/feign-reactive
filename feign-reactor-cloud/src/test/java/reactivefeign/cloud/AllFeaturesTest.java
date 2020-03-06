@@ -31,6 +31,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import reactivefeign.allfeatures.AllFeaturesApi;
 import reactivefeign.allfeatures.AllFeaturesController;
 import reactivefeign.allfeatures.AllFeaturesFeign;
@@ -50,6 +51,7 @@ import static reactivefeign.cloud.BuilderUtils.TEST_CLIENT_FACTORY;
 		classes = {AllFeaturesController.class, reactivefeign.allfeatures.AllFeaturesTest.TestConfiguration.class },
 		webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 @EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
+@ActiveProfiles("netty")
 public class AllFeaturesTest extends reactivefeign.allfeatures.AllFeaturesTest {
 
 	private static final String serviceName = "testServiceName";

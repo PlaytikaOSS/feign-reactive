@@ -19,7 +19,7 @@ import reactivefeign.testcase.IcecreamServiceApi;
 /**
  * @author Sergii Karpenko
  */
-public class LoggerTest extends reactivefeign.LoggerTest {
+public class LoggerTest extends reactivefeign.LoggerTest<LoggerTest.IcecreamServiceApiWebClient> {
 
   @Override
   protected String appenderPrefix(){
@@ -27,15 +27,22 @@ public class LoggerTest extends reactivefeign.LoggerTest {
   }
 
   @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
+  protected ReactiveFeign.Builder<IcecreamServiceApiWebClient> builder() {
     return WebReactiveFeign.builder();
   }
 
   @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
-    return WebReactiveFeign.<IcecreamServiceApi>builder().options(
+  protected ReactiveFeign.Builder<IcecreamServiceApiWebClient> builder(long readTimeoutInMillis) {
+    return WebReactiveFeign.<IcecreamServiceApiWebClient>builder().options(
             new WebReactiveOptions.Builder().setReadTimeoutMillis(readTimeoutInMillis).build()
     );
   }
+
+  @Override
+  protected Class<IcecreamServiceApiWebClient> target(){
+    return IcecreamServiceApiWebClient.class;
+  }
+
+  interface IcecreamServiceApiWebClient extends IcecreamServiceApi{}
 
 }

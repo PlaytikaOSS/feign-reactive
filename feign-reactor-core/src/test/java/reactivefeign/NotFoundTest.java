@@ -19,6 +19,7 @@ import org.apache.http.HttpStatus;
 import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -26,7 +27,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 /**
  * @author Sergii Karpenko
  */
-public abstract class NotFoundTest {
+public abstract class NotFoundTest extends BaseReactorTest {
 
   @Rule
   public WireMockClassRule wireMockRule = new WireMockClassRule(
@@ -50,7 +51,7 @@ public abstract class NotFoundTest {
         .decode404()
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
-    StepVerifier.create(client.findOrder(2))
+    StepVerifier.create(client.findOrder(2).subscribeOn(testScheduler()))
         .expectNextCount(0)
         .verifyComplete();
   }

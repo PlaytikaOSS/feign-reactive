@@ -16,6 +16,7 @@ package reactivefeign.retry;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.util.function.Tuples;
 
 import java.time.Duration;
@@ -26,7 +27,13 @@ import java.util.function.Function;
  */
 public abstract class SimpleReactiveRetryPolicy implements ReactiveRetryPolicy {
 
-  /**
+    private final Scheduler scheduler;
+
+    protected SimpleReactiveRetryPolicy(Scheduler scheduler) {
+        this.scheduler = scheduler;
+    }
+
+    /**
    * @param error
    * @param attemptNo
    * @return -1 if should not be retried, 0 if retry immediately
@@ -45,7 +52,7 @@ public abstract class SimpleReactiveRetryPolicy implements ReactiveRetryPolicy {
           }
         }).concatMap(
             tuple2 -> tuple2.getT1() > 0
-                ? Mono.delay(Duration.ofMillis(tuple2.getT1()))
+                ? Mono.delay(Duration.ofMillis(tuple2.getT1()), scheduler)
                     .map(time -> tuple2.getT2())
                 : Mono.just(tuple2.getT2()));
   }

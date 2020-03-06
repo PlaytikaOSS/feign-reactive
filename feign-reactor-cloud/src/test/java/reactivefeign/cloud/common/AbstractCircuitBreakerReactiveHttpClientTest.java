@@ -5,6 +5,7 @@ import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import reactivefeign.BaseReactorTest;
 import reactivefeign.ReactiveFeignBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -26,7 +27,7 @@ import static reactivefeign.cloud.LoadBalancingReactiveHttpClientTest.TestMonoIn
 /**
  * @author Sergii Karpenko
  */
-abstract public class AbstractCircuitBreakerReactiveHttpClientTest {
+abstract public class AbstractCircuitBreakerReactiveHttpClientTest extends BaseReactorTest {
 
     public static final int SLEEP_WINDOW = 1000;
     public static final int VOLUME_THRESHOLD = 4;
@@ -57,7 +58,7 @@ abstract public class AbstractCircuitBreakerReactiveHttpClientTest {
         TestMonoInterface client = cloudBuilderWithTimeoutDisabled()
                 .target(TestMonoInterface.class, "http://localhost:" + server.port());
 
-        StepVerifier.create(client.getMono())
+        StepVerifier.create(client.getMono().subscribeOn(testScheduler()))
                 .expectErrorMatches(this::assertNoFallback)
                 .verify();
     }
@@ -76,7 +77,7 @@ abstract public class AbstractCircuitBreakerReactiveHttpClientTest {
                 .fallback(() -> Mono.just(FALLBACK))
                 .target(TestMonoInterface.class, "http://localhost:" + server.port());
 
-        String result = client.getMono().block();
+        String result = client.getMono().subscribeOn(testScheduler()).block();
         assertThat(result).isEqualTo(FALLBACK);
     }
 
@@ -94,7 +95,7 @@ abstract public class AbstractCircuitBreakerReactiveHttpClientTest {
                 .fallbackFactory(throwable -> () -> {throw new RuntimeException();})
                 .target(TestMonoInterface.class, "http://localhost:" + server.port());
 
-        StepVerifier.create(client.getMono())
+        StepVerifier.create(client.getMono().subscribeOn(testScheduler()))
                 .expectErrorMatches(this::assertFailedAndFallbackFailed)
                 .verify();
     }
@@ -117,7 +118,7 @@ abstract public class AbstractCircuitBreakerReactiveHttpClientTest {
         //check that circuit breaker get opened on volume threshold
         List<Throwable> throwablesCircuitClosed = Flux.range(0, VOLUME_THRESHOLD)
                 .concatMap(i -> client.getMono()
-                        .subscribeOn(Schedulers.parallel())
+                        .subscribeOn(testScheduler())
                         .<Throwable>map(s -> null)
                         .onErrorResume(t -> true, Mono::just))
                 .collectList().block();
@@ -129,7 +130,7 @@ abstract public class AbstractCircuitBreakerReactiveHttpClientTest {
         waitCircuitBreakerToGetOpened();
 
         Throwable throwableCircuitOpened = client.getMono()
-                .subscribeOn(Schedulers.parallel())
+                .subscribeOn(testScheduler())
                 .<Throwable>map(s -> null)
                 .onErrorResume(t -> true, Mono::just).block();
         assertCircuitBreakerOpen(throwableCircuitOpened);
@@ -169,7 +170,7 @@ abstract public class AbstractCircuitBreakerReactiveHttpClientTest {
         TestMonoInterface client = cloudBuilderWithTimeout(500)
                 .target(TestMonoInterface.class, "http://localhost:" + server.port());
 
-        StepVerifier.create(client.getMono().subscribeOn(Schedulers.parallel()))
+        StepVerifier.create(client.getMono().subscribeOn(testScheduler()))
                 .expectErrorMatches(this::assertTimeout)
                 .verify();
     }

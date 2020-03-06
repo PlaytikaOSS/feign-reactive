@@ -29,6 +29,7 @@ import reactivefeign.testcase.domain.Mixin;
 import reactivefeign.testcase.domain.OrderGenerator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -44,7 +45,7 @@ import static reactivefeign.TestUtils.*;
  * @author Sergii Karpenko
  */
 
-abstract public class SmokeTest {
+abstract public class SmokeTest extends BaseReactorTest {
 
   @Rule
   public WireMockClassRule wireMockRule = new WireMockClassRule(wireMockConfig());
@@ -89,8 +90,8 @@ abstract public class SmokeTest {
             .withHeader("Content-Type", "application/json")
             .withBody(MAPPER.writeValueAsString(Mixin.values()))));
 
-    Flux<Flavor> flavors = client.getAvailableFlavors();
-    Flux<Mixin> mixins = client.getAvailableMixins();
+    Flux<Flavor> flavors = client.getAvailableFlavors().subscribeOn(testScheduler());
+    Flux<Mixin> mixins = client.getAvailableMixins().subscribeOn(testScheduler());
 
     StepVerifier.create(flavors)
         .expectNextSequence(asList(Flavor.values()))

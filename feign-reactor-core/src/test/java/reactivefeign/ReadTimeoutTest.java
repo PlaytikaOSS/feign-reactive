@@ -19,6 +19,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.client.ReadTimeoutException;
 import reactivefeign.testcase.IcecreamServiceApi;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -26,7 +27,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 /**
  * @author Sergii Karpenko
  */
-abstract public class ReadTimeoutTest {
+abstract public class ReadTimeoutTest extends BaseReactorTest {
 
   @Rule
   public WireMockClassRule wireMockRule = new WireMockClassRule(
@@ -51,7 +52,7 @@ abstract public class ReadTimeoutTest {
                 .target(IcecreamServiceApi.class,
                     "http://localhost:" + wireMockRule.port());
 
-    StepVerifier.create(client.findOrder(1))
+    StepVerifier.create(client.findOrder(1).subscribeOn(testScheduler()))
         .expectError(ReadTimeoutException.class)
         .verify();
   }

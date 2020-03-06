@@ -7,7 +7,7 @@ import reactor.core.publisher.Mono;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
-public class DefaultMethodHandlerTest {
+public class DefaultMethodHandlerTest extends BaseReactorTest {
 
     @Test(expected = AbstractMethodError.class)
     public void shouldThrowErrorOnNotDefaultMethod() throws NoSuchMethodException {

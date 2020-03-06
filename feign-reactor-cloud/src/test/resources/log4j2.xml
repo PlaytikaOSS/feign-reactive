@@ -10,8 +10,8 @@
         <AsyncRoot level="info">
             <AppenderRef ref="stdout" />
         </AsyncRoot>
-<!--        <AsyncLogger  name="reactivefeign.client.log" level="trace">-->
-<!--            <AppenderRef ref="stdout"/>-->
-<!--        </AsyncLogger>-->
+        <AsyncLogger  name="reactivefeign.client.log" level="trace">
+            <AppenderRef ref="stdout"/>
+        </AsyncLogger>
     </Loggers>
 </Configuration>

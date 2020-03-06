@@ -36,7 +36,7 @@ import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
  * @author Sergii Karpenko
  */
 
-abstract public class CompressionTest {
+abstract public class CompressionTest extends BaseReactorTest{
 
   @Rule
   public WireMockClassRule wireMockRule = new WireMockClassRule(
@@ -66,7 +66,7 @@ abstract public class CompressionTest {
                 .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
     Mono<Bill> bill = client.makeOrder(order);
-    StepVerifier.create(bill)
+    StepVerifier.create(bill.subscribeOn(testScheduler()))
         .expectNextMatches(equalsComparingFieldByFieldRecursively(billExpected))
         .verifyComplete();
   }

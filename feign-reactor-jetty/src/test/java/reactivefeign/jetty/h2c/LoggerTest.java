@@ -30,7 +30,7 @@ import static reactivefeign.wiremock.WireMockServerConfigurations.h2cConfig;
 /**
  * @author Sergii Karpenko
  */
-public class LoggerTest extends reactivefeign.LoggerTest {
+public class LoggerTest extends reactivefeign.LoggerTest<LoggerTest.IcecreamServiceApiJettyH2> {
 
     @Override
     protected String appenderPrefix(){
@@ -43,13 +43,13 @@ public class LoggerTest extends reactivefeign.LoggerTest {
     }
 
     @Override
-    protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
+    protected ReactiveFeign.Builder<IcecreamServiceApiJettyH2> builder() {
         return builderHttp2();
     }
 
     @Override
-    protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
-        return JettyReactiveFeign.<IcecreamServiceApi>builder().options(
+    protected ReactiveFeign.Builder<IcecreamServiceApiJettyH2> builder(long readTimeoutInMillis) {
+        return JettyReactiveFeign.<IcecreamServiceApiJettyH2>builder().options(
                 new JettyReactiveOptions.Builder()
                         .setRequestTimeoutMillis(readTimeoutInMillis)
                         .setUseHttp2(true)
@@ -66,6 +66,12 @@ public class LoggerTest extends reactivefeign.LoggerTest {
                         throw new RuntimeException(e);
                     }
                 }).collect(Collectors.joining("\n"))+"\n";
-
     }
+
+    @Override
+    protected Class<IcecreamServiceApiJettyH2> target(){
+        return IcecreamServiceApiJettyH2.class;
+    }
+
+    interface IcecreamServiceApiJettyH2 extends IcecreamServiceApi{}
 }

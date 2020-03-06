@@ -30,6 +30,7 @@ import reactivefeign.testcase.domain.Bill;
 import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.OrderGenerator;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 import java.time.Clock;
 import java.util.EnumSet;
@@ -45,7 +46,7 @@ import static reactivefeign.client.metrics.MicrometerReactiveLogger.DEFAULT_TIME
 /**
  * @author Sergii Karpenko
  */
-abstract public class MetricsTest {
+abstract public class MetricsTest extends BaseReactorTest {
 
   @ClassRule
   public static WireMockClassRule wireMockRule = new WireMockClassRule(
@@ -83,7 +84,7 @@ abstract public class MetricsTest {
             .addLoggerListener(buildLoggerListener())
             .target(target());
 
-    client.findOrder(20).block();
+    client.findOrder(20).subscribeOn(testScheduler()).block();
 
     assertThat(meterRegistry.get(DEFAULT_TIMER_NAME)
             .tagKeys(FEIGN_CLIENT_METHOD.getTagName())
@@ -109,7 +110,7 @@ abstract public class MetricsTest {
             .addLoggerListener(buildLoggerListener())
             .target(target());
 
-    client.makeOrders(Flux.just(order1, order2)).collectList().block();
+    client.makeOrders(Flux.just(order1, order2)).subscribeOn(testScheduler()).collectList().block();
 
     assertThat(meterRegistry.get(DEFAULT_TIMER_NAME)
             .tagKeys(FEIGN_CLIENT_METHOD.getTagName())
@@ -127,7 +128,7 @@ abstract public class MetricsTest {
             .addLoggerListener(buildLoggerListener())
             .target(target());
 
-    client.ping().block();
+    client.ping().subscribeOn(testScheduler()).block();
 
     assertThat(meterRegistry.get(DEFAULT_TIMER_NAME)
             .tagKeys(FEIGN_CLIENT_METHOD.getTagName())
@@ -151,7 +152,7 @@ abstract public class MetricsTest {
                     "http://" + getHost() + ":" + wireMockRule.port());
 
     try {
-      client.ping().block();
+      client.ping().subscribeOn(testScheduler()).block();
       fail("should throw ReadTimeoutException");
     }
     catch (Exception e) {

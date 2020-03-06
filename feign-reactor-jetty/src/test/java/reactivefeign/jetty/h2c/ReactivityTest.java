@@ -13,20 +13,12 @@
  */
 package reactivefeign.jetty.h2c;
 
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.jetty.JettyReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
 
-import static reactivefeign.wiremock.WireMockServerConfigurations.h2cConfig;
-
 public class ReactivityTest extends reactivefeign.ReactivityTest {
-
-  @Override
-  protected WireMockConfiguration wireMockConfig(){
-    return h2cConfig();
-  }
 
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {

@@ -22,6 +22,7 @@ import org.reactivestreams.Publisher;
 import reactivefeign.client.DelegatingReactiveHttpResponse;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.util.function.Predicate;
@@ -31,7 +32,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 /**
  * @author Sergii Karpenko
  */
-abstract public class ResponseMapperTest {
+abstract public class ResponseMapperTest extends BaseReactorTest {
 
   @Rule
   public WireMockClassRule wireMockRule = new WireMockClassRule(
@@ -72,7 +73,7 @@ abstract public class ResponseMapperTest {
         })
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
-    StepVerifier.create(clientWithoutAuth.findFirstOrder())
+    StepVerifier.create(clientWithoutAuth.findFirstOrder().subscribeOn(testScheduler()))
         .expectErrorMatches(errorPredicate())
         .verify();
   }

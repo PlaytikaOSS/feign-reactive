@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import feign.RequestLine;
 import org.junit.Rule;
 import org.junit.Test;
+import reactivefeign.BaseReactorTest;
 import reactivefeign.ReactiveFeignBuilder;
 import reactor.core.publisher.Mono;
 
@@ -15,7 +16,7 @@ import java.util.stream.IntStream;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
-abstract public class AbstractCircuitBreakerFuncTest {
+abstract public class AbstractCircuitBreakerFuncTest extends BaseReactorTest {
 
     protected static final int VOLUME_THRESHOLD = 3;
     private static final String TEST_URL = "/call";
@@ -41,7 +42,7 @@ abstract public class AbstractCircuitBreakerFuncTest {
 
         //check that circuit breaker DOESN'T open on volume threshold
         List<Object> results = IntStream.range(0, callsNo)
-                .mapToObj(i -> testCaller.call().block())
+                .mapToObj(i -> testCaller.call().subscribeOn(testScheduler()).block())
                 .collect(Collectors.toList());
 
         // check fallback invokes each time
@@ -62,7 +63,7 @@ abstract public class AbstractCircuitBreakerFuncTest {
         //check that circuit breaker DOESN'T open on volume threshold
         List<Object> results = IntStream.range(0, callsNo).mapToObj(i -> {
             try {
-                return testCaller.call().block();
+                return testCaller.call().subscribeOn(testScheduler()).block();
             } catch (Throwable t) {
                 return t;
             }

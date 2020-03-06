@@ -18,6 +18,8 @@ import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
 import reactivefeign.resttemplate.client.RestTemplateReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * @author Sergii Karpenko
@@ -39,5 +41,11 @@ public class DefaultMethodTest extends reactivefeign.DefaultMethodTest {
     return RestTemplateFakeReactiveFeign.<IcecreamServiceApi>builder().options(
             new RestTemplateReactiveOptions.Builder().setConnectTimeoutMillis(connectTimeoutInMillis).build()
     );
+  }
+
+  //to not detect blocking calls
+  @Override
+  protected Scheduler testScheduler(){
+    return Schedulers.elastic();
   }
 }

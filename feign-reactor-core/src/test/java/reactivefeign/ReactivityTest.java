@@ -14,66 +14,68 @@
 package reactivefeign;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import org.junit.Rule;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
-import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.OrderGenerator;
+import reactor.core.publisher.Mono;
+import reactor.netty.DisposableServer;
+import reactor.netty.http.server.HttpServer;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.awaitility.Awaitility.waitAtMost;
+import static reactor.netty.http.HttpProtocol.H2C;
+import static reactor.netty.http.HttpProtocol.HTTP11;
 
 /**
  * @author Sergii Karpenko
  */
-abstract public class ReactivityTest {
+abstract public class ReactivityTest extends BaseReactorTest {
 
   public static final int DELAY_IN_MILLIS = 500;
   public static final int CALLS_NUMBER = 500;
   public static final int REACTIVE_GAIN_RATIO = 50;
 
-  @Rule
-  public WireMockClassRule wireMockRule = new WireMockClassRule(
-          wireMockConfig()
-                  .asynchronousResponseEnabled(true)
-                  .dynamicPort());
-
   abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder();
 
-  protected WireMockConfiguration wireMockConfig(){
-    return WireMockConfiguration.wireMockConfig();
+  private static DisposableServer server;
+
+  @BeforeClass
+  public static void startServer() throws JsonProcessingException {
+    byte[] data = TestUtils.MAPPER.writeValueAsString(new OrderGenerator().generate(1)).getBytes();
+
+    server = HttpServer.create()
+            .protocol(HTTP11, H2C)
+            .route(r -> r.get("/icecream/orders/1",
+                    (req, res) -> {
+                      res.header("Content-Type", "application/json");
+                      return Mono.delay(Duration.ofMillis(DELAY_IN_MILLIS))
+                              .thenEmpty(res.sendByteArray(Mono.just(data)));
+                    }))
+            .bindNow();
+  }
+
+  @AfterClass
+  public static void stopServer(){
+    server.disposeNow();
   }
 
   @Test
   public void shouldRunReactively() throws JsonProcessingException {
 
-    IceCreamOrder orderGenerated = new OrderGenerator().generate(1);
-    String orderStr = TestUtils.MAPPER.writeValueAsString(orderGenerated);
-
-    wireMockRule.stubFor(get(urlEqualTo("/icecream/orders/1"))
-            .withHeader("Accept", equalTo("application/json"))
-            .willReturn(aResponse().withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(orderStr)
-                    .withFixedDelay(DELAY_IN_MILLIS)));
-
     IcecreamServiceApi client = builder()
             .target(IcecreamServiceApi.class,
-                    "http://localhost:" + wireMockRule.port());
+                    "http://localhost:" + server.port());
 
     AtomicInteger counter = new AtomicInteger();
 
-    //TODO temporary while jetty concurrent servlet initialization fixed
-    client.findFirstOrder().block();
-
     new Thread(() -> {
       for (int i = 0; i < CALLS_NUMBER; i++) {
-        client.findFirstOrder()
+        client.findFirstOrder().subscribeOn(testScheduler())
                 .doOnNext(order -> counter.incrementAndGet())
                 .subscribe();
       }
@@ -84,7 +86,9 @@ abstract public class ReactivityTest {
   }
 
   public static int timeToCompleteReactively(){
-    return CALLS_NUMBER * DELAY_IN_MILLIS / REACTIVE_GAIN_RATIO;
+    return CALLS_NUMBER * DELAY_IN_MILLIS
+            / (INSTALL_BLOCKHOUND
+            ? (int)(REACTIVE_GAIN_RATIO / BLOCKHOUND_DEGRADATION)
+            : REACTIVE_GAIN_RATIO);
   }
-
 }

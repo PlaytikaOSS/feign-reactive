@@ -27,7 +27,7 @@ import static reactivefeign.TestUtils.MAPPER;
 /**
  * @author Sergii Karpenko
  */
-public class LoggerTest extends reactivefeign.LoggerTest {
+public class LoggerTest extends reactivefeign.LoggerTest<LoggerTest.IcecreamServiceApiJava11H1> {
 
     @Override
     protected String appenderPrefix(){
@@ -35,13 +35,13 @@ public class LoggerTest extends reactivefeign.LoggerTest {
     }
 
     @Override
-    protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
+    protected ReactiveFeign.Builder<IcecreamServiceApiJava11H1> builder() {
         return Java11ReactiveFeign.builder();
     }
 
     @Override
-    protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
-        return Java11ReactiveFeign.<IcecreamServiceApi>builder().options(
+    protected ReactiveFeign.Builder<IcecreamServiceApiJava11H1> builder(long readTimeoutInMillis) {
+        return Java11ReactiveFeign.<IcecreamServiceApiJava11H1>builder().options(
                 new Java11ReactiveOptions.Builder().setRequestTimeoutMillis(readTimeoutInMillis).build());
     }
 
@@ -55,6 +55,12 @@ public class LoggerTest extends reactivefeign.LoggerTest {
                         throw new RuntimeException(e);
                     }
                 }).collect(Collectors.joining("\n"))+"\n";
-
     }
+
+    @Override
+    protected Class<IcecreamServiceApiJava11H1> target(){
+        return IcecreamServiceApiJava11H1.class;
+    }
+
+    interface IcecreamServiceApiJava11H1 extends IcecreamServiceApi{}
 }

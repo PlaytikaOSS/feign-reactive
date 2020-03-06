@@ -28,7 +28,7 @@ import static reactivefeign.jetty.h1.TestUtils.builderHttp;
 /**
  * @author Sergii Karpenko
  */
-public class LoggerTest extends reactivefeign.LoggerTest {
+public class LoggerTest extends reactivefeign.LoggerTest<LoggerTest.IcecreamServiceApiJettyH1> {
 
     @Override
     protected String appenderPrefix(){
@@ -36,13 +36,13 @@ public class LoggerTest extends reactivefeign.LoggerTest {
     }
 
     @Override
-    protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
+    protected ReactiveFeign.Builder<IcecreamServiceApiJettyH1> builder() {
         return builderHttp();
     }
 
     @Override
-    protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
-        return JettyReactiveFeign.<IcecreamServiceApi>builder().options(
+    protected ReactiveFeign.Builder<IcecreamServiceApiJettyH1> builder(long readTimeoutInMillis) {
+        return JettyReactiveFeign.<IcecreamServiceApiJettyH1>builder().options(
                 new JettyReactiveOptions.Builder().setRequestTimeoutMillis(readTimeoutInMillis).build());
     }
 
@@ -58,4 +58,11 @@ public class LoggerTest extends reactivefeign.LoggerTest {
                 }).collect(Collectors.joining("\n"))+"\n";
 
     }
+
+    @Override
+    protected Class<IcecreamServiceApiJettyH1> target(){
+        return IcecreamServiceApiJettyH1.class;
+    }
+
+    interface IcecreamServiceApiJettyH1 extends IcecreamServiceApi{}
 }

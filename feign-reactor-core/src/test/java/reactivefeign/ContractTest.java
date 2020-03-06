@@ -26,7 +26,7 @@ import static org.hamcrest.Matchers.containsString;
  * @author Sergii Karpenko
  */
 
-abstract public class ContractTest {
+abstract public class ContractTest extends BaseReactorTest{
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();

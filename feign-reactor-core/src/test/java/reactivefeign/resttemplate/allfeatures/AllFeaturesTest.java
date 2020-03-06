@@ -26,6 +26,8 @@ import reactivefeign.ReactiveFeign;
 import reactivefeign.allfeatures.AllFeaturesFeign;
 import reactivefeign.allfeatures.AllFeaturesFeignTest;
 import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * @author Sergii Karpenko
@@ -35,6 +37,12 @@ import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
 @EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
 @ActiveProfiles("netty")
 public class AllFeaturesTest extends AllFeaturesFeignTest {
+
+    //to not detect blocking calls
+	@Override
+	protected Scheduler testScheduler(){
+		return Schedulers.elastic();
+	}
 
 	@Override
 	protected ReactiveFeign.Builder<AllFeaturesFeign> builder() {

@@ -27,6 +27,7 @@ import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.Mixin;
 import reactivefeign.testcase.domain.OrderGenerator;
+import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;
@@ -47,7 +48,7 @@ import static reactivefeign.retry.FilteredReactiveRetryPolicy.notRetryOn;
 /**
  * @author Sergii Karpenko
  */
-public abstract class RetryingTest {
+public abstract class RetryingTest extends BaseReactorTest {
 
   @Rule
   public WireMockClassRule wireMockRule = new WireMockClassRule(
@@ -83,7 +84,7 @@ public abstract class RetryingTest {
         .target(IcecreamServiceApi.class,
             "http://localhost:" + wireMockRule.port());
 
-    StepVerifier.create(client.findOrder(1))
+    StepVerifier.create(client.findOrder(1).subscribeOn(testScheduler()))
         .expectNextMatches(equalsComparingFieldByFieldRecursively(orderGenerated))
         .verifyComplete();
 
@@ -108,7 +109,7 @@ public abstract class RetryingTest {
         .retryWhen(BasicReactiveRetryPolicy.retryWithBackoff(maxRetries, 0))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
-    StepVerifier.create(client.getAvailableMixins())
+    StepVerifier.create(client.getAvailableMixins().subscribeOn(testScheduler()))
         .expectNextSequence(Arrays.asList(Mixin.values()))
         .verifyComplete();
 
@@ -133,7 +134,7 @@ public abstract class RetryingTest {
         .retryWhen(BasicReactiveRetryPolicy.retryWithBackoff(maxRetries, 0))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
-    StepVerifier.create(client.findOrder(1))
+    StepVerifier.create(client.findOrder(1).subscribeOn(testScheduler()))
         .expectNextMatches(equalsComparingFieldByFieldRecursively(orderGenerated))
         .verifyComplete();
 
@@ -176,7 +177,7 @@ public abstract class RetryingTest {
         .retryWhen(retry(maxRetries))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
-    StepVerifier.create(client.findOrder(1))
+    StepVerifier.create(client.findOrder(1).subscribeOn(testScheduler()))
         .expectErrorMatches(throwable -> throwable instanceof OutOfRetriesException)
         .verify();
 
@@ -194,10 +195,10 @@ public abstract class RetryingTest {
 
     int maxRetries = 7;
     IcecreamServiceApi client = builder()
-        .retryWhen(BasicReactiveRetryPolicy.retryWithBackoff(maxRetries, 5))
+        .retryWhen(BasicReactiveRetryPolicy.retryWithBackoff(maxRetries, 5, testScheduler()))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
-    StepVerifier.create(client.findOrder(1))
+    StepVerifier.create(client.findOrder(1).subscribeOn(testScheduler()))
         .expectErrorMatches(throwable -> throwable instanceof OutOfRetriesException)
         .verify();
 
@@ -220,7 +221,7 @@ public abstract class RetryingTest {
             }))
             .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
-    StepVerifier.create(client.findOrder(1))
+    StepVerifier.create(client.findOrder(1).subscribeOn(testScheduler()))
             .expectErrorMatches(throwable -> throwable instanceof IllegalArgumentException)
             .verify();
 

@@ -21,6 +21,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import reactivefeign.testcase.IcecreamServiceApi;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.net.ConnectException;
@@ -30,7 +31,7 @@ import java.net.Socket;
 /**
  * @author Sergii Karpenko
  */
-abstract public class ConnectionTimeoutTest {
+abstract public class ConnectionTimeoutTest extends BaseReactorTest{
 
   @Rule
   public ExpectedException expectedException = ExpectedException.none();
@@ -73,7 +74,7 @@ abstract public class ConnectionTimeoutTest {
     IcecreamServiceApi client = builder(300)
                 .target(IcecreamServiceApi.class, "http://localhost:" + port);
 
-    client.findOrder(1).block();
+    client.findOrder(1).subscribeOn(testScheduler()).block();
   }
 
 }

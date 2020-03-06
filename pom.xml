@@ -63,6 +63,8 @@
         <wiremock.version>2.26.0</wiremock.version>
         <awaitility.version>4.0.2</awaitility.version>
         <guava.version>23.0</guava.version>
+        <blockhound.version>1.0.2.RELEASE</blockhound.version>
+        <disruptor.version>3.3.4</disruptor.version>
 
         <!-- Plugins -->
         <jacoco-plugin.version>0.8.5</jacoco-plugin.version>
@@ -232,6 +234,23 @@
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
             </dependency>
+
+            <!--Needed for tracking blocking calls in reactive application https://github.com/reactor/BlockHound -->
+            <dependency>
+                <groupId>io.projectreactor.tools</groupId>
+                <artifactId>blockhound</artifactId>
+                <version>${blockhound.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!--Need it to make log4j2 async-->
+            <dependency>
+                <groupId>com.lmax</groupId>
+                <artifactId>disruptor</artifactId>
+                <version>${disruptor.version}</version>
+                <scope>test</scope>
+            </dependency>
+
 
         </dependencies>
     </dependencyManagement>

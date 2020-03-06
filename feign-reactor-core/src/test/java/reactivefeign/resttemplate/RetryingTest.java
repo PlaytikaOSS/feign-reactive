@@ -16,6 +16,8 @@ package reactivefeign.resttemplate;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * @author Sergii Karpenko
@@ -25,5 +27,11 @@ public class RetryingTest extends reactivefeign.RetryingTest {
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
     return RestTemplateFakeReactiveFeign.builder();
+  }
+
+  //to not detect blocking calls
+  @Override
+  protected Scheduler testScheduler(){
+    return Schedulers.elastic();
   }
 }

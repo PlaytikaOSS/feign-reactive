@@ -29,6 +29,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.test.context.junit4.SpringRunner;
+import reactivefeign.BaseReactorTest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -47,9 +48,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.waitAtMost;
-import static reactivefeign.ReactivityTest.*;
+import static reactivefeign.ReactivityTest.CALLS_NUMBER;
+import static reactivefeign.ReactivityTest.timeToCompleteReactively;
 import static reactivefeign.TestUtils.toLowerCaseKeys;
 import static reactor.core.publisher.Flux.empty;
+import static reactor.core.publisher.Flux.fromArray;
 import static reactor.core.publisher.Mono.fromFuture;
 import static reactor.core.publisher.Mono.just;
 
@@ -64,7 +67,7 @@ import static reactor.core.publisher.Mono.just;
 		properties = {"spring.main.web-application-type=reactive"},
 		classes = {AllFeaturesController.class, AllFeaturesTest.TestConfiguration.class },
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-abstract public class AllFeaturesTest {
+abstract public class AllFeaturesTest extends BaseReactorTest {
 
 	protected AllFeaturesApi client;
 
@@ -92,7 +95,8 @@ abstract public class AllFeaturesTest {
 				put("paramKey", "paramValue");
 			}
 		};
-		Map<String, String> returned = client.mirrorParameters(555,"777", paramMap).block();
+		Map<String, String> returned = client.mirrorParameters(555,"777", paramMap)
+				.subscribeOn(testScheduler()).block();
 
 		assertThat(returned).containsEntry("paramInPath", "555");
 		assertThat(returned).containsEntry("paramInUrl", "777");
@@ -106,7 +110,8 @@ abstract public class AllFeaturesTest {
 				put("paramKey", "");
 			}
 		};
-		Map<String, String> returned = client.mirrorParameters(555,"", paramMap).block();
+		Map<String, String> returned = client.mirrorParameters(555,"", paramMap)
+				.subscribeOn(testScheduler()).block();
 
 		assertThat(returned).containsEntry("paramKey", "");
 		assertThat(returned).containsEntry("paramInUrl", "");
@@ -121,9 +126,8 @@ abstract public class AllFeaturesTest {
 			}
 		};
 
-		Map<String, String> returned = client.mirrorParametersNew(
-				777, 888L, paramMap)
-				.block();
+		Map<String, String> returned = client.mirrorParametersNew(777, 888L, paramMap)
+				.subscribeOn(testScheduler()).block();
 
 		assertThat(returned).containsEntry("paramInUrl", "777");
 		assertThat(returned).containsEntry("dynamicParam", "888");
@@ -138,7 +142,8 @@ abstract public class AllFeaturesTest {
 				put("paramKeyNull", null);
 			}
 		};
-		Map<String, String> returned = client.mirrorParametersNew(777,null, paramMap).block();
+		Map<String, String> returned = client.mirrorParametersNew(777,null, paramMap)
+				.subscribeOn(testScheduler()).block();
 
 		assertThat(returned).containsEntry("paramInUrl", "777");
 		assertThat(returned).containsEntry("paramKey", "paramValue");
@@ -150,7 +155,7 @@ abstract public class AllFeaturesTest {
 
 		List<Integer> dynamicListParam = asList(1, 2, 3);
 		List<Integer> returned = client.mirrorListParametersNew(dynamicListParam)
-				.block();
+				.subscribeOn(testScheduler()).block();
 
 		assertThat(returned).containsAll(dynamicListParam);
 	}
@@ -159,7 +164,7 @@ abstract public class AllFeaturesTest {
 	public void shouldReturnEmptyOnNullPassedListParametersNew() {
 
 		List<Integer> returned = client.mirrorListParametersNew(null)
-				.block();
+				.subscribeOn(testScheduler()).block();
 
 		assertThat(returned).isEmpty();
 	}
@@ -174,7 +179,7 @@ abstract public class AllFeaturesTest {
 		};
 
 		Map<String, List<String>> returned = client.mirrorMapParametersNew(paramMap)
-				.block();
+				.subscribeOn(testScheduler()).block();
 
 		assertThat(returned).containsAllEntriesOf(paramMap);
 	}
@@ -183,7 +188,7 @@ abstract public class AllFeaturesTest {
 	public void shouldReturnEmptyOnNullPassedMapParametersNew() {
 
 		Map<String, List<String>> returned = client.mirrorMapParametersNew(null)
-				.block();
+				.subscribeOn(testScheduler()).block();
 
 		assertThat(returned).isEmpty();
 	}
@@ -196,7 +201,8 @@ abstract public class AllFeaturesTest {
 				put("headerKey2", "headerValue2");
 			}
 		};
-		Map<String, String> returned = toLowerCaseKeys(client.mirrorHeaders(777, headersMap).block());
+		Map<String, String> returned = toLowerCaseKeys(client.mirrorHeaders(777, headersMap)
+				.subscribeOn(testScheduler()).block());
 
 		assertThat(returned).containsEntry("method-header", "777");
 		assertThat(returned).containsAllEntriesOf(toLowerCaseKeys(headersMap));
@@ -206,7 +212,8 @@ abstract public class AllFeaturesTest {
 	@Test
 	public void shouldReturnAllPassedListHeaders() {
 		List<Long> listHeader = asList(111L, 777L);
-		List<Long> returned = client.mirrorListHeaders(listHeader).block();
+		List<Long> returned = client.mirrorListHeaders(listHeader)
+				.subscribeOn(testScheduler()).block();
 
 		assertThat(returned).containsAll(listHeader);
 	}
@@ -218,14 +225,16 @@ abstract public class AllFeaturesTest {
 				put("headerKey1", asList("headerValue1", "headerValue2"));
 			}
 		};
-		Map<String, List<String>> returned = client.mirrorMultiMapHeaders(headersMap).block();
+		Map<String, List<String>> returned = client.mirrorMultiMapHeaders(headersMap)
+				.subscribeOn(testScheduler()).block();
 
 		assertThat(toLowerCaseKeys(returned)).containsAllEntriesOf(toLowerCaseKeys(headersMap));
 	}
 
 	@Test
 	public void shouldReturnBody() {
-		String returned = client.mirrorBody("Test Body").block();
+		String returned = client.mirrorBody("Test Body")
+				.subscribeOn(testScheduler()).block();
 
 		assertThat(returned).isEqualTo("Test Body");
 	}
@@ -239,13 +248,15 @@ abstract public class AllFeaturesTest {
 			}
 		};
 
-		Map<String, String> returned = client.mirrorBodyMap(bodyMap).block();
+		Map<String, String> returned = client.mirrorBodyMap(bodyMap)
+				.subscribeOn(testScheduler()).block();
 		assertThat(returned).containsAllEntriesOf(bodyMap);
 	}
 
 	@Test
 	public void shouldReturnBodyReactive() {
-		String returned = client.mirrorBodyReactive(just("Test Body")).block();
+		String returned = client.mirrorBodyReactive(just("Test Body"))
+				.subscribeOn(testScheduler()).block();
 		assertThat(returned).isEqualTo("Test Body");
 	}
 
@@ -258,7 +269,8 @@ abstract public class AllFeaturesTest {
 			}
 		};
 
-		Mono<Map<String, String>> publisher = client.mirrorBodyMapReactive(just(bodyMap));
+		Mono<Map<String, String>> publisher = client.mirrorBodyMapReactive(just(bodyMap))
+				.subscribeOn(testScheduler());
 		StepVerifier.create(publisher)
 				.consumeNextWith(map -> assertThat(map).containsAllEntriesOf(bodyMap))
 				.verifyComplete();
@@ -280,7 +292,7 @@ abstract public class AllFeaturesTest {
 						.delayUntil(testObject -> sentCount.get() == 1 ? fromFuture(firstReceived)
 								: empty())
 						.doOnNext(sent -> sentCount.incrementAndGet())
-				);
+				).subscribeOn(testScheduler());
 
 		returned.doOnNext(received -> {
 			receivedCount.incrementAndGet();
@@ -293,13 +305,15 @@ abstract public class AllFeaturesTest {
 
 	@Test
 	public void shouldReturnEmpty() {
-		Optional<AllFeaturesApi.TestObject> returned = client.empty().blockOptional();
+		Optional<AllFeaturesApi.TestObject> returned = client.empty()
+				.subscribeOn(testScheduler()).blockOptional();
 		assertThat(!returned.isPresent());
 	}
 
 	@Test
 	public void shouldReturnDefaultBody() {
-		String returned = client.mirrorDefaultBody().block();
+		String returned = client.mirrorDefaultBody()
+				.subscribeOn(testScheduler()).block();
 		assertThat(returned).isEqualTo("default");
 	}
 
@@ -312,6 +326,7 @@ abstract public class AllFeaturesTest {
 		for (int i = 0; i < CALLS_NUMBER; i++) {
 			client.mirrorBodyWithDelay("testBody")
 					.doOnNext(order -> counter.incrementAndGet())
+					.subscribeOn(testScheduler())
 					.subscribe();
 		}
 
@@ -321,8 +336,8 @@ abstract public class AllFeaturesTest {
 
 	@Test
 	public void shouldMirrorIntegerStreamBody() {
-		Flux<Integer> result = client.mirrorIntegerBodyStream(
-				Flux.fromArray(new Integer[]{1, 3, 5, 7}));
+		Flux<Integer> result = client.mirrorIntegerBodyStream(fromArray(new Integer[]{1, 3, 5, 7}))
+				.subscribeOn(testScheduler());
 
 		StepVerifier.create(result)
 				.expectNext(1)
@@ -334,8 +349,8 @@ abstract public class AllFeaturesTest {
 
 	@Test
 	public void shouldMirrorStringStreamBody() {
-		Flux<String> result = client.mirrorStringBodyStream(
-				Flux.fromArray(new String[]{"a", "b", "c"}));
+		Flux<String> result = client.mirrorStringBodyStream(fromArray(new String[]{"a", "b", "c"}))
+				.subscribeOn(testScheduler());
 
 		StepVerifier.create(result)
 				.expectNext("a")
@@ -347,7 +362,8 @@ abstract public class AllFeaturesTest {
 	@Test
 	public void shouldMirrorBinaryBody() {
 		StepVerifier.create(client.mirrorStreamingBinaryBodyReactive(
-				Mono.just(fromByteArray(new byte[]{1,2,3}))))
+				Mono.just(fromByteArray(new byte[]{1,2,3})))
+				.subscribeOn(testScheduler()))
 				.consumeNextWith(buffer -> {
 					byte[] dataReceived = new byte[buffer.limit()];
 					buffer.get(dataReceived);
@@ -368,6 +384,7 @@ abstract public class AllFeaturesTest {
 
 		Flux<ByteBuffer> returned = client.mirrorStreamingBinaryBodyReactive(
 				Flux.just(fromByteArray(new byte[]{1,2,3}), fromByteArray(new byte[]{4,5,6})))
+				.subscribeOn(testScheduler())
 				.delayUntil(testObject -> sentCount.get() == 1 ? fromFuture(firstReceived)
 						: empty())
 				.doOnNext(sent -> sentCount.incrementAndGet());
@@ -388,7 +405,8 @@ abstract public class AllFeaturesTest {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void shouldFailIfNoSubstitutionForPath(){
-		client.urlNotSubstituted().block();
+		client.urlNotSubstituted()
+				.subscribeOn(testScheduler()).block();
 	}
 
 
@@ -396,7 +414,8 @@ abstract public class AllFeaturesTest {
 	public void shouldEncodeQueryParam() {
 		String QUERY_PARAM_VALUE = "query param value with space and Cyrillic Героям Слава";
 
-		StepVerifier.create(client.encodeParam(QUERY_PARAM_VALUE))
+		StepVerifier.create(client.encodeParam(QUERY_PARAM_VALUE)
+				.subscribeOn(testScheduler()))
 				.expectNextMatches(testObject -> testObject.payload.equals(QUERY_PARAM_VALUE))
 				.verifyComplete();
 	}
@@ -405,7 +424,8 @@ abstract public class AllFeaturesTest {
 	public void shouldEncodeQueryParamWithReservedChars() {
 		String QUERY_PARAM_VALUE = "workers?in=(\"123/321\")";
 
-		StepVerifier.create(client.encodeParam(QUERY_PARAM_VALUE))
+		StepVerifier.create(client.encodeParam(QUERY_PARAM_VALUE)
+				.subscribeOn(testScheduler()))
 				.expectNextMatches(testObject -> testObject.payload.equals(QUERY_PARAM_VALUE))
 				.verifyComplete();
 	}
@@ -414,7 +434,8 @@ abstract public class AllFeaturesTest {
 	public void shouldEncodePathParam() {
 		String PATH_PARAM = "path value with space and Cyrillic Героям Слава";
 
-		StepVerifier.create(client.encodePath(PATH_PARAM))
+		StepVerifier.create(client.encodePath(PATH_PARAM)
+				.subscribeOn(testScheduler()))
 				.expectNextMatches(testObject -> testObject.payload.equals(PATH_PARAM))
 				.verifyComplete();
 
@@ -424,7 +445,8 @@ abstract public class AllFeaturesTest {
 	public void shouldEncodePathParamWithReservedChars() {
 		String PATH_PARAM = "workers?in=(\"123/321\")";
 
-		StepVerifier.create(client.encodePath(PATH_PARAM))
+		StepVerifier.create(client.encodePath(PATH_PARAM)
+				.subscribeOn(testScheduler()))
 				.expectNextMatches(testObject -> testObject.payload.equals(PATH_PARAM))
 				.verifyComplete();
 
