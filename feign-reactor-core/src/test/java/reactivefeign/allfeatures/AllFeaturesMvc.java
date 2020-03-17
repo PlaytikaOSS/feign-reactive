@@ -18,12 +18,7 @@ package reactivefeign.allfeatures;
 
 import org.reactivestreams.Publisher;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -51,6 +46,11 @@ public interface AllFeaturesMvc extends AllFeaturesApi {
 	@GetMapping(path = "/mirrorListParametersNew")
 	Mono<List<Integer>> mirrorListParametersNew(
 			@RequestParam(value = "dynamicListParam", required = false) List<Integer> listParams);
+
+	@Override
+	@GetMapping(path = "/mirrorArrayParametersNew")
+	Mono<String[]> mirrorArrayParametersNew(
+			@RequestParam("dynamicArrayParam") String[] dynamicArrayParam);
 
 	@GetMapping(path = "/mirrorMapParametersNew")
 	Mono<Map<String, List<String>>> mirrorMapParametersNew(

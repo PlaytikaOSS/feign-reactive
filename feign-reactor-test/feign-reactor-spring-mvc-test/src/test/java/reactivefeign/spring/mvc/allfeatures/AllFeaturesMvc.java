@@ -51,6 +51,11 @@ public interface AllFeaturesMvc extends reactivefeign.allfeatures.AllFeaturesApi
 	Mono<List<Integer>> mirrorListParametersNew(
 			@RequestParam(value = "dynamicListParam", required = false) List<Integer> listParams);
 
+	@Override
+	@GetMapping(path = "/mirrorArrayParametersNew")
+	Mono<String[]> mirrorArrayParametersNew(
+			@RequestParam("dynamicArrayParam") String[] dynamicArrayParam);
+
 	//Spring can't treat Map<String, List<String>> correctly
 	@Override
 	@GetMapping(path = "/mirrorMapParametersNew")

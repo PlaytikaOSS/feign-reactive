@@ -34,6 +34,7 @@ import java.util.stream.Stream;
 
 import static feign.Util.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.*;
 import static reactivefeign.utils.MultiValueMapUtils.*;
@@ -254,9 +255,14 @@ public class PublisherClientMethodHandler implements MethodHandler {
                 if (substitution != null) {
                     if(substitution instanceof Iterable){
                         List<String> stringValues = new ArrayList<>();
-                        ((Iterable) substitution).forEach(o -> stringValues.add(o.toString()));
+                        ((Iterable<?>) substitution).forEach(o -> stringValues.add(o.toString()));
                         return stringValues;
-                    } else {
+                    } else if(substitution instanceof Object[]){
+                        List<String> stringValues = new ArrayList<>(((Object[]) substitution).length);
+                        (asList((Object[])substitution)).forEach(o -> stringValues.add(o.toString()));
+                        return stringValues;
+                    }
+                    else {
                         return singletonList(substitution.toString());
                     }
                 } else {

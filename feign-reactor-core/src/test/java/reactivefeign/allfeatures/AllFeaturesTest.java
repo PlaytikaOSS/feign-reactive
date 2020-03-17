@@ -161,6 +161,16 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 	}
 
 	@Test
+	public void shouldReturnAllPassedArrayParametersNew() {
+
+		String[] dynamicArrayParam = new String[]{"1", "2", "3"};
+		String[] returned = client.mirrorArrayParametersNew(dynamicArrayParam)
+				.subscribeOn(testScheduler()).block();
+
+		assertThat(returned).containsExactly(dynamicArrayParam);
+	}
+
+	@Test
 	public void shouldReturnEmptyOnNullPassedListParametersNew() {
 
 		List<Integer> returned = client.mirrorListParametersNew(null)

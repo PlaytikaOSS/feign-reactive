@@ -16,6 +16,8 @@
 
 package reactivefeign.allfeatures;
 
+import feign.Param;
+import feign.RequestLine;
 import org.reactivestreams.Publisher;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RestController;
@@ -64,6 +66,12 @@ public class AllFeaturesController implements AllFeaturesMvc {
 	public Mono<List<Integer>> mirrorListParametersNew(
 			List<Integer> listParams) {
 		return listParams != null ? just(listParams) : Mono.just(emptyList());
+	}
+
+	@Override
+	public Mono<String[]> mirrorArrayParametersNew(
+			String[] dynamicArrayParam){
+		return Mono.just(dynamicArrayParam);
 	}
 
 	//Spring can't treat Map<String, List<String>> correctly

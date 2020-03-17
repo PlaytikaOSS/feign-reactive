@@ -39,6 +39,9 @@ public interface AllFeaturesApi {
 	Mono<List<Integer>> mirrorListParametersNew(
 			List<Integer> dynamicListParam);
 
+	Mono<String[]> mirrorArrayParametersNew(
+			String[] dynamicArrayParam);
+
 	Mono<Map<String, List<String>>> mirrorMapParametersNew(
 			Map<String, List<String>> paramMap);
 

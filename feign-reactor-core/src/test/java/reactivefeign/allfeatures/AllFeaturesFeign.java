@@ -54,6 +54,11 @@ public interface AllFeaturesFeign extends AllFeaturesApi{
             @Param("dynamicListParam") List<Integer> dynamicListParam);
 
 	@Override
+	@RequestLine("GET /mirrorArrayParametersNew")
+	Mono<String[]> mirrorArrayParametersNew(
+			@Param("dynamicArrayParam") String[] dynamicArrayParam);
+
+	@Override
 	@RequestLine("GET /mirrorMapParametersNew")
 	Mono<Map<String, List<String>>> mirrorMapParametersNew(
             @QueryMap Map<String, List<String>> paramMap);
