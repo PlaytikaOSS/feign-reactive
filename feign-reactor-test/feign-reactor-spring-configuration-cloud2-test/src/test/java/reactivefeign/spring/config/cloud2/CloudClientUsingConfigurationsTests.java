@@ -105,15 +105,14 @@ public class CloudClientUsingConfigurationsTests {
 	}
 
 	@Test
-	public void shouldFailButNotOnDefaultHystrixTimeoutAsItDisabledForBarClient() {
+	public void shouldFailButNotOnDefaultCircuitBreakerTimeoutAsItDisabledForBarClient() {
 		mockHttpServer.stubFor(get(urlPathMatching("/bar"))
 				.willReturn(aResponse()
 						.withFixedDelay(1100)
 						.withStatus(503)));
 
 		StepVerifier.create(barClient.bar())
-				.expectErrorMatches(throwable -> throwable.getCause() instanceof FeignException
-						&& throwable.getCause().getMessage().contains("status 503"))
+				.expectErrorMatches(throwable -> throwable.getCause() instanceof FeignException.ServiceUnavailable)
 				.verify();
 
 		assertThat(mockHttpServer.getAllServeEvents().size()).isEqualTo(1);
