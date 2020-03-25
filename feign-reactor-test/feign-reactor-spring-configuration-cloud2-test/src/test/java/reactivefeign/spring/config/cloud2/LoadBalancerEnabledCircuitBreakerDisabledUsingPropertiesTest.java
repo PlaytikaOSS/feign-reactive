@@ -76,7 +76,7 @@ public class LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest {
 	TestReactiveFeignClient feignClient;
 
 	@Test
-	public void shouldRetryAndNotFailOnDefaultHystrixTimeout() {
+	public void shouldRetryAndNotFailOnDefaultCircuitBreakerTimeout() {
 		Stream.of(mockHttpServer1, mockHttpServer2).forEach(wireMockServer -> {
 			wireMockServer.stubFor(get(urlPathMatching(TEST_URL))
 					.willReturn(aResponse()
@@ -88,7 +88,10 @@ public class LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest {
 		Mono<String> result = feignClient.testMethod();
 
 		StepVerifier.create(result)
-				.expectErrorMatches(throwable -> throwable instanceof OutOfRetriesException)
+				.expectErrorMatches(throwable -> {
+					throwable.printStackTrace();
+					return throwable instanceof OutOfRetriesException;
+				})
 				.verify();
 
 		assertThat(mockHttpServer1.getAllServeEvents().size()).isEqualTo(1);

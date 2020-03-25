@@ -259,13 +259,7 @@ public class SampleConfigurationsTest {
 		@Bean
 		public ReactiveResilience4JCircuitBreakerFactory circuitBreakerFactory(){
 			ReactiveResilience4JCircuitBreakerFactory circuitBreakerFactory = new ReactiveResilience4JCircuitBreakerFactory();
-			circuitBreakerFactory.configureCircuitBreakerRegistry(circuitBreakerRegistry);
-			return circuitBreakerFactory;
-		}
-
-		@Bean
-		public Customizer<ReactiveResilience4JCircuitBreakerFactory> defaultCustomizer() {
-			return factory -> factory.configureDefault(id -> new Resilience4JConfigBuilder(id)
+			circuitBreakerFactory.configureDefault(id -> new Resilience4JConfigBuilder(id)
 					.circuitBreakerConfig(CircuitBreakerConfig.custom()
 							.minimumNumberOfCalls(VOLUME_THRESHOLD)
 							.enableAutomaticTransitionFromOpenToHalfOpen()
@@ -274,7 +268,10 @@ public class SampleConfigurationsTest {
 							.build())
 					.timeLimiterConfig(TimeLimiterConfig.custom()
 							.timeoutDuration(Duration.ofSeconds(5)).build()).build());
+			circuitBreakerFactory.configureCircuitBreakerRegistry(circuitBreakerRegistry);
+			return circuitBreakerFactory;
 		}
+
 	}
 
 	@Configuration
