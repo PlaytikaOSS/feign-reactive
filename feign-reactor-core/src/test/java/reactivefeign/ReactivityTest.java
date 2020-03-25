@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.awaitility.Awaitility.waitAtMost;
+import static org.hamcrest.CoreMatchers.is;
 import static reactor.netty.http.HttpProtocol.H2C;
 import static reactor.netty.http.HttpProtocol.HTTP11;
 
@@ -82,7 +83,7 @@ abstract public class ReactivityTest extends BaseReactorTest {
     }).start();
 
     waitAtMost(timeToCompleteReactively(), TimeUnit.MILLISECONDS)
-            .until(() -> counter.get() == CALLS_NUMBER);
+            .untilAtomic(counter, is(CALLS_NUMBER));
   }
 
   public static int timeToCompleteReactively(){

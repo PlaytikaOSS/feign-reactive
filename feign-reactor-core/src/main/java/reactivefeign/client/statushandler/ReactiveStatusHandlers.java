@@ -57,7 +57,8 @@ public class ReactiveStatusHandlers {
     Request feignRequest = Request.create(httpMethod(request.method()),
             request.uri().toString(),
             (Map)request.headers(),
-            Request.Body.empty());
+            Request.Body.empty(),
+            null);
 
     return Response.builder()
             .request(feignRequest)

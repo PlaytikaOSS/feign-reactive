@@ -103,7 +103,7 @@ public class ReactiveFeign {
   }
 
   Map<String, MethodHandler> targetToHandlersByName(final Target target) {
-    Map<String, MethodMetadata> metadata = contract.parseAndValidatateMetadata(target.type())
+    Map<String, MethodMetadata> metadata = contract.parseAndValidateMetadata(target.type())
             .stream()
             .collect(Collectors.toMap(
                     MethodMetadata::configKey,

@@ -40,9 +40,9 @@ public class ReactiveContract implements Contract {
   }
 
   @Override
-  public List<MethodMetadata> parseAndValidatateMetadata(final Class<?> targetType) {
+  public List<MethodMetadata> parseAndValidateMetadata(final Class<?> targetType) {
     final List<MethodMetadata> methodsMetadata =
-        this.delegate.parseAndValidatateMetadata(targetType);
+        this.delegate.parseAndValidateMetadata(targetType);
 
     for (final MethodMetadata metadata : methodsMetadata) {
       final Type type = metadata.returnType();

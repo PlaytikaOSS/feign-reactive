@@ -19,7 +19,7 @@ abstract public class BaseReactorTest {
 
     @BeforeClass
     public static void installBlockHound() {
-        if(INSTALL_BLOCKHOUND) {
+        if (INSTALL_BLOCKHOUND) {
             BlockHound.Builder builder = BlockHound.builder();
             ServiceLoader<BlockHoundIntegration> serviceLoader = ServiceLoader.load(BlockHoundIntegration.class);
             serviceLoader.forEach(builder::with);
@@ -67,18 +67,17 @@ abstract public class BaseReactorTest {
     }
 
     //by default we want to detect blocking calls
-    protected Scheduler testScheduler(){
+    protected Scheduler testScheduler() {
         return Schedulers.parallel();
     }
 
     @Test(expected = RuntimeException.class)
-    public void shouldFailAsBlocking(){
+    public void shouldFailAsBlocking() {
         Mono.delay(Duration.ofSeconds(1))
                 .doOnNext(it -> {
                     try {
                         Thread.sleep(10);
-                    }
-                    catch (InterruptedException e) {
+                    } catch (InterruptedException e) {
                         throw new RuntimeException(e);
                     }
                 })
