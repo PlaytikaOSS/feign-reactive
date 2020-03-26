@@ -5,7 +5,6 @@ import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
 import org.junit.After;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +41,6 @@ import static reactivefeign.spring.config.cloud2.SleuthTest.FEIGN_CLIENT_TEST_SL
         "spring.cloud.discovery.client.simple.instances."+ FEIGN_CLIENT_TEST_SLEUTH +"[0].uri=http://localhost:8080"},
         locations = "classpath:common.properties")
 @DirtiesContext
-@Ignore  //TODO find out why spring context get closed in the next test
 public class SleuthTest {
 
     static final String TRACE_ID_NAME = "X-B3-TraceId";
@@ -61,7 +59,7 @@ public class SleuthTest {
     Tracer tracer;
 
     @After
-    public void close() {
+    public void reset() {
         this.reporter.clear();
     }
 

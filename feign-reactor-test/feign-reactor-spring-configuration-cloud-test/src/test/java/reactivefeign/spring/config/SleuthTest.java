@@ -4,7 +4,7 @@ package reactivefeign.spring.config;
 import brave.Span;
 import brave.Tracer;
 import brave.sampler.Sampler;
-import org.junit.Before;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,8 +56,8 @@ public class SleuthTest {
     @Autowired
     Tracer tracer;
 
-    @Before
-    public void close() {
+    @After
+    public void reset() {
         this.reporter.clear();
     }
 
