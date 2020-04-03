@@ -5,12 +5,13 @@
 version: 2
 jobs:
   build:
-    docker:
-      - image: circleci/openjdk:11-browsers
+    machine:
+      image: ubuntu-1604:201903-01
 
     environment:
       # Customize the JVM maximum heap limit
-      MAVEN_OPTS: -Xmx1024m
+      MAVEN_OPTS: -Xmx2048m
+      MAVEN_VERSION: 3.5.0
 
     steps:
       - add_ssh_keys:
