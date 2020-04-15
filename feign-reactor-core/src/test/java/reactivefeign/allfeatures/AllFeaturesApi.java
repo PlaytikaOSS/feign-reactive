@@ -54,6 +54,7 @@ public interface AllFeaturesApi {
 	Mono<Map<String, List<String>>> mirrorMultiMapHeaders(
 			Map<String, List<String>> headerMap);
 
+	Mono<String[]> mirrorHeaderAndRequestWithSameName(String header, String requestParam);
 
 	Mono<String> mirrorBody(String body);
 

@@ -16,14 +16,11 @@
 
 package reactivefeign.allfeatures;
 
-import feign.Param;
-import feign.RequestLine;
 import org.reactivestreams.Publisher;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 
 import java.nio.ByteBuffer;
 import java.time.Duration;
@@ -106,6 +103,11 @@ public class AllFeaturesController implements AllFeaturesMvc {
 	public Mono<Map<String, List<String>>> mirrorMultiMapHeaders(
 			Map<String, List<String>> param) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Mono<String[]> mirrorHeaderAndRequestWithSameName(String header, String requestParam) {
+		return just(new String[]{header, requestParam});
 	}
 
 	@Override

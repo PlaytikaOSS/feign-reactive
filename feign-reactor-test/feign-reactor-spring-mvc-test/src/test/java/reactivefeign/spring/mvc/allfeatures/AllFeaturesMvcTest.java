@@ -52,4 +52,11 @@ public class AllFeaturesMvcTest extends AllFeaturesTest{
 				.verifyComplete();
 	}
 
+	//TODO https://github.com/Playtika/feign-reactive/issues/186
+	//should be fixed in RequestHeaderParameterProcessor
+	@Override
+	@Test(expected = IllegalStateException.class)
+	public void shouldPassHeaderAndRequestParameterWithSameName() {
+		super.shouldPassHeaderAndRequestParameterWithSameName();
+	}
 }

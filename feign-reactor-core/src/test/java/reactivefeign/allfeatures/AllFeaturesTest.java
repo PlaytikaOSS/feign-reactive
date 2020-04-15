@@ -242,6 +242,14 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 	}
 
 	@Test
+	public void shouldPassHeaderAndRequestParameterWithSameName() {
+		String[] returned = client.mirrorHeaderAndRequestWithSameName("1", "2")
+				.subscribeOn(testScheduler()).block();
+
+		assertThat(returned).containsExactly("1", "2");
+	}
+
+	@Test
 	public void shouldReturnBody() {
 		String returned = client.mirrorBody("Test Body")
 				.subscribeOn(testScheduler()).block();

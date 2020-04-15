@@ -81,6 +81,12 @@ public interface AllFeaturesMvc extends reactivefeign.allfeatures.AllFeaturesApi
 			@RequestHeader Map<String, List<String>> param);
 
 	@Override
+	@GetMapping(path = "/mirrorHeaderAndRequestWithSameName")
+	Mono<String[]> mirrorHeaderAndRequestWithSameName(
+			@RequestHeader("username") String header,
+			@RequestParam("username") String requestParam);
+
+	@Override
 	@PostMapping(path = "/mirrorBody")
 	Mono<String> mirrorBody(@RequestBody String body);
 

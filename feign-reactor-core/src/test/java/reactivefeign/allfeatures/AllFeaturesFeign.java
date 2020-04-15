@@ -77,9 +77,15 @@ public interface AllFeaturesFeign extends AllFeaturesApi{
 
 	@Override
 	@RequestLine("GET /mirrorMultiMapHeaders")
-	@Headers({ "Method-Header: {headerValue}" })
 	Mono<Map<String, List<String>>> mirrorMultiMapHeaders(
             @HeaderMap Map<String, List<String>> headerMap);
+
+	@Override
+	@RequestLine("GET /mirrorHeaderAndRequestWithSameName")
+	@Headers({ "username: {headerValue}" })
+	Mono<String[]> mirrorHeaderAndRequestWithSameName(
+			@Param("headerValue") String header,
+			@Param("username") String requestParam);
 
 	@Override
 	@RequestLine("POST " + "/mirrorBody")
