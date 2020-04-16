@@ -16,16 +16,25 @@ package reactivefeign.webclient;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static java.util.Arrays.asList;
+import static reactivefeign.TestUtils.MAPPER;
+import static reactivefeign.TestUtils.toLowerCaseKeys;
+import static reactivefeign.webclient.utils.ResponseUtils.toResponseEntity;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.Test;
 import org.springframework.core.codec.DecodingException;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import feign.FeignException;
 import reactivefeign.ReactiveFeign;
+import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.testcase.IcecreamServiceApi;
+import reactivefeign.testcase.domain.Flavor;
 import reactivefeign.testcase.domain.IceCreamOrder;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -71,4 +80,24 @@ public class SmokeTest extends reactivefeign.SmokeTest {
             .expectError(FeignException.class)
             .verify();
   }
+
+  @Test
+  public void shouldPassResponseAsResponseEntity() throws JsonProcessingException {
+
+    wireMockRule.stubFor(get(urlEqualTo("/icecream/flavors"))
+            .willReturn(aResponse().withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(MAPPER.writeValueAsString(Flavor.values()))));
+
+    Mono<ResponseEntity<Flux<Flavor>>> result = client.response().map(toResponseEntity());
+    StepVerifier.create(result)
+            .expectNextMatches(response -> toLowerCaseKeys(response.getHeaders())
+                    .containsKey("content-type"))
+            .verifyComplete();
+
+     StepVerifier.create(result.flatMapMany(ResponseEntity::getBody))
+            .expectNextSequence(asList(Flavor.values()))
+            .verifyComplete();
+  }
+
 }

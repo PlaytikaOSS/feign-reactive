@@ -95,7 +95,7 @@ public class DefaultReactiveLogger implements ReactiveLoggerListener<DefaultReac
         return logger.isTraceEnabled();
     }
 
-    private void logResponseHeaders(ReactiveHttpResponse httpResponse, String feignMethodTag,
+    private void logResponseHeaders(ReactiveHttpResponse<?> httpResponse, String feignMethodTag,
                                     long elapsedTime) {
         if (logger.isTraceEnabled()) {
             logger.trace("[{}] RESPONSE HEADERS\n{}", feignMethodTag,

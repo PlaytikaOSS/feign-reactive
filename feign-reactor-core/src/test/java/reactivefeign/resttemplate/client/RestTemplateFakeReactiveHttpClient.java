@@ -27,11 +27,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
-import reactivefeign.client.ReactiveFeignException;
-import reactivefeign.client.ReactiveHttpClient;
-import reactivefeign.client.ReactiveHttpRequest;
-import reactivefeign.client.ReactiveHttpResponse;
-import reactivefeign.client.ReadTimeoutException;
+import reactivefeign.client.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -41,8 +37,9 @@ import java.net.SocketTimeoutException;
 import java.util.List;
 import java.util.Map;
 
-import static feign.Util.resolveLastTypeParameter;
 import static org.springframework.core.ParameterizedTypeReference.forType;
+import static reactivefeign.utils.FeignUtils.returnActualType;
+import static reactivefeign.utils.FeignUtils.returnPublisherType;
 
 public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
 
@@ -64,10 +61,8 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
     converter.setObjectMapper(mapper);
     restTemplate.getMessageConverters().add(0, converter);
 
-
-    final Type returnType = methodMetadata.returnType();
-    returnPublisherType = ((ParameterizedType) returnType).getRawType();
-    returnActualType = forType(resolveLastTypeParameter(returnType, (Class<?>) returnPublisherType));
+    returnPublisherType = returnPublisherType(methodMetadata);
+    returnActualType = forType(returnActualType(methodMetadata));
   }
 
   @Override

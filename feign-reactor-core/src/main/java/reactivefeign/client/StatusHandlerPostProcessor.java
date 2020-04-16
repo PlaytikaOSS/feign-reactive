@@ -25,7 +25,7 @@ import reactor.core.publisher.Mono;
  * @author Sergii Karpenko
  */
 
-public class StatusHandlerPostProcessor implements ReactiveHttpResponseMapper {
+public class StatusHandlerPostProcessor<P extends Publisher<?>> implements ReactiveHttpResponseMapper<P> {
 
   private final ReactiveStatusHandler statusHandler;
 
@@ -40,32 +40,32 @@ public class StatusHandlerPostProcessor implements ReactiveHttpResponseMapper {
   }
 
   @Override
-  public Mono<ReactiveHttpResponse> apply(ReactiveHttpResponse response) {
+  public Mono<ReactiveHttpResponse<P>> apply(ReactiveHttpResponse<P> response) {
     String methodTag = response.request().methodKey();
-    ReactiveHttpResponse errorResponse = response;
+    ReactiveHttpResponse<P> errorResponse = response;
     if (statusHandler.shouldHandle(response.status())) {
-      errorResponse = new ErrorReactiveHttpResponse(response, statusHandler.decode(methodTag, response));
+      errorResponse = new ErrorReactiveHttpResponse<>(response, statusHandler.decode(methodTag, response));
     } else if(defaultStatusHandler.shouldHandle(response.status())){
-      errorResponse = new ErrorReactiveHttpResponse(response, defaultStatusHandler.decode(methodTag, response));
+      errorResponse = new ErrorReactiveHttpResponse<>(response, defaultStatusHandler.decode(methodTag, response));
     }
     return Mono.just(errorResponse);
   }
 
-  private class ErrorReactiveHttpResponse extends DelegatingReactiveHttpResponse {
+  private static class ErrorReactiveHttpResponse<P extends Publisher<?>> extends DelegatingReactiveHttpResponse<P> {
 
     private final Mono<? extends Throwable> error;
 
-    ErrorReactiveHttpResponse(ReactiveHttpResponse response, Mono<? extends Throwable> error) {
+    ErrorReactiveHttpResponse(ReactiveHttpResponse<P> response, Mono<? extends Throwable> error) {
       super(response);
       this.error = error;
     }
 
     @Override
-    public Publisher<Object> body() {
+    public P body() {
       if (getResponse().body() instanceof Mono) {
-        return error.flatMap(Mono::error);
+        return (P)error.flatMap(Mono::error);
       } else {
-        return error.flatMapMany(Flux::error);
+        return (P)error.flatMapMany(Flux::error);
       }
     }
   }

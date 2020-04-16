@@ -32,7 +32,7 @@ import static reactivefeign.utils.FeignUtils.methodTag;
 public final class ReactiveHttpRequest {
 
   private final MethodMetadata methodMetadata;
-  private final Target target;
+  private final Target<?> target;
   private final URI uri;
   private final Map<String, List<String>> headers;
   private final Publisher<Object> body;
@@ -41,7 +41,7 @@ public final class ReactiveHttpRequest {
    * No parameters can be null except {@code body}. All parameters must be effectively immutable,
    * via safe copies, not mutating or otherwise.
    */
-  public ReactiveHttpRequest(MethodMetadata methodMetadata, Target target,
+  public ReactiveHttpRequest(MethodMetadata methodMetadata, Target<?> target,
                              URI uri, Map<String, List<String>> headers, Publisher<Object> body) {
     this.methodMetadata = checkNotNull(methodMetadata, "method of %s", uri);
     this.target = checkNotNull(target, "target of %s", uri);

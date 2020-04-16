@@ -17,6 +17,8 @@ import feign.MethodMetadata;
 import feign.Request;
 import feign.Target;
 import org.reactivestreams.Publisher;
+import reactivefeign.client.ReactiveHttpResponse;
+import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -35,12 +37,43 @@ public class FeignUtils {
   }
 
   public static Class returnPublisherType(MethodMetadata methodMetadata) {
-    final Type returnType = methodMetadata.returnType();
-    return (Class)((ParameterizedType) returnType).getRawType();
+    return returnPublisherType(methodMetadata.returnType());
+  }
+
+  public static boolean isResponsePublisher(Type returnType) {
+    Class<?> publisher = (Class)((ParameterizedType) returnType).getRawType();
+    Type typeInPublisher = resolveLastTypeParameter(returnType, publisher);
+    return isResponsePublisher(publisher, typeInPublisher);
+  }
+
+  public static Class returnPublisherType(Type returnType) {
+    Class<?> publisher = (Class)((ParameterizedType) returnType).getRawType();
+    Type typeInPublisher = resolveLastTypeParameter(returnType, publisher);
+    if(isResponsePublisher(publisher, typeInPublisher)){
+      Type typeInResponse = resolveLastTypeParameter(typeInPublisher, ReactiveHttpResponse.class);
+      return (Class)((ParameterizedType) typeInResponse).getRawType();
+    } else {
+      return publisher;
+    }
+  }
+
+  private static boolean isResponsePublisher(Class<?> publisher, Type typeInPublisher ){
+    return publisher == Mono.class
+            && typeInPublisher instanceof ParameterizedType
+            && ((ParameterizedType) typeInPublisher).getRawType() == ReactiveHttpResponse.class;
   }
 
   public static Type returnActualType(MethodMetadata methodMetadata) {
-    return resolveLastTypeParameter(methodMetadata.returnType(), returnPublisherType(methodMetadata));
+    Type returnType = methodMetadata.returnType();
+    Class<?> publisher = (Class)((ParameterizedType) returnType).getRawType();
+    Type typeInPublisher = resolveLastTypeParameter(returnType, publisher);
+    if(isResponsePublisher(publisher, typeInPublisher)){
+      Type typeInResponse = resolveLastTypeParameter(typeInPublisher, ReactiveHttpResponse.class);
+      Class publisherInResponse = (Class)((ParameterizedType) typeInResponse).getRawType();
+      return resolveLastTypeParameter(typeInResponse, publisherInResponse);
+    } else {
+      return typeInPublisher;
+    }
   }
 
   public static Type bodyActualType(MethodMetadata methodMetadata) {

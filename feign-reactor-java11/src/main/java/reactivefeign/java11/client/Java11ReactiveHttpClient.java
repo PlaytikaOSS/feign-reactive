@@ -23,11 +23,7 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import feign.MethodMetadata;
 import org.reactivestreams.Publisher;
-import reactivefeign.client.ReactiveFeignException;
-import reactivefeign.client.ReactiveHttpClient;
-import reactivefeign.client.ReactiveHttpRequest;
-import reactivefeign.client.ReactiveHttpResponse;
-import reactivefeign.client.ReadTimeoutException;
+import reactivefeign.client.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -41,12 +37,10 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 
-import static feign.Util.resolveLastTypeParameter;
 import static java.net.http.HttpResponse.BodyHandlers.fromSubscriber;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static reactivefeign.utils.FeignUtils.getBodyActualType;
+import static reactivefeign.utils.FeignUtils.*;
 import static reactivefeign.utils.HttpUtils.*;
 import static reactor.adapter.JdkFlowAdapter.publisherToFlowPublisher;
 
@@ -71,9 +65,8 @@ public class Java11ReactiveHttpClient implements ReactiveHttpClient {
 			HttpClient httpClient,
 			JsonFactory jsonFactory, ObjectMapper objectMapper) {
 
-		final Type returnType = methodMetadata.returnType();
-		Class returnPublisherType = (Class)((ParameterizedType) returnType).getRawType();
-		Type returnActualType = resolveLastTypeParameter(returnType, returnPublisherType);
+		Class returnPublisherType = returnPublisherType(methodMetadata);
+		Type returnActualType = returnActualType(methodMetadata);
 		Type bodyActualType = getBodyActualType(methodMetadata.bodyType());
 		ObjectWriter bodyWriter = bodyActualType != null
 				? objectMapper.writerFor(objectMapper.constructType(bodyActualType)) : null;

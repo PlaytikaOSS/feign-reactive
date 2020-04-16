@@ -28,11 +28,7 @@ import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.reactive.client.ContentChunk;
 import org.eclipse.jetty.reactive.client.ReactiveRequest;
 import org.reactivestreams.Publisher;
-import reactivefeign.client.ReactiveFeignException;
-import reactivefeign.client.ReactiveHttpClient;
-import reactivefeign.client.ReactiveHttpRequest;
-import reactivefeign.client.ReactiveHttpResponse;
-import reactivefeign.client.ReadTimeoutException;
+import reactivefeign.client.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -43,13 +39,12 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.util.concurrent.TimeUnit;
 
-import static feign.Util.resolveLastTypeParameter;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static org.eclipse.jetty.http.HttpHeader.ACCEPT;
 import static org.eclipse.jetty.http.HttpHeader.ACCEPT_ENCODING;
 import static reactivefeign.jetty.utils.ProxyPostProcessor.postProcess;
-import static reactivefeign.utils.FeignUtils.getBodyActualType;
+import static reactivefeign.utils.FeignUtils.*;
 import static reactivefeign.utils.HttpUtils.*;
 
 /**
@@ -73,9 +68,8 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 			HttpClient httpClient,
 			JsonFactory jsonFactory, ObjectMapper objectMapper) {
 
-		final Type returnType = methodMetadata.returnType();
-		Class returnPublisherType = (Class)((ParameterizedType) returnType).getRawType();
-		Type returnActualType = resolveLastTypeParameter(returnType, returnPublisherType);
+		Class returnPublisherType = returnPublisherType(methodMetadata);
+		Type returnActualType = returnActualType(methodMetadata);
 		Type bodyActualType = getBodyActualType(methodMetadata.bodyType());
 		ObjectWriter bodyWriter = bodyActualType != null
 				? objectMapper.writerFor(objectMapper.constructType(bodyActualType)) : null;

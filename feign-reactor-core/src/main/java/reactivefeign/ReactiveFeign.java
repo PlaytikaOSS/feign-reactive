@@ -25,10 +25,7 @@ import reactivefeign.methodhandler.MethodHandler;
 import reactivefeign.methodhandler.MethodHandlerFactory;
 import reactivefeign.methodhandler.ReactiveMethodHandlerFactory;
 import reactivefeign.methodhandler.fallback.FallbackMethodHandlerFactory;
-import reactivefeign.publisher.FluxPublisherHttpClient;
-import reactivefeign.publisher.MonoPublisherHttpClient;
-import reactivefeign.publisher.PublisherClientFactory;
-import reactivefeign.publisher.PublisherHttpClient;
+import reactivefeign.publisher.*;
 import reactivefeign.publisher.retry.FluxRetryPublisherHttpClient;
 import reactivefeign.publisher.retry.MonoRetryPublisherHttpClient;
 import reactivefeign.retry.ReactiveRetryPolicy;
@@ -51,7 +48,7 @@ import static reactivefeign.client.ReactiveHttpExchangeFilterFunction.ofRequestP
 import static reactivefeign.client.ReactiveHttpExchangeFilterFunction.ofResponseProcessor;
 import static reactivefeign.client.StatusHandlerPostProcessor.handleStatus;
 import static reactivefeign.client.log.LoggerExchangeFilterFunction.log;
-import static reactivefeign.utils.FeignUtils.returnPublisherType;
+import static reactivefeign.utils.FeignUtils.*;
 
 /**
  * Allows Feign interfaces to accept {@link Publisher} as body and return reactive {@link Mono} or
@@ -298,9 +295,13 @@ public class ReactiveFeign {
     }
 
     protected PublisherHttpClient toPublisher(ReactiveHttpClient reactiveHttpClient, MethodMetadata methodMetadata){
-      Type returnPublisherType = returnPublisherType(methodMetadata);
+      if(isResponsePublisher(methodMetadata.returnType())){
+        return new ResponsePublisherHttpClient(reactiveHttpClient);
+      }
+
+      Class returnPublisherType = returnPublisherType(methodMetadata);
       if(returnPublisherType == Mono.class){
-        return new MonoPublisherHttpClient(reactiveHttpClient);
+          return new MonoPublisherHttpClient(reactiveHttpClient);
       } else if(returnPublisherType == Flux.class){
         return new FluxPublisherHttpClient(reactiveHttpClient);
       } else {

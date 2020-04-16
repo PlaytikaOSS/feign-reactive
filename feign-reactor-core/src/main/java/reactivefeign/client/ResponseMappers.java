@@ -24,18 +24,18 @@ import reactor.core.publisher.Mono;
  */
 public class ResponseMappers {
 
-  public static ReactiveHttpResponseMapper ignore404() {
+  public static <P extends Publisher<?>> ReactiveHttpResponseMapper<P> ignore404() {
     return response -> {
       if (response.status() == HttpStatus.SC_NOT_FOUND) {
-        return Mono.just(new DelegatingReactiveHttpResponse(response) {
+        return Mono.just(new DelegatingReactiveHttpResponse<P>(response) {
           @Override
           public int status() {
             return HttpStatus.SC_OK;
           }
 
           @Override
-          public Publisher<Object> body() {
-            return Mono.empty();
+          public P body() {
+            return (P)Mono.empty();
           }
         });
       }

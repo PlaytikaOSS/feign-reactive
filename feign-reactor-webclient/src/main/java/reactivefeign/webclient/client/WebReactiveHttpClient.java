@@ -17,6 +17,7 @@
 package reactivefeign.webclient.client;
 
 import feign.MethodMetadata;
+import org.reactivestreams.Publisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -24,50 +25,44 @@ import org.springframework.http.client.reactive.ClientHttpRequest;
 import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactivefeign.client.ReactiveFeignException;
-import reactivefeign.client.ReactiveHttpClient;
-import reactivefeign.client.ReactiveHttpRequest;
-import reactivefeign.client.ReactiveHttpResponse;
-import reactivefeign.client.ReadTimeoutException;
+import reactivefeign.client.*;
 import reactor.core.publisher.Mono;
 
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-import static feign.Util.resolveLastTypeParameter;
 import static java.util.Optional.ofNullable;
-import static reactivefeign.utils.FeignUtils.getBodyActualType;
+import static reactivefeign.utils.FeignUtils.*;
 
 /**
  * Uses {@link WebClient} to execute http requests
  * @author Sergii Karpenko
  */
-public class WebReactiveHttpClient implements ReactiveHttpClient {
+public class WebReactiveHttpClient<P extends Publisher<?>> implements ReactiveHttpClient<P> {
 
 	private final WebClient webClient;
 	private final ParameterizedTypeReference<Object> bodyActualType;
 	private final Type returnPublisherType;
-	private final ParameterizedTypeReference<Object> returnActualType;
+	private final ParameterizedTypeReference returnActualType;
 
-	public static WebReactiveHttpClient webClient(MethodMetadata methodMetadata, WebClient webClient) {
+	public static <P extends Publisher<?>> WebReactiveHttpClient<P> webClient(MethodMetadata methodMetadata, WebClient webClient) {
 
-		final Type returnType = methodMetadata.returnType();
-		Type returnPublisherType = ((ParameterizedType) returnType).getRawType();
-		ParameterizedTypeReference<Object> returnActualType = ParameterizedTypeReference.forType(
-				resolveLastTypeParameter(returnType, (Class<?>) returnPublisherType));
+		Type returnPublisherType = returnPublisherType(methodMetadata);
+		ParameterizedTypeReference returnActualType =
+				ParameterizedTypeReference.forType(returnActualType(methodMetadata));
 
 		ParameterizedTypeReference<Object> bodyActualType = ofNullable(
 				getBodyActualType(methodMetadata.bodyType()))
-				.map(type -> ParameterizedTypeReference.forType(type))
+				.map(ParameterizedTypeReference::forType)
 				.orElse(null);
 
-		return new WebReactiveHttpClient(webClient,
+		return new WebReactiveHttpClient<>(webClient,
 				bodyActualType, returnPublisherType, returnActualType);
 	}
 
 	public WebReactiveHttpClient(WebClient webClient,
 								 ParameterizedTypeReference<Object> bodyActualType,
-								 Type returnPublisherType, ParameterizedTypeReference<Object> returnActualType) {
+								 Type returnPublisherType,
+								 ParameterizedTypeReference returnActualType) {
 		this.webClient = webClient;
 		this.bodyActualType = bodyActualType;
 		this.returnPublisherType = returnPublisherType;
@@ -75,7 +70,7 @@ public class WebReactiveHttpClient implements ReactiveHttpClient {
 	}
 
 	@Override
-	public Mono<ReactiveHttpResponse> executeRequest(ReactiveHttpRequest request) {
+	public Mono<ReactiveHttpResponse<P>> executeRequest(ReactiveHttpRequest request) {
 		return webClient.method(HttpMethod.valueOf(request.method()))
 				.uri(request.uri())
 				.headers(httpHeaders -> setUpHeaders(request, httpHeaders))
@@ -88,7 +83,7 @@ public class WebReactiveHttpClient implements ReactiveHttpClient {
 						return new ReactiveFeignException(ex, request);
 					}
 				})
-				.map(response -> new WebReactiveHttpResponse(request, response, returnPublisherType, returnActualType));
+				.map(response -> new WebReactiveHttpResponse<>(request, response, returnPublisherType, returnActualType));
 	}
 
 	protected BodyInserter<?, ? super ClientHttpRequest> provideBody(ReactiveHttpRequest request) {

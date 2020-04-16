@@ -1,32 +1,33 @@
 package reactivefeign.client;
 
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 import java.util.function.Function;
 
 
-public interface ReactiveHttpExchangeFilterFunction {
+public interface ReactiveHttpExchangeFilterFunction<P extends Publisher<?>> {
 
-    Mono<ReactiveHttpResponse> filter(
+    Mono<ReactiveHttpResponse<P>> filter(
             ReactiveHttpRequest request,
-            ReactiveHttpClient exchangeFunction);
+            ReactiveHttpClient<P> exchangeFunction);
 
-    default ReactiveHttpExchangeFilterFunction then(
-            ReactiveHttpExchangeFilterFunction afterFilter) {
+    default ReactiveHttpExchangeFilterFunction<P> then(
+            ReactiveHttpExchangeFilterFunction<P> afterFilter) {
         return (request, next) -> filter(request, afterRequest -> afterFilter.filter(afterRequest, next));
     }
 
-    default ReactiveHttpClient filter(ReactiveHttpClient exchangeFunction){
+    default ReactiveHttpClient<P> filter(ReactiveHttpClient<P> exchangeFunction){
         return request -> filter(request, exchangeFunction);
     }
 
-    static ReactiveHttpExchangeFilterFunction ofRequestProcessor(
+    static <P extends Publisher<?>> ReactiveHttpExchangeFilterFunction<P> ofRequestProcessor(
             Function<ReactiveHttpRequest, Mono<ReactiveHttpRequest>> processor) {
         return (request, next) -> processor.apply(request).flatMap(next::executeRequest);
     }
 
-    static ReactiveHttpExchangeFilterFunction ofResponseProcessor(
-            Function<ReactiveHttpResponse, Mono<ReactiveHttpResponse>> processor) {
+    static <P extends Publisher<?>> ReactiveHttpExchangeFilterFunction<P> ofResponseProcessor(
+            Function<ReactiveHttpResponse<P>, Mono<ReactiveHttpResponse<P>>> processor) {
         return (request, next) -> next.executeRequest(request).flatMap(processor);
     }
 

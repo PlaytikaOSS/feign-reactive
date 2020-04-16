@@ -22,7 +22,6 @@ import org.reactivestreams.Publisher;
 import reactivefeign.client.DelegatingReactiveHttpResponse;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.util.function.Predicate;
@@ -58,7 +57,7 @@ abstract public class ResponseMapperTest extends BaseReactorTest {
         .statusHandler(null)
         .responseMapper(response -> {
           if(response.status() == HttpStatus.SC_NOT_IMPLEMENTED){
-            return Mono.just(new DelegatingReactiveHttpResponse(response){
+            return Mono.just(new DelegatingReactiveHttpResponse<Publisher<?>>(response){
               @Override
               public Publisher<?> body() {
                 return getResponse().bodyData().map(bytes -> {

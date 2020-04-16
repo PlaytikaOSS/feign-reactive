@@ -21,15 +21,11 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.web.client.RestClientException;
+import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.testcase.IcecreamServiceApi;
-import reactivefeign.testcase.domain.Bill;
-import reactivefeign.testcase.domain.Flavor;
-import reactivefeign.testcase.domain.IceCreamOrder;
-import reactivefeign.testcase.domain.Mixin;
-import reactivefeign.testcase.domain.OrderGenerator;
+import reactivefeign.testcase.domain.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -60,7 +56,7 @@ abstract public class SmokeTest extends BaseReactorTest {
     return wireMockRule.port();
   }
 
-  private IcecreamServiceApi client;
+  protected IcecreamServiceApi client;
 
   private OrderGenerator generator = new OrderGenerator();
   private Map<Integer, IceCreamOrder> orders = generator.generateRange(10).stream()
@@ -200,6 +196,26 @@ abstract public class SmokeTest extends BaseReactorTest {
     Mono<Map<String, Object>> result = client.genericJson(request);
     StepVerifier.create(result)
             .expectNext(response)
+            .verifyComplete();
+  }
+
+  @Test
+  public void shouldPassResponseAsIs() throws JsonProcessingException {
+
+    wireMockRule.stubFor(get(urlEqualTo("/icecream/flavors"))
+            .willReturn(aResponse().withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(MAPPER.writeValueAsString(Flavor.values()))));
+
+    Mono<ReactiveHttpResponse<Flux<Flavor>>> result = client.response();
+    StepVerifier.create(result)
+            .expectNextMatches(response -> toLowerCaseKeys(response.headers())
+                    .containsKey("content-type"))
+            .verifyComplete();
+
+    Flux<Flavor> flux = result.flatMapMany(ReactiveHttpResponse::body);
+    StepVerifier.create(flux)
+            .expectNextSequence(asList(Flavor.values()))
             .verifyComplete();
   }
 

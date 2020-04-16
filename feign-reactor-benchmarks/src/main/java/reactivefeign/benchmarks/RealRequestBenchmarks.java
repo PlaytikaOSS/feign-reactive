@@ -38,6 +38,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -135,7 +136,7 @@ abstract public class RealRequestBenchmarks {
                 })
                 .decoder((response, type) ->
                         type == String.class
-                                ? Util.toString(response.body().asReader())
+                                ? Util.toString(response.body().asReader(StandardCharsets.UTF_8))
                                 : objectMapper.readValue(
                                 response.body().asInputStream(),
                                 (Class)((ParameterizedType)type).getRawType()))

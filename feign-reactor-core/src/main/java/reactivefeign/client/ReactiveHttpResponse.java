@@ -24,7 +24,7 @@ import java.util.Map;
  * 
  * @author Sergii Karpenko
  */
-public interface ReactiveHttpResponse {
+public interface ReactiveHttpResponse<P extends Publisher<?>> {
 
   ReactiveHttpRequest request();
 
@@ -32,7 +32,7 @@ public interface ReactiveHttpResponse {
 
   Map<String, List<String>> headers();
 
-  Publisher<?> body();
+  P body();
 
   /**
    * used by error decoders

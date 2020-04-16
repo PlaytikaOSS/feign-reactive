@@ -3,6 +3,7 @@ package reactivefeign.methodhandler;
 import feign.MethodMetadata;
 import feign.Target;
 import reactivefeign.publisher.PublisherClientFactory;
+import reactivefeign.publisher.ResponsePublisherHttpClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -10,6 +11,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
 import static feign.Util.checkNotNull;
+import static reactivefeign.utils.FeignUtils.isResponsePublisher;
 import static reactivefeign.utils.FeignUtils.returnPublisherType;
 
 public class ReactiveMethodHandlerFactory implements MethodHandlerFactory {
@@ -32,6 +34,10 @@ public class ReactiveMethodHandlerFactory implements MethodHandlerFactory {
 
 		MethodHandler methodHandler = new PublisherClientMethodHandler(
 				target, metadata, publisherClientFactory.create(metadata));
+
+		if(isResponsePublisher(metadata.returnType())){
+			return new MonoMethodHandler(methodHandler);
+		}
 
 		Type returnPublisherType = returnPublisherType(metadata);
 		if(returnPublisherType == Mono.class){

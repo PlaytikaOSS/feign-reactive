@@ -73,7 +73,7 @@ public interface ReactiveFeignBuilder<T> {
      * @param responseMapper
      * @return
      */
-    ReactiveFeignBuilder<T> responseMapper(ReactiveHttpResponseMapper responseMapper);
+    ReactiveFeignBuilder<T> responseMapper(ReactiveHttpResponseMapper<?> responseMapper);
 
     ReactiveFeignBuilder<T> retryWhen(ReactiveRetryPolicy retryPolicy);
 

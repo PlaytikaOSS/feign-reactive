@@ -20,11 +20,13 @@ import reactor.core.publisher.Mono;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static feign.Util.checkNotNull;
-import static reactivefeign.utils.FeignUtils.bodyActualType;
-import static reactivefeign.utils.FeignUtils.returnActualType;
+import static java.util.Arrays.asList;
+import static reactivefeign.utils.FeignUtils.*;
 
 /**
  * Contract allowing only {@link Mono} and {@link Flux} return type.
@@ -62,9 +64,10 @@ public class ReactiveContract implements Contract {
     return methodsMetadata;
   }
 
+  private static final Set<Class> REACTOR_PUBLISHERS = new HashSet<>(asList(Mono.class, Flux.class));
+
   private boolean isReactorType(final Type type) {
     return (type instanceof ParameterizedType)
-        && (((ParameterizedType) type).getRawType() == Mono.class
-            || ((ParameterizedType) type).getRawType() == Flux.class);
+        && REACTOR_PUBLISHERS.contains(returnPublisherType(type));
   }
 }

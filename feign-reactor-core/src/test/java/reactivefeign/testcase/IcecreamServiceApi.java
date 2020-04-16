@@ -16,6 +16,7 @@ package reactivefeign.testcase;
 import feign.Headers;
 import feign.Param;
 import feign.RequestLine;
+import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.testcase.domain.Bill;
 import reactivefeign.testcase.domain.Flavor;
 import reactivefeign.testcase.domain.IceCreamOrder;
@@ -62,6 +63,9 @@ public interface IcecreamServiceApi {
 
   @RequestLine("POST /genericJson")
   Mono<Map<String, Object>> genericJson(Map<String, Object> payload);
+
+  @RequestLine("GET /icecream/flavors")
+  Mono<ReactiveHttpResponse<Flux<Flavor>>> response();
 
   default Mono<IceCreamOrder> findFirstOrder() {
     return findOrder(1);

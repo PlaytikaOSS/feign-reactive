@@ -8,7 +8,6 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.web.reactive.function.BodyExtractors;
 import org.springframework.web.reactive.function.client.ClientResponse;
-
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactor.core.publisher.Flux;
@@ -18,18 +17,18 @@ import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 
-class WebReactiveHttpResponse implements ReactiveHttpResponse{
+class WebReactiveHttpResponse<P extends Publisher<?>> implements ReactiveHttpResponse<P>{
 
 	private ReactiveHttpRequest reactiveRequest;
 	private final ClientResponse clientResponse;
 	private final Type returnPublisherType;
-	private final ParameterizedTypeReference<Object> returnActualType;
+	private final ParameterizedTypeReference returnActualType;
 
 	private final ByteArrayDecoder byteArrayDecoder = new ByteArrayDecoder();
 
 	WebReactiveHttpResponse(ReactiveHttpRequest reactiveRequest,
 							ClientResponse clientResponse,
-							Type returnPublisherType, ParameterizedTypeReference<Object> returnActualType) {
+							Type returnPublisherType, ParameterizedTypeReference returnActualType) {
 		this.reactiveRequest = reactiveRequest;
 		this.clientResponse = clientResponse;
 		this.returnPublisherType = returnPublisherType;
@@ -52,11 +51,11 @@ class WebReactiveHttpResponse implements ReactiveHttpResponse{
 	}
 
 	@Override
-	public Publisher<Object> body() {
+	public P body() {
 		if (returnPublisherType == Mono.class) {
-			return clientResponse.bodyToMono(returnActualType);
+			return (P)clientResponse.bodyToMono(returnActualType);
 		} else if(returnPublisherType == Flux.class){
-			return clientResponse.bodyToFlux(returnActualType);
+			return (P)clientResponse.bodyToFlux(returnActualType);
 		} else {
 			throw new IllegalArgumentException("Unknown returnPublisherType: " + returnPublisherType);
 		}
@@ -65,7 +64,6 @@ class WebReactiveHttpResponse implements ReactiveHttpResponse{
 	@Override
 	public Mono<byte[]> bodyData() {
 		Flux<DataBuffer> response = clientResponse.body(BodyExtractors.toDataBuffers());
-
 		return DataBufferUtils.join(response)
 				.map(dataBuffer -> byteArrayDecoder.decode(dataBuffer, ResolvableType.NONE, null, null))
 				.defaultIfEmpty(new byte[0]);

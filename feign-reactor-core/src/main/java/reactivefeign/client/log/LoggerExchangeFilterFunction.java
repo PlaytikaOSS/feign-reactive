@@ -32,7 +32,7 @@ import static reactivefeign.utils.FeignUtils.responseWithBody;
  *
  * @author Sergii Karpenko
  */
-public class LoggerExchangeFilterFunction implements ReactiveHttpExchangeFilterFunction {
+public class LoggerExchangeFilterFunction<P extends Publisher<?>> implements ReactiveHttpExchangeFilterFunction<P> {
 
   private final MethodMetadata methodMetadata;
   private Target target;
@@ -40,10 +40,10 @@ public class LoggerExchangeFilterFunction implements ReactiveHttpExchangeFilterF
   private final boolean requestWithBody;
   private final boolean responseWithBody;
 
-  public static ReactiveHttpExchangeFilterFunction log(
+  public static <P extends Publisher<?>> ReactiveHttpExchangeFilterFunction<P> log(
           MethodMetadata methodMetadata, Target target,
           ReactiveLoggerListener<Object> loggerListener) {
-    return new LoggerExchangeFilterFunction(methodMetadata, target, loggerListener);
+    return new LoggerExchangeFilterFunction<>(methodMetadata, target, loggerListener);
   }
 
   private LoggerExchangeFilterFunction(MethodMetadata methodMetadata, Target target,
@@ -56,7 +56,7 @@ public class LoggerExchangeFilterFunction implements ReactiveHttpExchangeFilterF
   }
 
   @Override
-  public Mono<ReactiveHttpResponse> filter(ReactiveHttpRequest request, ReactiveHttpClient exchangeFunction) {
+  public Mono<ReactiveHttpResponse<P>> filter(ReactiveHttpRequest request, ReactiveHttpClient<P> exchangeFunction) {
     AtomicReference<Object> logContext = new AtomicReference<>();
 
     logContext.set(loggerListener.requestStarted(request, target, methodMetadata));
@@ -100,16 +100,16 @@ public class LoggerExchangeFilterFunction implements ReactiveHttpExchangeFilterF
     return body -> loggerListener.bodySent(body, logContext);
   }
 
-  private ReactiveHttpResponse logResponseBody(ReactiveHttpResponse resp, Object logContext) {
-    return responseWithBody ? new LoggerReactiveHttpResponse(resp, loggerListener, logContext) : resp;
+  private ReactiveHttpResponse<P> logResponseBody(ReactiveHttpResponse<P> resp, Object logContext) {
+    return responseWithBody ? new LoggerReactiveHttpResponse<>(resp, loggerListener, logContext) : resp;
   }
 
-  private class LoggerReactiveHttpResponse extends DelegatingReactiveHttpResponse {
+  private static class LoggerReactiveHttpResponse<P extends Publisher<?>> extends DelegatingReactiveHttpResponse<P> {
 
     private final ReactiveLoggerListener<Object> loggerListener;
     private Object logContext;
 
-    private LoggerReactiveHttpResponse(ReactiveHttpResponse response,
+    private LoggerReactiveHttpResponse(ReactiveHttpResponse<P> response,
                                        ReactiveLoggerListener<Object> loggerListener, Object logContext) {
       super(response);
       this.loggerListener = loggerListener;
@@ -117,13 +117,13 @@ public class LoggerExchangeFilterFunction implements ReactiveHttpExchangeFilterF
     }
 
     @Override
-    public Publisher<?> body() {
-      Publisher<?> publisher = getResponse().body();
+    public P body() {
+      P publisher = getResponse().body();
 
       if (publisher instanceof Mono) {
-        return ((Mono<?>) publisher).doOnNext(responseBodyLogger());
+        return (P)((Mono) publisher).doOnNext(responseBodyLogger());
       } else {
-        return ((Flux<?>) publisher).doOnNext(responseBodyLogger());
+        return (P)((Flux) publisher).doOnNext(responseBodyLogger());
       }
 
     }

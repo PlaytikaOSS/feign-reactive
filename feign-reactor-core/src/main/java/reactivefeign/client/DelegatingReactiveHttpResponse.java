@@ -13,6 +13,7 @@
  */
 package reactivefeign.client;
 
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -21,15 +22,15 @@ import java.util.Map;
 /**
  * @author Sergii Karpenko
  */
-abstract public class DelegatingReactiveHttpResponse implements ReactiveHttpResponse {
+abstract public class DelegatingReactiveHttpResponse<P extends Publisher<?>> implements ReactiveHttpResponse<P> {
 
-  private final ReactiveHttpResponse response;
+  private final ReactiveHttpResponse<P> response;
 
-  protected DelegatingReactiveHttpResponse(ReactiveHttpResponse response) {
+  protected DelegatingReactiveHttpResponse(ReactiveHttpResponse<P> response) {
     this.response = response;
   }
 
-  protected ReactiveHttpResponse getResponse() {
+  protected ReactiveHttpResponse<P> getResponse() {
     return response;
   }
 

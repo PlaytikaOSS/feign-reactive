@@ -1,8 +1,9 @@
 package reactivefeign.client;
 
+import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
-public interface ReactiveHttpClient {
+public interface ReactiveHttpClient<P extends Publisher<?>> {
 
-	Mono<ReactiveHttpResponse> executeRequest(ReactiveHttpRequest request);
+	Mono<ReactiveHttpResponse<P>> executeRequest(ReactiveHttpRequest request);
 }
