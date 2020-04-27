@@ -62,7 +62,7 @@
         <!-- Tests -->
         <wiremock.version>2.26.3</wiremock.version>
         <awaitility.version>4.0.2</awaitility.version>
-        <blockhound.version>1.0.2.RELEASE</blockhound.version>
+        <blockhound.version>1.0.3.RELEASE</blockhound.version>
         <disruptor.version>3.4.2</disruptor.version>
 
         <!-- Plugins -->
