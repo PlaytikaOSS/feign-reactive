@@ -53,7 +53,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--BOMs-->
-        <spring-cloud-bom.version>Hoxton.SR3</spring-cloud-bom.version>
+        <spring-cloud-bom.version>Hoxton.SR4</spring-cloud-bom.version>
         <spring-boot-dependencies-bom.version>2.2.5.RELEASE</spring-boot-dependencies-bom.version>
 
         <!--other-->
