@@ -165,7 +165,7 @@ You can use `@RequestHeader` annotation for specific parameter to pass one heade
 
 ## Spring Auto-Configuration
 
-You can enable auto-configuration of reactive Feign clients as Sring beans just by adding `feign-reactor-spring-configuration` module to classpath. 
+You can enable auto-configuration of reactive Feign clients as Spring beans just by adding `feign-reactor-spring-configuration` module to classpath. 
 [Spring Auto-Configuration module](https://github.com/Playtika/feign-reactive/tree/develop/feign-reactor-spring-configuration)
 [Sample cloud auto-configuration project with Eureka/WebFlux/ReaciveFeign](https://github.com/kptfh/feign-reactive-sample)
 
