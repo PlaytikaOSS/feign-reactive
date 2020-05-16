@@ -2,11 +2,7 @@ package reactivefeign.rx2;
 
 import feign.Contract;
 import feign.MethodMetadata;
-import io.reactivex.BackpressureStrategy;
-import io.reactivex.Flowable;
-import io.reactivex.Maybe;
-import io.reactivex.Observable;
-import io.reactivex.Single;
+import io.reactivex.*;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactivefeign.ReactiveOptions;
@@ -34,6 +30,7 @@ import static feign.Util.resolveLastTypeParameter;
 import static java.util.Optional.ofNullable;
 import static reactivefeign.utils.FeignUtils.getBodyActualType;
 import static reactivefeign.utils.FeignUtils.returnPublisherType;
+import static reactivefeign.webclient.client.WebReactiveHttpClient.webReactiveHttpResponse;
 
 /**
  * @author Sergii Karpenko
@@ -141,8 +138,8 @@ public final class Rx2ReactiveFeign {
                     .map(type -> ParameterizedTypeReference.forType(type))
                     .orElse(null);
 
-            return new WebReactiveHttpClient(webClient,
-                    bodyActualType, rx2ToReactor(returnPublisherType), returnActualType);
+            return new WebReactiveHttpClient(webClient, bodyActualType,
+                    webReactiveHttpResponse(rx2ToReactor(returnPublisherType), returnActualType));
         }
 
         private static Class rx2ToReactor(Type type){

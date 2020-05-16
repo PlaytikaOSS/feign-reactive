@@ -65,6 +65,10 @@ public class FeignUtils {
 
   public static Type returnActualType(MethodMetadata methodMetadata) {
     Type returnType = methodMetadata.returnType();
+    return returnActualType(returnType);
+  }
+
+  public static Type returnActualType(Type returnType) {
     Class<?> publisher = (Class)((ParameterizedType) returnType).getRawType();
     Type typeInPublisher = resolveLastTypeParameter(returnType, publisher);
     if(isResponsePublisher(publisher, typeInPublisher)){

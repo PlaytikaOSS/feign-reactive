@@ -17,15 +17,15 @@ import java.util.Map;
 
 class WebReactiveHttpResponse<P extends Publisher<?>> implements ReactiveHttpResponse<P>{
 
-	private ReactiveHttpRequest reactiveRequest;
-	private final ClientResponse clientResponse;
-	private final Type returnPublisherType;
-	private final ParameterizedTypeReference returnActualType;
+	final ReactiveHttpRequest reactiveRequest;
+	final ClientResponse clientResponse;
+	final Type returnPublisherType;
+	final ParameterizedTypeReference<?> returnActualType;
 
 
 	WebReactiveHttpResponse(ReactiveHttpRequest reactiveRequest,
 							ClientResponse clientResponse,
-							Type returnPublisherType, ParameterizedTypeReference returnActualType) {
+							Type returnPublisherType, ParameterizedTypeReference<?> returnActualType) {
 		this.reactiveRequest = reactiveRequest;
 		this.clientResponse = clientResponse;
 		this.returnPublisherType = returnPublisherType;
