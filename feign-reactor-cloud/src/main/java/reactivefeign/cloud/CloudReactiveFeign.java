@@ -198,7 +198,6 @@ public class CloudReactiveFeign {
                     } else {
                         return publisherClient;
                     }
-
                 }
             };
         }

@@ -11,29 +11,34 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package reactivefeign.java11.h2c;
+package reactivefeign.jetty.h2c;
 
+import com.fasterxml.jackson.core.io.JsonEOFException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import reactivefeign.ReactiveFeign;
-import reactivefeign.testcase.IcecreamServiceApi;
 
-import static reactivefeign.ReactivityTest.CALLS_NUMBER;
-import static reactivefeign.java11.h2c.TestUtils.builderHttp2;
+import java.util.function.Predicate;
+
+import static reactivefeign.jetty.h2c.TestUtils.builderHttp2;
 import static reactivefeign.wiremock.WireMockServerConfigurations.h2cConfig;
 
 /**
  * @author Sergii Karpenko
  */
-public class SmokeTest extends reactivefeign.SmokeTest {
+public class BasicFeaturesTest extends reactivefeign.BasicFeaturesTest {
 
   @Override
   protected WireMockConfiguration wireMockConfig(){
-    return h2cConfig(true, CALLS_NUMBER);
+    return h2cConfig();
   }
 
   @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
+  protected <T> ReactiveFeign.Builder<T> builder() {
     return builderHttp2();
   }
 
+  @Override
+  protected Predicate<Throwable> corruptedJsonError() {
+    return throwable -> throwable instanceof JsonEOFException;
+  }
 }

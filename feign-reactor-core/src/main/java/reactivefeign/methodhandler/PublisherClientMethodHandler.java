@@ -49,23 +49,18 @@ import static reactivefeign.utils.StringUtils.cutTail;
  */
 public class PublisherClientMethodHandler implements MethodHandler {
 
-    /**
-     *
-     * @param template
-     * @return function that able to map substitutions map to actual value for specified template
-     */
     public static final Pattern SUBSTITUTION_PATTERN = Pattern.compile("\\{([^}]+)\\}");
 
-    private final Target target;
+    private final Target<?> target;
     private final MethodMetadata methodMetadata;
     private final PublisherHttpClient publisherClient;
-    private final Function<Map<String, ?>, String> pathExpander;
-    private final Map<String, List<Function<Map<String, ?>, List<String>>>> headerExpanders;
+    private final Function<Substitutions, String> pathExpander;
+    private final Map<String, List<Function<Substitutions, List<String>>>> headerExpanders;
     private final Map<String, Collection<String>> queriesAll;
-    private final Map<String, List<Function<Map<String, ?>, List<String>>>> queryExpanders;
+    private final Map<String, List<Function<Substitutions, List<String>>>> queryExpanders;
     private final URI staticUri;
 
-    public PublisherClientMethodHandler(Target target,
+    public PublisherClientMethodHandler(Target<?> target,
                                         MethodMetadata methodMetadata,
                                         PublisherHttpClient publisherClient) {
         this.target = checkNotNull(target, "target must be not null");
@@ -73,8 +68,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
                 "methodMetadata must be not null");
         this.publisherClient = checkNotNull(publisherClient, "client must be not null");
         RequestTemplate requestTemplate = methodMetadata.template();
-        this.pathExpander = buildUrlExpandFunction(target.url() +
-                cutTail(requestTemplate.url(), requestTemplate.queryLine()));
+        this.pathExpander = buildUrlExpandFunction(requestTemplate, target);
         this.headerExpanders = buildExpanders(requestTemplate.headers());
 
         this.queriesAll = new HashMap<>(requestTemplate.queries());
@@ -93,43 +87,45 @@ public class PublisherClientMethodHandler implements MethodHandler {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public Publisher<?> invoke(final Object[] argv) {
         return publisherClient.executeRequest(buildRequest(argv));
     }
 
     protected ReactiveHttpRequest buildRequest(Object[] argv) {
 
-        Map<String, ?> substitutionsMap = buildSubstitutions(argv);
+        Substitutions substitutions = buildSubstitutions(argv);
 
-        URI uri = buildUri(argv, substitutionsMap);
+        URI uri = buildUri(argv, substitutions);
 
-        Map<String, List<String>> headers = headers(argv, substitutionsMap);
+        Map<String, List<String>> headers = headers(argv, substitutions);
 
         return new ReactiveHttpRequest(methodMetadata, target, uri, headers, body(argv));
     }
 
-    private URI buildUri(Object[] argv, Map<String, ?> substitutionsMap) {
+    private URI buildUri(Object[] argv, Substitutions substitutions) {
         //static template
         if(staticUri != null){
             return staticUri;
         }
 
-        String path = pathExpander.apply(substitutionsMap);
+        String path = pathExpander.apply(substitutions);
 
-        Map<String, Collection<String>> queries = queries(argv, substitutionsMap);
+        Map<String, Collection<String>> queries = queries(argv, substitutions);
         String queryLine = queryLine(queries);
 
         return URI.create(path + queryLine);
     }
 
-    private Map<String, Object> buildSubstitutions(Object[] argv) {
-        return methodMetadata.indexToName().entrySet().stream()
+    private Substitutions buildSubstitutions(Object[] argv) {
+        Map<String, Object> substitutions = methodMetadata.indexToName().entrySet().stream()
                 .filter(e -> argv[e.getKey()] != null)
                 .flatMap(e -> e.getValue().stream()
                         .map(v -> new AbstractMap.SimpleImmutableEntry<>(e.getKey(), v)))
-                .collect(Collectors.toMap(Map.Entry::getValue,
+                .collect(toMap(Map.Entry::getValue,
                         entry -> argv[entry.getKey()]));
+
+        return new Substitutions(substitutions,
+                methodMetadata.urlIndex() != null ? (URI)argv[methodMetadata.urlIndex()] : null);
     }
 
     private String queryLine(Map<String, Collection<String>> queries) {
@@ -158,14 +154,14 @@ public class PublisherClientMethodHandler implements MethodHandler {
     }
 
     protected Map<String, Collection<String>> queries(Object[] argv,
-                                                      Map<String, ?> substitutionsMap) {
+                                                      Substitutions substitutions) {
         Map<String, Collection<String>> queries = new LinkedHashMap<>();
 
         // queries from template
         queriesAll.keySet()
                 .forEach(queryName -> addAll(queries, queryName,
                         queryExpanders.get(queryName).stream()
-                                .map(expander -> expander.apply(substitutionsMap))
+                                .map(expander -> expander.apply(substitutions))
                                 .filter(Objects::nonNull)
                                 .flatMap(Collection::stream)
                                 .collect(toList())));
@@ -185,7 +181,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
         return queries;
     }
 
-    protected Map<String, List<String>> headers(Object[] argv, Map<String, ?> substitutionsMap) {
+    protected Map<String, List<String>> headers(Object[] argv, Substitutions substitutions) {
 
         Map<String, List<String>> headers = new LinkedHashMap<>();
 
@@ -193,7 +189,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
         methodMetadata.template().headers().keySet()
                 .forEach(headerName -> addAllOrdered(headers, headerName,
                         headerExpanders.get(headerName).stream()
-                                .map(expander -> expander.apply(substitutionsMap))
+                                .map(expander -> expander.apply(substitutions))
                                 .filter(Objects::nonNull)
                                 .flatMap(Collection::stream)
                                 .collect(toList())));
@@ -230,7 +226,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
         }
     }
 
-    private static Map<String, List<Function<Map<String, ?>, List<String>>>> buildExpanders(
+    private static Map<String, List<Function<Substitutions, List<String>>>> buildExpanders(
             Map<String, Collection<String>> templates) {
         Stream<Pair<String, String>> templatesFlattened = templates.entrySet().stream()
                 .flatMap(e -> e.getValue().stream()
@@ -245,13 +241,13 @@ public class PublisherClientMethodHandler implements MethodHandler {
      * @param template
      * @return function that able to map substitutions map to actual value for specified template
      */
-    private static Function<Map<String, ?>, List<String>> buildExpandFunction(String template) {
+    private static Function<Substitutions, List<String>> buildExpandFunction(String template) {
         Matcher matcher = SUBSTITUTION_PATTERN.matcher(template);
         if(matcher.matches()){
-            String substitute = matcher.group(1);
+            String placeholder = matcher.group(1);
 
-            return traceData -> {
-                Object substitution = traceData.get(substitute);
+            return substitutions -> {
+                Object substitution = substitutions.placeholderToSubstitution.get(placeholder);
                 if (substitution != null) {
                     if(substitution instanceof Iterable){
                         List<String> stringValues = new ArrayList<>();
@@ -270,8 +266,24 @@ public class PublisherClientMethodHandler implements MethodHandler {
                 }
             };
         } else {
-            return traceData -> singletonList(template);
+            return substitutions -> singletonList(template);
         }
+    }
+
+    private static Function<Substitutions, String> buildUrlExpandFunction(
+            RequestTemplate requestTemplate, Target<?> target) {
+        if(target instanceof Target.EmptyTarget){
+            return expandUrlForEmptyTarget(buildUrlExpandFunction(
+                    cutTail(requestTemplate.url(), requestTemplate.queryLine())));
+        } else {
+            return buildUrlExpandFunction(target.url() +
+                    cutTail(requestTemplate.url(), requestTemplate.queryLine()));
+        }
+    }
+
+    private static Function<Substitutions, String> expandUrlForEmptyTarget(
+            Function<Substitutions, String> expandFunction){
+        return substitutions -> substitutions.url.toString() + expandFunction.apply(substitutions);
     }
 
     /**
@@ -279,8 +291,8 @@ public class PublisherClientMethodHandler implements MethodHandler {
      * @param template
      * @return function that able to map substitutions map to actual value for specified template
      */
-    private static Function<Map<String, ?>, String> buildUrlExpandFunction(String template) {
-        List<Function<Map<String, ?>, String>> chunks = new ArrayList<>();
+    private static Function<Substitutions, String> buildUrlExpandFunction(String template) {
+        List<Function<Substitutions, String>> chunks = new ArrayList<>();
         Matcher matcher = SUBSTITUTION_PATTERN.matcher(template);
         int previousMatchEnd = 0;
         while (matcher.find()) {
@@ -289,13 +301,13 @@ public class PublisherClientMethodHandler implements MethodHandler {
                 chunks.add(data -> textChunk);
             }
 
-            String substitute = matcher.group(1);
+            String placeholder = matcher.group(1);
             chunks.add(data -> {
-                Object substitution = data.get(substitute);
+                Object substitution = data.placeholderToSubstitution.get(placeholder);
                 if (substitution != null) {
                     return UriUtils.encode(substitution.toString(), UTF_8);
                 } else {
-                    throw new IllegalArgumentException("No substitution in url for:"+substitute);
+                    throw new IllegalArgumentException("No substitution in url for:"+placeholder);
                 }
             });
             previousMatchEnd = matcher.end();
@@ -311,11 +323,11 @@ public class PublisherClientMethodHandler implements MethodHandler {
             chunks.add(data -> textChunk);
         }
 
-        return traceData -> chunks.stream().map(chunk -> chunk.apply(traceData))
+        return substitutions -> chunks.stream().map(chunk -> chunk.apply(substitutions))
                 .collect(Collectors.joining());
     }
 
-    private static class StaticPathExpander implements Function<Map<String, ?>, String>{
+    private static class StaticPathExpander implements Function<Substitutions, String>{
 
         private final String staticPath;
 
@@ -324,8 +336,18 @@ public class PublisherClientMethodHandler implements MethodHandler {
         }
 
         @Override
-        public String apply(Map<String, ?> stringMap) {
+        public String apply(Substitutions substitutions) {
             return staticPath;
+        }
+    }
+
+    private static class Substitutions {
+        private final URI url;
+        private final Map<String, Object> placeholderToSubstitution;
+
+        private Substitutions(Map<String, Object> placeholderToSubstitution, URI url) {
+            this.url = url;
+            this.placeholderToSubstitution = placeholderToSubstitution;
         }
     }
 

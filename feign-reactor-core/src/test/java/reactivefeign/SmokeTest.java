@@ -1,6 +1,4 @@
 /**
- * Copyright 2018 The Feign Authors
- *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
  *
@@ -20,22 +18,19 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import org.springframework.web.client.RestClientException;
-import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.io.IOException;
 import java.util.Map;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static java.util.Arrays.asList;
-import static reactivefeign.TestUtils.*;
+import static reactivefeign.TestUtils.MAPPER;
+import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
 
 /**
  * @author Sergii Karpenko
@@ -67,10 +62,14 @@ abstract public class SmokeTest extends BaseReactorTest {
 
   @Before
   public void setUp() {
-    String targetUrl = "http://localhost:" + wireMockPort();
-    client = builder()
+    String targetUrl = getTargetUrl();
+    client = this.builder()
         .decode404()
         .target(IcecreamServiceApi.class, targetUrl);
+  }
+
+  public String getTargetUrl() {
+    return "http://localhost:" + wireMockPort();
   }
 
   @Test
@@ -115,45 +114,16 @@ abstract public class SmokeTest extends BaseReactorTest {
   }
 
   @Test
-  public void shouldFailOnCorruptedJson() {
-
-    wireMockRule.stubFor(get(urlEqualTo("/icecream/orders/1"))
-            .willReturn(aResponse().withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody("{\"corrupted ! json")));
-
-    Mono<IceCreamOrder> order = client.findOrder(1);
-
-    StepVerifier.create(order)
-            .expectErrorMatches(corruptedJsonError())
-            .verify();
-  }
-
-  protected Predicate<Throwable> corruptedJsonError() {
-    return throwable -> throwable instanceof RestClientException;
-  }
-
-  @Test
-  public void testFindOrder_empty() {
-
-    Mono<IceCreamOrder> orderEmpty = client.findOrder(123);
-
-    StepVerifier.create(orderEmpty)
-        .expectNextCount(0)
-        .verifyComplete();
-  }
-
-  @Test
   public void testMakeOrder_success() throws JsonProcessingException {
 
     IceCreamOrder order = new OrderGenerator().generate(20);
     Bill billExpected = Bill.makeBill(order);
 
     wireMockRule.stubFor(post(urlEqualTo("/icecream/orders"))
-        .withRequestBody(equalTo(MAPPER.writeValueAsString(order)))
-        .willReturn(aResponse().withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody(MAPPER.writeValueAsString(billExpected))));
+            .withRequestBody(equalTo(MAPPER.writeValueAsString(order)))
+            .willReturn(aResponse().withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(MAPPER.writeValueAsString(billExpected))));
 
     Mono<Bill> bill = client.makeOrder(order);
 
@@ -174,50 +144,8 @@ abstract public class SmokeTest extends BaseReactorTest {
 
     Mono<Void> result = client.payBill(bill);
     StepVerifier.create(result)
-        .expectNextCount(0)
-        .verifyComplete();
-  }
-
-  @Test
-  public void shouldParseGenericJson() throws IOException {
-
-    Map<String, Object> request = MAPPER.readValue(readJsonFromFile("/request.json"), Map.class);
-    String requestJson = MAPPER.writeValueAsString(request);
-    String responseJson = readJsonFromFile("/response.json");
-    Map<String, Object> response = MAPPER.readValue(responseJson, Map.class);
-
-
-    wireMockRule.stubFor(post(urlEqualTo("/genericJson"))
-            .withRequestBody(equalTo(requestJson))
-            .willReturn(aResponse().withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(responseJson)));
-
-    Mono<Map<String, Object>> result = client.genericJson(request);
-    StepVerifier.create(result)
-            .expectNext(response)
+            .expectNextCount(0)
             .verifyComplete();
   }
-
-  @Test
-  public void shouldPassResponseAsIs() throws JsonProcessingException {
-
-    wireMockRule.stubFor(get(urlEqualTo("/icecream/flavors"))
-            .willReturn(aResponse().withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(MAPPER.writeValueAsString(Flavor.values()))));
-
-    Mono<ReactiveHttpResponse<Flux<Flavor>>> result = client.response();
-    StepVerifier.create(result)
-            .expectNextMatches(response -> toLowerCaseKeys(response.headers())
-                    .containsKey("content-type"))
-            .verifyComplete();
-
-    Flux<Flavor> flux = result.flatMapMany(ReactiveHttpResponse::body);
-    StepVerifier.create(flux)
-            .expectNextSequence(asList(Flavor.values()))
-            .verifyComplete();
-  }
-
 
 }

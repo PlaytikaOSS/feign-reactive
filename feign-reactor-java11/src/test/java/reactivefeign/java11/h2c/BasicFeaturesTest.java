@@ -13,9 +13,13 @@
  */
 package reactivefeign.java11.h2c;
 
+import com.fasterxml.jackson.core.io.JsonEOFException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import org.junit.Ignore;
+import org.junit.Test;
 import reactivefeign.ReactiveFeign;
-import reactivefeign.testcase.IcecreamServiceApi;
+
+import java.util.function.Predicate;
 
 import static reactivefeign.ReactivityTest.CALLS_NUMBER;
 import static reactivefeign.java11.h2c.TestUtils.builderHttp2;
@@ -24,7 +28,7 @@ import static reactivefeign.wiremock.WireMockServerConfigurations.h2cConfig;
 /**
  * @author Sergii Karpenko
  */
-public class SmokeTest extends reactivefeign.SmokeTest {
+public class BasicFeaturesTest extends reactivefeign.BasicFeaturesTest {
 
   @Override
   protected WireMockConfiguration wireMockConfig(){
@@ -32,8 +36,20 @@ public class SmokeTest extends reactivefeign.SmokeTest {
   }
 
   @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
+  protected <T> ReactiveFeign.Builder<T> builder() {
     return builderHttp2();
+  }
+
+  @Override
+  protected Predicate<Throwable> corruptedJsonError() {
+    return throwable -> throwable instanceof JsonEOFException;
+  }
+
+  @Ignore
+  @Override
+  @Test
+  public void shouldExpandUrlWithBaseUriForEmptyTarget() {
+
   }
 
 }

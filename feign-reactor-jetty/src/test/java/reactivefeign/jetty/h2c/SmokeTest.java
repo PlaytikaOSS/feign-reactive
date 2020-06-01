@@ -13,12 +13,9 @@
  */
 package reactivefeign.jetty.h2c;
 
-import com.fasterxml.jackson.core.io.JsonEOFException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
-
-import java.util.function.Predicate;
 
 import static reactivefeign.jetty.h2c.TestUtils.builderHttp2;
 import static reactivefeign.wiremock.WireMockServerConfigurations.h2cConfig;
@@ -38,8 +35,4 @@ public class SmokeTest extends reactivefeign.SmokeTest {
     return builderHttp2();
   }
 
-  @Override
-  protected Predicate<Throwable> corruptedJsonError() {
-    return throwable -> throwable instanceof JsonEOFException;
-  }
 }

@@ -13,17 +13,31 @@
  */
 package reactivefeign.cloud;
 
+import org.junit.Ignore;
+import org.junit.Test;
+import org.springframework.core.codec.DecodingException;
 import reactivefeign.ReactiveFeignBuilder;
-import reactivefeign.testcase.IcecreamServiceApi;
+
+import java.util.function.Predicate;
 
 /**
  * @author Sergii Karpenko
  */
-public class SmokeTest extends reactivefeign.SmokeTest {
+public class BasicFeaturesTest extends reactivefeign.BasicFeaturesTest {
 
   @Override
-  protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
+  protected <T> ReactiveFeignBuilder<T> builder() {
     return BuilderUtils.cloudBuilderWithExecutionTimeoutDisabled();
   }
 
+  @Override
+  protected Predicate<Throwable> corruptedJsonError() {
+    return throwable -> throwable.getCause() instanceof DecodingException;
+  }
+
+  @Ignore
+  @Test
+  @Override
+  public void shouldExpandUrlWithBaseUriForEmptyTarget() {
+  }
 }

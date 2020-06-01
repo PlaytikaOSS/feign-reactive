@@ -46,7 +46,7 @@ public class Java11ReactiveHttpClientFactory implements ReactiveHttpClientFactor
 
     @Override
     public ReactiveHttpClient create(MethodMetadata methodMetadata) {
-        Java11ReactiveHttpClient reactiveHttpClient = Java11ReactiveHttpClient.jettyClient(
+        Java11ReactiveHttpClient reactiveHttpClient = Java11ReactiveHttpClient.java11Client(
                 methodMetadata, httpClient, jsonFactory, objectMapper);
         if (options != null) {
             if(options.getRequestTimeoutMillis() != null) {

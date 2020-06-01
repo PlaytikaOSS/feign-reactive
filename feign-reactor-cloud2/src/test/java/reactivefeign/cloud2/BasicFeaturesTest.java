@@ -11,19 +11,33 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package reactivefeign.cloud;
+package reactivefeign.cloud2;
 
+import org.junit.Ignore;
+import org.junit.Test;
+import org.springframework.core.codec.DecodingException;
 import reactivefeign.ReactiveFeignBuilder;
-import reactivefeign.testcase.IcecreamServiceApi;
+
+import java.util.function.Predicate;
 
 /**
  * @author Sergii Karpenko
  */
-public class SmokeTest extends reactivefeign.SmokeTest {
+public class BasicFeaturesTest extends reactivefeign.BasicFeaturesTest {
 
   @Override
-  protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
-    return BuilderUtils.cloudBuilderWithExecutionTimeoutDisabled();
+  protected <T> ReactiveFeignBuilder<T> builder() {
+    return BuilderUtils.cloudBuilder();
   }
 
+  @Override
+  protected Predicate<Throwable> corruptedJsonError() {
+    return throwable -> throwable instanceof DecodingException;
+  }
+
+  @Ignore
+  @Test
+  @Override
+  public void shouldExpandUrlWithBaseUriForEmptyTarget() {
+  }
 }

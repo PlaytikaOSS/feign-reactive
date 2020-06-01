@@ -60,7 +60,7 @@ public class Java11ReactiveHttpClient implements ReactiveHttpClient {
 	private long requestTimeout = -1;
 	private boolean tryUseCompression = false;
 
-	public static Java11ReactiveHttpClient jettyClient(
+	public static Java11ReactiveHttpClient java11Client(
 			MethodMetadata methodMetadata,
 			HttpClient httpClient,
 			JsonFactory jsonFactory, ObjectMapper objectMapper) {

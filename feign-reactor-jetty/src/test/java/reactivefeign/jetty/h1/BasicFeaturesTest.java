@@ -11,19 +11,27 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package reactivefeign.cloud;
+package reactivefeign.jetty.h1;
 
-import reactivefeign.ReactiveFeignBuilder;
-import reactivefeign.testcase.IcecreamServiceApi;
+import com.fasterxml.jackson.core.io.JsonEOFException;
+import reactivefeign.ReactiveFeign;
+
+import java.util.function.Predicate;
+
+import static reactivefeign.jetty.h1.TestUtils.builderHttp;
 
 /**
  * @author Sergii Karpenko
  */
-public class SmokeTest extends reactivefeign.SmokeTest {
+public class BasicFeaturesTest extends reactivefeign.BasicFeaturesTest {
 
   @Override
-  protected ReactiveFeignBuilder<IcecreamServiceApi> builder() {
-    return BuilderUtils.cloudBuilderWithExecutionTimeoutDisabled();
+  protected <T> ReactiveFeign.Builder<T> builder() {
+    return builderHttp();
   }
 
+  @Override
+  protected Predicate<Throwable> corruptedJsonError() {
+    return throwable -> throwable instanceof JsonEOFException;
+  }
 }

@@ -13,20 +13,29 @@
  */
 package reactivefeign.resttemplate;
 
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import reactivefeign.ReactiveFeign;
+import reactivefeign.client.ReactiveFeignException;
 import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
-import reactivefeign.testcase.IcecreamServiceApi;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
+
+import java.util.function.Predicate;
 
 /**
  * @author Sergii Karpenko
  */
-public class SmokeTest extends reactivefeign.SmokeTest {
+public class BasicFeaturesTest extends reactivefeign.BasicFeaturesTest {
 
   @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
+  protected <T> ReactiveFeign.Builder<T> builder() {
     return RestTemplateFakeReactiveFeign.builder();
+  }
+
+  @Override
+  protected Predicate<Throwable> corruptedJsonError() {
+    return throwable -> throwable instanceof ReactiveFeignException
+            && throwable.getCause().getCause() instanceof HttpMessageNotReadableException;
   }
 
   //to not detect blocking calls
