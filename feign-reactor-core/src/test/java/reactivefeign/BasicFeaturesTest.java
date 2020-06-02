@@ -15,6 +15,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.Param;
+import feign.QueryMap;
 import feign.RequestLine;
 import feign.Target;
 import org.junit.Before;
@@ -30,6 +31,7 @@ import reactor.test.StepVerifier;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -174,6 +176,30 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
             .verifyComplete();
   }
 
+  @Test
+  public void shouldExpandQueryMapToQueryParameters() {
+
+    String queryParameter = "queryParameter";
+    String value = "1";
+    wireMockRule.stubFor(post(urlEqualTo("/queryMap?" + queryParameter + "=" + value))
+            .willReturn(aResponse().withStatus(200)));
+
+    StepVerifier.create(client.queryMap(new HashMap<String, Object>(){{put(queryParameter, value);}})
+            .subscribeOn(testScheduler()))
+            .verifyComplete();
+  }
+
+  @Test
+  public void shouldExpandPojoToQueryParameters() {
+
+    wireMockRule.stubFor(post(urlEqualTo("/queryPojo?field=1"))
+            .willReturn(aResponse().withStatus(200)));
+
+    StepVerifier.create(client.queryPojo(new TestObject(1))
+            .subscribeOn(testScheduler()))
+            .verifyComplete();
+  }
+
   public interface TestClient {
     @RequestLine("GET /icecream/orders/{orderId}")
     Mono<TestObject> decode404ToEmptyMono(@Param("orderId") int orderId);
@@ -189,6 +215,12 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
 
     @RequestLine("GET /reactiveHttpResponse")
     Mono<ReactiveHttpResponse<Flux<TestObject>>> reactiveHttpResponse();
+
+    @RequestLine("POST /queryMap")
+    Mono<Void> queryMap(@QueryMap Map<String, Object> queryParameters);
+
+    @RequestLine("POST /queryPojo")
+    Mono<Void> queryPojo(@QueryMap TestObject queryPojo);
   }
 
   public interface EmptyTargetClient {

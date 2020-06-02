@@ -14,8 +14,10 @@
 package reactivefeign.methodhandler;
 
 import feign.MethodMetadata;
+import feign.QueryMapEncoder;
 import feign.RequestTemplate;
 import feign.Target;
+import feign.querymap.FieldQueryMapEncoder;
 import feign.template.UriUtils;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpClient;
@@ -59,6 +61,8 @@ public class PublisherClientMethodHandler implements MethodHandler {
     private final Map<String, Collection<String>> queriesAll;
     private final Map<String, List<Function<Substitutions, List<String>>>> queryExpanders;
     private final URI staticUri;
+
+    private final QueryMapEncoder queryMapEncoder = new FieldQueryMapEncoder();
 
     public PublisherClientMethodHandler(Target<?> target,
                                         MethodMetadata methodMetadata,
@@ -124,8 +128,8 @@ public class PublisherClientMethodHandler implements MethodHandler {
                 .collect(toMap(Map.Entry::getValue,
                         entry -> argv[entry.getKey()]));
 
-        return new Substitutions(substitutions,
-                methodMetadata.urlIndex() != null ? (URI)argv[methodMetadata.urlIndex()] : null);
+        URI url = methodMetadata.urlIndex() != null ? (URI) argv[methodMetadata.urlIndex()] : null;
+        return new Substitutions(substitutions, url);
     }
 
     private String queryLine(Map<String, Collection<String>> queries) {
@@ -167,15 +171,20 @@ public class PublisherClientMethodHandler implements MethodHandler {
                                 .collect(toList())));
 
         // queries from args
-        if (methodMetadata.queryMapIndex() != null && argv[methodMetadata.queryMapIndex()] != null) {
-            ((Map<String, ?>) argv[methodMetadata.queryMapIndex()])
-                    .forEach((key, value) -> {
-                        if (value instanceof Iterable) {
-                            ((Iterable<?>) value).forEach(element -> add(queries, key, element.toString()));
-                        } else if(value != null){
-                            add(queries, key, value.toString());
-                        }
-                    });
+        if (methodMetadata.queryMapIndex() != null) {
+            Object queryMapObject = argv[methodMetadata.queryMapIndex()];
+            if(queryMapObject != null){
+                Map<String, ?> queryMap = queryMapObject instanceof Map
+                        ? (Map<String, ?>) queryMapObject
+                        : queryMapEncoder.encode(queryMapObject);
+                queryMap.forEach((key, value) -> {
+                            if (value instanceof Iterable) {
+                                ((Iterable<?>) value).forEach(element -> add(queries, key, element.toString()));
+                            } else if (value != null) {
+                                add(queries, key, value.toString());
+                            }
+                        });
+            }
         }
 
         return queries;
