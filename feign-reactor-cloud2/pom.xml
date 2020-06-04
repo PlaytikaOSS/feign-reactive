@@ -12,7 +12,7 @@
     <description>Adds support of Spring Cloud Loadbalancer instead of Ribbon and Resilience4j instead of Hystrix</description>
 
     <properties>
-        <resilience4j.version>1.4.0</resilience4j.version>
+        <resilience4j.version>1.5.0</resilience4j.version>
     </properties>
 
     <dependencies>
