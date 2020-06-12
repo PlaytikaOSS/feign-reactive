@@ -47,12 +47,12 @@ public class MicrometerReactiveLogger implements ReactiveLoggerListener<Micromet
     }
 
     @Override
-    public MetricsContext requestStarted(ReactiveHttpRequest request, Target target, MethodMetadata methodMetadata) {
+    public MetricsContext requestStarted(ReactiveHttpRequest request, Target<?> target, MethodMetadata methodMetadata) {
         return new MetricsContext(request, target, methodMetadata, clock);
     }
 
     @Override
-    public void responseReceived(ReactiveHttpResponse response, MetricsContext logContext) {
+    public void responseReceived(ReactiveHttpResponse<?> response, MetricsContext logContext) {
         meterRegistry.timer(name, buildResponseTags(response, logContext, tags))
                 .record(logContext.timeSpent(), TimeUnit.MILLISECONDS);
     }
@@ -83,12 +83,12 @@ public class MicrometerReactiveLogger implements ReactiveLoggerListener<Micromet
 
     static class MetricsContext {
         private final ReactiveHttpRequest request;
-        private final Target target;
+        private final Target<?> target;
         private final MethodMetadata methodMetadata;
         private final Clock clock;
         private final long startTime;
 
-        public MetricsContext(ReactiveHttpRequest request, Target target, MethodMetadata methodMetadata, Clock clock) {
+        public MetricsContext(ReactiveHttpRequest request, Target<?> target, MethodMetadata methodMetadata, Clock clock) {
             this.request = request;
             this.target = target;
             this.methodMetadata = methodMetadata;
@@ -103,7 +103,7 @@ public class MicrometerReactiveLogger implements ReactiveLoggerListener<Micromet
     }
 
     private static List<Tag> buildResponseTags(
-            ReactiveHttpResponse response,
+            ReactiveHttpResponse<?> response,
             MetricsContext metricsContext, Set<MetricsTag> tags){
         List<Tag> metricsTags = buildTags(metricsContext, tags);
         //takes actual host resolved from service name
@@ -111,6 +111,10 @@ public class MicrometerReactiveLogger implements ReactiveLoggerListener<Micromet
             metricsTags.add(Tag.of(HOST.getTagName(), response.request().uri().getHost()));
         }
         metricsTags.add(Tag.of(STATUS.getTagName(), Integer.toString(response.status())));
+
+        if(tags.contains(EXCEPTION)) {
+            metricsTags.add(Tag.of(EXCEPTION.getTagName(), "None"));
+        }
 
         return metricsTags;
     }

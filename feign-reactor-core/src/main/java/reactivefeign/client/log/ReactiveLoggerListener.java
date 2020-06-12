@@ -12,13 +12,13 @@ import reactivefeign.client.ReactiveHttpResponse;
  */
 public interface ReactiveLoggerListener<CONTEXT> {
 
-    CONTEXT requestStarted(ReactiveHttpRequest request, Target target, MethodMetadata methodMetadata);
+    CONTEXT requestStarted(ReactiveHttpRequest request, Target<?> target, MethodMetadata methodMetadata);
 
     boolean logRequestBody();
 
     void bodySent(Object body, CONTEXT context);
 
-    void responseReceived(ReactiveHttpResponse response, CONTEXT context);
+    void responseReceived(ReactiveHttpResponse<?> response, CONTEXT context);
 
     void errorReceived(Throwable throwable, CONTEXT context);
 
