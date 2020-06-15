@@ -21,6 +21,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
 import org.springframework.boot.web.reactive.server.ReactiveWebServerFactory;
@@ -28,6 +29,7 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
 import org.springframework.test.context.junit4.SpringRunner;
 import reactivefeign.BaseReactorTest;
 import reactor.core.publisher.Flux;
@@ -68,6 +70,13 @@ import static reactor.core.publisher.Mono.just;
 		classes = {AllFeaturesController.class, AllFeaturesTest.TestConfiguration.class },
 		webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 abstract public class AllFeaturesTest extends BaseReactorTest {
+
+	@Autowired
+	private Environment environment;
+
+	protected List<String> getActiveProfiles() {
+		return asList(environment.getActiveProfiles());
+	}
 
 	protected AllFeaturesApi client;
 

@@ -39,7 +39,7 @@ abstract public class ReactivityTest extends BaseReactorTest {
 
   public static final int DELAY_IN_MILLIS = 500;
   public static final int CALLS_NUMBER = 500;
-  public static final int REACTIVE_GAIN_RATIO = 40;
+  public static final int REACTIVE_GAIN_RATIO = 30;
 
   abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder();
 

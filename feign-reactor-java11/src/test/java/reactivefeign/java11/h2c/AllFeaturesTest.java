@@ -18,7 +18,6 @@ package reactivefeign.java11.h2c;
 
 import org.junit.Ignore;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
@@ -43,9 +42,6 @@ import static reactivefeign.spring.server.config.TestServerConfigurations.UNDERT
 @ActiveProfiles(JETTY_H2C)
 public class AllFeaturesTest extends AllFeaturesFeignTest {
 
-	@Value("${spring.profiles.active}")
-	private String activeProfile;
-
 	@Override
 	protected ReactiveFeign.Builder<AllFeaturesFeign> builder() {
 		return builderHttp2();
@@ -54,7 +50,7 @@ public class AllFeaturesTest extends AllFeaturesFeignTest {
 	@Test
 	@Override
 	public void shouldMirrorStreamingBinaryBodyReactive() throws InterruptedException {
-		if(activeProfile.equals(UNDERTOW_H2C)){
+		if(getActiveProfiles().contains(UNDERTOW_H2C)){
 			return;
 		}
 		super.shouldMirrorStreamingBinaryBodyReactive();
