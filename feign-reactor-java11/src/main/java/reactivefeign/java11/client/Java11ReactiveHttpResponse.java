@@ -83,6 +83,11 @@ class Java11ReactiveHttpResponse implements ReactiveHttpResponse{
 		}
 	}
 
+	@Override
+	public Mono<Void> releaseBody() {
+		return Flux.from(contentChunks).then();
+	}
+
 	private Charset getCharset() {
 		return ofNullable(headers().get(CONTENT_TYPE_HEADER))
 				.map(headers -> {

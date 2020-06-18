@@ -35,7 +35,7 @@ public class ResponseMappers {
 
           @Override
           public P body() {
-            return (P)Mono.empty();
+            return (P)response.releaseBody();
           }
         });
       }

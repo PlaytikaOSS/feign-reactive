@@ -34,6 +34,8 @@ public interface ReactiveHttpResponse<P extends Publisher<?>> {
 
   P body();
 
+  Mono<Void> releaseBody();
+
   /**
    * used by error decoders
    * 

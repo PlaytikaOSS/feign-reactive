@@ -164,6 +164,11 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
     }
 
     @Override
+    public Mono<Void> releaseBody() {
+      return Mono.empty();
+    }
+
+    @Override
     public Mono<byte[]> bodyData() {
       return Mono.just(new byte[0]);
     }
@@ -196,6 +201,11 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
 
     @Override
     public Publisher<Object> body() {
+      return Mono.empty();
+    }
+
+    @Override
+    public Mono<Void> releaseBody() {
       return Mono.empty();
     }
 

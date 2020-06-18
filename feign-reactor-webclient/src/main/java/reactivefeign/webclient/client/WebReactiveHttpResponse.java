@@ -59,6 +59,11 @@ class WebReactiveHttpResponse<P extends Publisher<?>> implements ReactiveHttpRes
 	}
 
 	@Override
+	public Mono<Void> releaseBody() {
+		return clientResponse.releaseBody();
+	}
+
+	@Override
 	public Mono<byte[]> bodyData() {
 		Flux<DataBuffer> response = clientResponse.body(BodyExtractors.toDataBuffers());
 		return DataBufferUtils.join(response)

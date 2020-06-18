@@ -50,6 +50,11 @@ abstract public class DelegatingReactiveHttpResponse<P extends Publisher<?>> imp
   }
 
   @Override
+  public Mono<Void> releaseBody() {
+    return response.releaseBody();
+  }
+
+  @Override
   public Mono<byte[]> bodyData() {
     return response.bodyData();
   }

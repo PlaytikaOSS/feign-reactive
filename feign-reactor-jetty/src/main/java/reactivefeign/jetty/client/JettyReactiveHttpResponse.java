@@ -86,6 +86,11 @@ class JettyReactiveHttpResponse implements ReactiveHttpResponse{
 		}
 	}
 
+	@Override
+	public Mono<Void> releaseBody() {
+		return Flux.from(contentChunks).then();
+	}
+
 	private Charset getCharset() {
 		return ofNullable(clientResponse.getHeaders().get(CONTENT_TYPE.asString()))
 				.map(header -> {
