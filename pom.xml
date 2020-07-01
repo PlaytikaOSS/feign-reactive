@@ -60,7 +60,7 @@
         <json-reactor.version>0.0.1</json-reactor.version>
 
         <!-- Tests -->
-        <wiremock.version>2.26.3</wiremock.version>
+        <wiremock.version>2.27.0</wiremock.version>
         <awaitility.version>4.0.3</awaitility.version>
         <blockhound.version>1.0.3.RELEASE</blockhound.version>
         <disruptor.version>3.4.2</disruptor.version>
