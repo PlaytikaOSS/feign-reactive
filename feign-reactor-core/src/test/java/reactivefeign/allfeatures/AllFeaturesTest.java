@@ -99,11 +99,10 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 
 	@Test
 	public void shouldReturnAllPassedParameters() {
-		Map<String, String> paramMap = new HashMap<String, String>() {
-			{
-				put("paramKey", "paramValue");
-			}
-		};
+		Map<String, String> paramMap = new HashMap<String, String>() {{
+				put("paramKey1", "paramValue1");
+				put("paramKey2", "paramValue2");
+			}};
 		Map<String, String> returned = client.mirrorParameters(555,"777", paramMap)
 				.subscribeOn(testScheduler()).block();
 

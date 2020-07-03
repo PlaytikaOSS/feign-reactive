@@ -17,6 +17,7 @@
 package reactivefeign.spring.mvc.allfeatures;
 
 import org.reactivestreams.Publisher;
+import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -38,6 +39,12 @@ public interface AllFeaturesMvc extends reactivefeign.allfeatures.AllFeaturesApi
 			@PathVariable("paramInPath") long paramInPath,
 			@RequestParam("paramInUrl") String paramInUrl,
 			@RequestParam Map<String, String> paramMap);
+
+	@GetMapping(path = "/mirrorParameters/{paramInPath}")
+	Mono<Map<String, String>> mirrorParametersViaSpringQueryMap(
+			@PathVariable("paramInPath") long paramInPath,
+			@RequestParam("paramInUrl") String paramInUrl,
+			@SpringQueryMap Map<String, String> paramMap);
 
 	@Override
 	@GetMapping(path = "/mirrorParametersNew")

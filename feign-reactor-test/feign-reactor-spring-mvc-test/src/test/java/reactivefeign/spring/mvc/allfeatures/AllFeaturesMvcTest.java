@@ -27,6 +27,11 @@ import reactivefeign.allfeatures.AllFeaturesTest;
 import reactivefeign.jetty.JettyReactiveFeign;
 import reactor.test.StepVerifier;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
 /**
  * @author Sergii Karpenko
  *
@@ -58,5 +63,19 @@ public class AllFeaturesMvcTest extends AllFeaturesTest{
 	@Test(expected = IllegalStateException.class)
 	public void shouldPassHeaderAndRequestParameterWithSameName() {
 		super.shouldPassHeaderAndRequestParameterWithSameName();
+	}
+
+	@Test
+	public void shouldReturnAllPassedParametersViaSpringQueryMap() {
+		Map<String, String> paramMap = new HashMap<String, String>() {{
+				put("paramKey1", "paramValue1");
+			    put("paramKey2", "paramValue2");
+			}};
+		Map<String, String> returned = ((AllFeaturesMvc)client).mirrorParametersViaSpringQueryMap(555,"777", paramMap)
+				.subscribeOn(testScheduler()).block();
+
+		assertThat(returned).containsEntry("paramInPath", "555");
+		assertThat(returned).containsEntry("paramInUrl", "777");
+		assertThat(returned).containsAllEntriesOf(paramMap);
 	}
 }

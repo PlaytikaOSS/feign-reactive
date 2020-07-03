@@ -34,7 +34,7 @@
         </dependency>
 
         <dependency>
-            <groupId>io.kptfh.reactivejson</groupId>
+            <groupId>com.playtika.reactivejson</groupId>
             <artifactId>json-reactor</artifactId>
         </dependency>
 

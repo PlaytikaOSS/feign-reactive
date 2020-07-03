@@ -57,7 +57,7 @@
         <spring-boot-dependencies-bom.version>2.3.1.RELEASE</spring-boot-dependencies-bom.version>
 
         <!--other-->
-        <json-reactor.version>0.0.1</json-reactor.version>
+        <json-reactor.version>0.0.4</json-reactor.version>
 
         <!-- Tests -->
         <wiremock.version>2.26.3</wiremock.version>
@@ -186,7 +186,7 @@
 
             <!-- Other -->
             <dependency>
-                <groupId>io.kptfh.reactivejson</groupId>
+                <groupId>com.playtika.reactivejson</groupId>
                 <artifactId>json-reactor</artifactId>
                 <version>${json-reactor.version}</version>
             </dependency>
@@ -262,12 +262,6 @@
 
 
     <repositories>
-        <!--used for io.kptfh.reactivejson:json-reactor-->
-        <repository>
-            <id>bintray-kptfh-feign-reactive</id>
-            <name>bintray</name>
-            <url>https://dl.bintray.com/kptfh/json-reactive</url>
-        </repository>
 
         <!--<repository>-->
             <!--<id>spring-snapshots</id>-->
