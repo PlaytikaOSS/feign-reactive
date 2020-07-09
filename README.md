@@ -31,6 +31,11 @@ non-blocking HTTP client of Spring WebClient.
   - have greater reactivity level then Spring WebClient. By default don't collect body to list instead starts sending request body as stream. 
   - starts receiving reactive response before all reactive request body has been sent
   - process Flux<`String`> correctly in request and response body  
+  
+   **_feign-reactor-spring-cloud-starter_** : Single dependency to have reactive feign client operabable in your spring cloud application. Uses webclient as default client implementation.
+   
+   **_feign-reactor-bom_** : Maven BOM module which simplifies dependency management for all reactive feign client modules.
+    
 
 ## Usage
 

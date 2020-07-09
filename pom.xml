@@ -18,6 +18,8 @@
         <module>feign-reactor-benchmarks</module>
         <module>feign-reactor-spring-configuration</module>
         <module>feign-reactor-test</module>
+        <module>feign-reactor-bom</module>
+        <module>feign-reactor-spring-cloud-starter</module>
     </modules>
 
     <name>feign-reactive</name>
