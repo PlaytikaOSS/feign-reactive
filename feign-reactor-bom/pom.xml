@@ -27,6 +27,11 @@
             </dependency>
             <dependency>
                 <groupId>com.playtika.reactivefeign</groupId>
+                <artifactId>feign-reactor-spring-cloud-starter</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.playtika.reactivefeign</groupId>
                 <artifactId>feign-reactor-core</artifactId>
                 <version>${project.version}</version>
             </dependency>
