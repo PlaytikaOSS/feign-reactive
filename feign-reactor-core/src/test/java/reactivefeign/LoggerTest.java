@@ -35,6 +35,7 @@ import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.Bill;
 import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.OrderGenerator;
+import reactivefeign.utils.Pair;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -44,10 +45,12 @@ import java.util.stream.Collectors;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.when;
+import static reactivefeign.client.ReactiveHttpRequestInterceptors.addHeaders;
 
 /**
  * @author Sergii Karpenko
@@ -289,6 +292,64 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
       setLogLevel(originalLevel);
       removeAppender(appender.getName());
     }
+  }
+
+  @Test
+  public void shouldLogRequestInterceptor() throws Exception {
+
+    Appender appender = createAppender("TestRequestInterceptorAppender");
+
+    Level originalLevel = setLogLevel(Level.TRACE);
+
+    IceCreamOrder order = new OrderGenerator().generate(20);
+    Bill billExpected = Bill.makeBill(order);
+
+    wireMockRule.stubFor(post(urlEqualTo("/icecream/orders"))
+            .withRequestBody(equalTo(TestUtils.MAPPER.writeValueAsString(order)))
+            .willReturn(aResponse().withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(TestUtils.MAPPER.writeValueAsString(billExpected))));
+
+    T client = builder()
+            .addRequestInterceptor(addHeaders(singletonList(new Pair<>("Authorization", "Bearer mytoken123"))))
+            .target(target(),
+                    "http://localhost:" + wireMockRule.port());
+    String clientName = target().getSimpleName();
+
+    Mono<Bill> billMono = client.makeOrder(order).subscribeOn(testScheduler());
+
+    ArgumentCaptor<LogEvent> argumentCaptor = ArgumentCaptor.forClass(LogEvent.class);
+    assertNoEventsBeforeSubscription(appender, argumentCaptor, clientName);
+
+    billMono.block();
+
+    Mockito.verify(appender, atLeast(7)).append(argumentCaptor.capture());
+
+    List<LogEvent> logEvents = argumentCaptor.getAllValues();
+    AtomicInteger index = new AtomicInteger();
+    assertLogEvent(logEvents, index, Level.DEBUG,
+            "["+clientName+"#makeOrder]--->POST http://localhost");
+    assertLogEvent(logEvents, index, Level.TRACE,
+            "["+clientName+"#makeOrder] REQUEST HEADERS\n" +
+                    "Accept:[application/json]\n" +
+                    "Content-Type:[application/json]\n" +
+                    "Authorization:[Bearer mytoken123]");
+    assertLogEvent(logEvents, index, Level.TRACE,
+            "["+clientName+"#makeOrder] REQUEST BODY\n" +
+                    "IceCreamOrder{ id=20, balls=");
+    assertLogEvent(logEvents, index, Level.TRACE,
+            "["+clientName+"#makeOrder] RESPONSE HEADERS",
+            "Content-Type:application/json");
+    assertLogEvent(logEvents, index, Level.DEBUG,
+            "["+clientName+"#makeOrder]<--- headers takes");
+    assertLogEvent(logEvents, index, Level.TRACE,
+            "["+clientName+"#makeOrder] RESPONSE BODY\n" +
+                    "reactivefeign.testcase.domain.Bill");
+    assertLogEvent(logEvents, index, Level.DEBUG,
+            "["+clientName+"#makeOrder]<--- body takes");
+
+    setLogLevel(originalLevel);
+    removeAppender(appender.getName());
   }
 
   private void assertNoEventsBeforeSubscription(Appender appender, ArgumentCaptor<LogEvent> argumentCaptor, String clientName) {
