@@ -12,7 +12,7 @@
 
     <properties>
         <java.version>11</java.version>
-        <jmh.version>1.23</jmh.version>
+        <jmh.version>1.25</jmh.version>
     </properties>
 
     <dependencies>
