@@ -25,12 +25,15 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
 import reactivefeign.spring.config.EnableReactiveFeignClients;
+import reactivefeign.spring.config.ReactiveFeignCircuitBreakerCustomizer;
 import reactivefeign.spring.config.ReactiveFeignClient;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -38,6 +41,7 @@ import reactor.test.StepVerifier;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
+import static reactivefeign.spring.config.cloud2.AutoConfigurationTest.CIRCUIT_BREAKER_TIMEOUT_DISABLED_CONFIGURATION_CUSTOMIZER;
 import static reactivefeign.spring.config.cloud2.LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest.FEIGN_CLIENT_TEST_LB;
 
 /**
@@ -108,5 +112,10 @@ public class LoadbalancerEnabledStaticUrlTest {
 	@EnableReactiveFeignClients(clients = LoadbalancerEnabledStaticUrlTest.TestReactiveFeignClient.class)
 	@EnableAutoConfiguration
 	@Configuration
-	public static class TestStaticUrlConfiguration {}
+	public static class TestStaticUrlConfiguration {
+		@Bean
+		public ReactiveFeignCircuitBreakerCustomizer<Resilience4JConfigBuilder, Resilience4JConfigBuilder.Resilience4JCircuitBreakerConfiguration> defaultCustomizer() {
+			return CIRCUIT_BREAKER_TIMEOUT_DISABLED_CONFIGURATION_CUSTOMIZER;
+		}
+	}
 }
