@@ -50,7 +50,6 @@ import static reactivefeign.spring.config.cloud2.LoadBalancerEnabledCircuitBreak
 @SpringBootTest(classes = LoadbalancerEnabledStaticUrlTest.TestStaticUrlConfiguration.class,
 		        webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @TestPropertySource(locations = {
-		"classpath:lb-enabled-cb-disabled.properties",
 		"classpath:common.properties"
 })
 @DirtiesContext
