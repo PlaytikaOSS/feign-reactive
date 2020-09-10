@@ -4,14 +4,12 @@
 
     <parent>
         <groupId>com.playtika.reactivefeign</groupId>
-        <artifactId>feign-reactor</artifactId>
+        <artifactId>feign-reactor-parent</artifactId>
+        <relativePath>../feign-reactor-parent</relativePath>
         <version>2.0.20-SNAPSHOT</version>
     </parent>
 
     <artifactId>feign-reactor-rx2</artifactId>
-
-    <properties>
-    </properties>
 
     <dependencies>
 
