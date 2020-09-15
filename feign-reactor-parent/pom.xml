@@ -36,20 +36,9 @@
 
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
-        <versions-maven-plugin.version>2.3</versions-maven-plugin.version>
-        <nexus-staging-maven-plugin.version>1.6.8</nexus-staging-maven-plugin.version>
+
         <maven.javadoc.plugin.version>3.2.0</maven.javadoc.plugin.version>
         <maven.source.plugin.version>3.2.1</maven.source.plugin.version>
-
-        <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
-        <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
-
-        <!-- GPG -->
-        <gpg.keyname>3EEF24C7</gpg.keyname>
-        <gpg.defaultKeyring>false</gpg.defaultKeyring>
-        <gpg.useagent>true</gpg.useagent>
-        <gpg.lockMode>never</gpg.lockMode>
-
     </properties>
 
     <dependencyManagement>
