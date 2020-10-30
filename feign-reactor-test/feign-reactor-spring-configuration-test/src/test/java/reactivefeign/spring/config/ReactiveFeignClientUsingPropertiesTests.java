@@ -82,8 +82,7 @@ public class ReactiveFeignClientUsingPropertiesTests {
 				.withHeader("header", equalTo("value"))
 				.willReturn(aResponse().withBody("OK")));
 
-		mockHttpServer.stubFor(get(urlEqualTo("/query"))
-				.withQueryParam("query", equalTo("value"))
+		mockHttpServer.stubFor(get(urlEqualTo("/query?query=value"))
 				.willReturn(aResponse().withBody("OK")));
 
 		mockHttpServer.start();
