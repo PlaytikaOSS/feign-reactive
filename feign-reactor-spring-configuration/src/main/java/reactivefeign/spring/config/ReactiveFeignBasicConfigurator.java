@@ -20,6 +20,7 @@ package reactivefeign.spring.config;
 import feign.codec.ErrorDecoder;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
+import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.log.ReactiveLoggerListener;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
@@ -129,6 +130,18 @@ public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigu
 				// Every Map entry is gonna belong to it's own interceptor
 				resultBuilder = resultBuilder.addRequestInterceptor(reactiveHttpRequest -> {
 					reactiveHttpRequest.headers().put(entry.getKey(), entry.getValue());
+					return Mono.just(reactiveHttpRequest);
+				});
+			}
+		}
+
+		if (config.getDefaultQueryParameters() != null) {
+			for (Map.Entry<String, List<String>> entry : config.getDefaultQueryParameters().entrySet()) {
+				// Every Map entry is gonna belong to it's own interceptor
+				resultBuilder = resultBuilder.addRequestInterceptor(reactiveHttpRequest -> {
+					for (String value : entry.getValue()) {
+						reactiveHttpRequest = reactiveHttpRequest.withQuery(entry.getKey(), value);
+					}
 					return Mono.just(reactiveHttpRequest);
 				});
 			}

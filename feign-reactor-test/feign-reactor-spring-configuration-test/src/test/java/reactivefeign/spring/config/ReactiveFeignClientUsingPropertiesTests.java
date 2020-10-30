@@ -62,6 +62,9 @@ public class ReactiveFeignClientUsingPropertiesTests {
 	@Autowired
 	private HeadersClient headersClient;
 
+	@Autowired
+	private QueryClient queryClient;
+
 	@BeforeClass
 	public static void setupStubs() {
 
@@ -77,6 +80,10 @@ public class ReactiveFeignClientUsingPropertiesTests {
 
 		mockHttpServer.stubFor(get(urlEqualTo("/headers"))
 				.withHeader("header", equalTo("value"))
+				.willReturn(aResponse().withBody("OK")));
+
+		mockHttpServer.stubFor(get(urlEqualTo("/query"))
+				.withQueryParam("query", equalTo("value"))
 				.willReturn(aResponse().withBody("OK")));
 
 		mockHttpServer.start();
@@ -95,6 +102,12 @@ public class ReactiveFeignClientUsingPropertiesTests {
         String response = headersClient.headers().block();
         assertEquals("OK", response);
     }
+
+	@Test
+	public void testQueryClient() {
+		String response = queryClient.query().block();
+		assertEquals("OK", response);
+	}
 
 	@Test(expected = ReadTimeoutException.class)
 	public void testBar() {
@@ -123,6 +136,13 @@ public class ReactiveFeignClientUsingPropertiesTests {
 		Mono<String> headers();
 	}
 
+	@ReactiveFeignClient(name = "query", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}")
+	protected interface QueryClient {
+
+		@RequestMapping(method = RequestMethod.GET, value = "/query")
+		Mono<String> query();
+	}
+
 	public static class FooRequestInterceptor implements ReactiveHttpRequestInterceptor {
 		@Override
 		public Mono<ReactiveHttpRequest> apply(ReactiveHttpRequest request) {
@@ -141,7 +161,7 @@ public class ReactiveFeignClientUsingPropertiesTests {
 
 	@Configuration
 	@EnableAutoConfiguration
-	@EnableReactiveFeignClients(clients = {FooClient.class, BarClient.class, HeadersClient.class})
+	@EnableReactiveFeignClients(clients = {FooClient.class, BarClient.class, HeadersClient.class, QueryClient.class})
 	protected static class Application {
 	}
 }

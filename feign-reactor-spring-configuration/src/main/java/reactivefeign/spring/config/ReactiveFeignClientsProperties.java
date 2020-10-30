@@ -87,6 +87,8 @@ public class ReactiveFeignClientsProperties<O extends ReactiveOptions.Builder> {
 
         private Map<String, List<String>> defaultRequestHeaders;
 
+        private Map<String, List<String>> defaultQueryParameters;
+
         public O getOptions() {
             return options;
         }
@@ -189,6 +191,7 @@ public class ReactiveFeignClientsProperties<O extends ReactiveOptions.Builder> {
                     Objects.equals(decode404, that.decode404) &&
                     Objects.equals(contract, that.contract) &&
                     Objects.equals(logger, that.logger) &&
+                    Objects.equals(defaultQueryParameters, that.defaultQueryParameters) &&
                     Objects.equals(defaultRequestHeaders, that.defaultRequestHeaders);
         }
 
@@ -196,7 +199,7 @@ public class ReactiveFeignClientsProperties<O extends ReactiveOptions.Builder> {
         public int hashCode() {
             return Objects.hash(options, retryOnSame, retryOnNext,
                     statusHandler, errorDecoder, requestInterceptors,
-                    decode404, contract, logger, defaultRequestHeaders);
+                    decode404, contract, logger, defaultQueryParameters, defaultRequestHeaders);
         }
 
         public Map<String, List<String>> getDefaultRequestHeaders() {
@@ -205,6 +208,14 @@ public class ReactiveFeignClientsProperties<O extends ReactiveOptions.Builder> {
 
         public void setDefaultRequestHeaders(Map<String, List<String>> defaultRequestHeaders) {
             this.defaultRequestHeaders = defaultRequestHeaders;
+        }
+
+        public Map<String, List<String>> getDefaultQueryParameters() {
+            return defaultQueryParameters;
+        }
+
+        public void setDefaultQueryParameters(Map<String, List<String>> defaultQueryParameters) {
+            this.defaultQueryParameters = defaultQueryParameters;
         }
     }
 
