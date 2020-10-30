@@ -25,7 +25,10 @@ import reactivefeign.client.log.ReactiveLoggerListener;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
 import reactivefeign.client.statushandler.ReactiveStatusHandlers;
 import reactivefeign.retry.ReactiveRetryPolicy;
+import reactor.core.publisher.Mono;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -118,6 +121,16 @@ public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigu
 			for (Class<ReactiveHttpRequestInterceptor> interceptorClass : config.getRequestInterceptors()) {
 				ReactiveHttpRequestInterceptor interceptor = namedContext.getOrInstantiate(interceptorClass);
 				resultBuilder = resultBuilder.addRequestInterceptor(interceptor);
+			}
+		}
+
+		if (config.getDefaultRequestHeaders() != null) {
+			for (Map.Entry<String, List<String>> entry : config.getDefaultRequestHeaders().entrySet()) {
+				// Every Map entry is gonna belong to it's own interceptor
+				resultBuilder = resultBuilder.addRequestInterceptor(reactiveHttpRequest -> {
+					reactiveHttpRequest.headers().put(entry.getKey(), entry.getValue());
+					return Mono.just(reactiveHttpRequest);
+				});
 			}
 		}
 

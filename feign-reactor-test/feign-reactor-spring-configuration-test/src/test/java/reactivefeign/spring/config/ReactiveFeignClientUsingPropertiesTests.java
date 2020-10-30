@@ -17,6 +17,8 @@
 package reactivefeign.spring.config;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.google.j2objc.annotations.AutoreleasePool;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -57,6 +59,9 @@ public class ReactiveFeignClientUsingPropertiesTests {
 	@Autowired
 	private BarClient barClient;
 
+	@Autowired
+	private HeadersClient headersClient;
+
 	@BeforeClass
 	public static void setupStubs() {
 
@@ -70,6 +75,10 @@ public class ReactiveFeignClientUsingPropertiesTests {
 						.withFixedDelay(1000)
 						.withBody("OK")));
 
+		mockHttpServer.stubFor(get(urlEqualTo("/headers"))
+				.withHeader("header", equalTo("value"))
+				.willReturn(aResponse().withBody("OK")));
+
 		mockHttpServer.start();
 
 		System.setProperty(MOCK_SERVER_PORT_PROPERTY, Integer.toString(mockHttpServer.port()));
@@ -80,6 +89,12 @@ public class ReactiveFeignClientUsingPropertiesTests {
 		String response = fooClient.foo().block();
 		assertEquals("OK", response);
 	}
+
+	@Test
+    public void testHeadersClient() {
+        String response = headersClient.headers().block();
+        assertEquals("OK", response);
+    }
 
 	@Test(expected = ReadTimeoutException.class)
 	public void testBar() {
@@ -101,6 +116,13 @@ public class ReactiveFeignClientUsingPropertiesTests {
 		Mono<String> bar();
 	}
 
+	@ReactiveFeignClient(name = "headers", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}")
+	protected interface HeadersClient {
+
+		@RequestMapping(method = RequestMethod.GET, value = "/headers")
+		Mono<String> headers();
+	}
+
 	public static class FooRequestInterceptor implements ReactiveHttpRequestInterceptor {
 		@Override
 		public Mono<ReactiveHttpRequest> apply(ReactiveHttpRequest request) {
@@ -119,7 +141,7 @@ public class ReactiveFeignClientUsingPropertiesTests {
 
 	@Configuration
 	@EnableAutoConfiguration
-	@EnableReactiveFeignClients(clients = {FooClient.class, BarClient.class})
+	@EnableReactiveFeignClients(clients = {FooClient.class, BarClient.class, HeadersClient.class})
 	protected static class Application {
 	}
 }

@@ -9,6 +9,7 @@ import reactivefeign.client.metrics.MicrometerReactiveLogger;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
 import reactivefeign.retry.ReactiveRetryPolicy;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,6 +84,8 @@ public class ReactiveFeignClientsProperties<O extends ReactiveOptions.Builder> {
         private Boolean decode404;
 
         private Class<Contract> contract;
+
+        private Map<String, List<String>> defaultRequestHeaders;
 
         public O getOptions() {
             return options;
@@ -185,13 +188,23 @@ public class ReactiveFeignClientsProperties<O extends ReactiveOptions.Builder> {
                     Objects.equals(requestInterceptors, that.requestInterceptors) &&
                     Objects.equals(decode404, that.decode404) &&
                     Objects.equals(contract, that.contract) &&
-                    Objects.equals(logger, that.logger);
+                    Objects.equals(logger, that.logger) &&
+                    Objects.equals(defaultRequestHeaders, that.defaultRequestHeaders);
         }
 
         @Override
         public int hashCode() {
             return Objects.hash(options, retryOnSame, retryOnNext,
-                    statusHandler, errorDecoder, requestInterceptors, decode404, contract, logger);
+                    statusHandler, errorDecoder, requestInterceptors,
+                    decode404, contract, logger, defaultRequestHeaders);
+        }
+
+        public Map<String, List<String>> getDefaultRequestHeaders() {
+            return defaultRequestHeaders;
+        }
+
+        public void setDefaultRequestHeaders(Map<String, List<String>> defaultRequestHeaders) {
+            this.defaultRequestHeaders = defaultRequestHeaders;
         }
     }
 
