@@ -71,7 +71,7 @@ public final class ReactiveHttpRequest {
         String keyValuePair = String.format(KEY_VALUE_PAIR_TEMPLATE, key, value);
 
         if (query == null) {
-            query = "?" + keyValuePair;
+            query = keyValuePair;
         } else {
             query += "&" + keyValuePair;
         }
