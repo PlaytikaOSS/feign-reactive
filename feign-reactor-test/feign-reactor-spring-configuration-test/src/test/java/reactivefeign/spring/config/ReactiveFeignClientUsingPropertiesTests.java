@@ -110,7 +110,7 @@ public class ReactiveFeignClientUsingPropertiesTests {
 
 	@Test
     public void testDefaultSingleHeaderClient() {
-        String response = singleDefaultHeaderClient.headers().block();
+        String response = singleDefaultHeaderClient.header().block();
         assertEquals("OK", response);
     }
 
@@ -128,7 +128,7 @@ public class ReactiveFeignClientUsingPropertiesTests {
 
 	@Test
 	public void testDefaultMultipleQueriesClient() {
-		String response = multipleSingleDefaultQueryClient.query().block();
+		String response = multipleSingleDefaultQueryClient.queries().block();
 		assertEquals("OK", response);
 	}
 
@@ -156,7 +156,7 @@ public class ReactiveFeignClientUsingPropertiesTests {
 	protected interface SingleDefaultHeaderClient {
 
 		@RequestMapping(method = RequestMethod.GET, value = "/header")
-		Mono<String> headers();
+		Mono<String> header();
 	}
 
 	@ReactiveFeignClient(name = "query", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}")
@@ -177,7 +177,7 @@ public class ReactiveFeignClientUsingPropertiesTests {
 	protected interface MultipleDefaultQueryClient {
 
 		@RequestMapping(method = RequestMethod.GET, value = "/queries")
-		Mono<String> query();
+		Mono<String> queries();
 	}
 
 	public static class FooRequestInterceptor implements ReactiveHttpRequestInterceptor {
