@@ -17,8 +17,6 @@
 package reactivefeign.spring.config;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
-import com.google.j2objc.annotations.AutoreleasePool;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -60,10 +58,16 @@ public class ReactiveFeignClientUsingPropertiesTests {
 	private BarClient barClient;
 
 	@Autowired
-	private HeadersClient headersClient;
+	private SingleDefaultHeaderClient singleDefaultHeaderClient;
 
 	@Autowired
-	private QueryClient queryClient;
+	private SingleDefaultQueryClient singleDefaultQueryClient;
+
+	@Autowired
+	private MultipleDefaultHeaderClient multipleSingleDefaultHeaderClient;
+
+	@Autowired
+	private MultipleDefaultQueryClient multipleSingleDefaultQueryClient;
 
 	@BeforeClass
 	public static void setupStubs() {
@@ -78,11 +82,19 @@ public class ReactiveFeignClientUsingPropertiesTests {
 						.withFixedDelay(1000)
 						.withBody("OK")));
 
-		mockHttpServer.stubFor(get(urlEqualTo("/headers"))
+		mockHttpServer.stubFor(get(urlEqualTo("/header"))
 				.withHeader("header", equalTo("value"))
 				.willReturn(aResponse().withBody("OK")));
 
 		mockHttpServer.stubFor(get(urlEqualTo("/query?query=value"))
+				.willReturn(aResponse().withBody("OK")));
+
+		mockHttpServer.stubFor(get(urlEqualTo("/headers"))
+				.withHeader("header1", equalTo("value1"))
+				.withHeader("header2", equalTo("value2"))
+				.willReturn(aResponse().withBody("OK")));
+
+		mockHttpServer.stubFor(get(urlEqualTo("/queries?query1=value1&query2=value2"))
 				.willReturn(aResponse().withBody("OK")));
 
 		mockHttpServer.start();
@@ -97,14 +109,26 @@ public class ReactiveFeignClientUsingPropertiesTests {
 	}
 
 	@Test
-    public void testHeadersClient() {
-        String response = headersClient.headers().block();
+    public void testDefaultHeaderClient() {
+        String response = singleDefaultHeaderClient.headers().block();
         assertEquals("OK", response);
     }
 
 	@Test
-	public void testQueryClient() {
-		String response = queryClient.query().block();
+	public void testDefaultQueryClient() {
+		String response = singleDefaultQueryClient.query().block();
+		assertEquals("OK", response);
+	}
+
+	@Test
+	public void testDefaultHeadersClient() {
+		String response = multipleSingleDefaultHeaderClient.headers().block();
+		assertEquals("OK", response);
+	}
+
+	@Test
+	public void testDefaultQueriesClient() {
+		String response = multipleSingleDefaultQueryClient.query().block();
 		assertEquals("OK", response);
 	}
 
@@ -128,17 +152,31 @@ public class ReactiveFeignClientUsingPropertiesTests {
 		Mono<String> bar();
 	}
 
+	@ReactiveFeignClient(name = "header", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}")
+	protected interface SingleDefaultHeaderClient {
+
+		@RequestMapping(method = RequestMethod.GET, value = "/header")
+		Mono<String> headers();
+	}
+
+	@ReactiveFeignClient(name = "query", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}")
+	protected interface SingleDefaultQueryClient {
+
+		@RequestMapping(method = RequestMethod.GET, value = "/query")
+		Mono<String> query();
+	}
+
 	@ReactiveFeignClient(name = "headers", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}")
-	protected interface HeadersClient {
+	protected interface MultipleDefaultHeaderClient {
 
 		@RequestMapping(method = RequestMethod.GET, value = "/headers")
 		Mono<String> headers();
 	}
 
-	@ReactiveFeignClient(name = "query", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}")
-	protected interface QueryClient {
+	@ReactiveFeignClient(name = "queries", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}")
+	protected interface MultipleDefaultQueryClient {
 
-		@RequestMapping(method = RequestMethod.GET, value = "/query")
+		@RequestMapping(method = RequestMethod.GET, value = "/queries")
 		Mono<String> query();
 	}
 
@@ -160,7 +198,14 @@ public class ReactiveFeignClientUsingPropertiesTests {
 
 	@Configuration
 	@EnableAutoConfiguration
-	@EnableReactiveFeignClients(clients = {FooClient.class, BarClient.class, HeadersClient.class, QueryClient.class})
+	@EnableReactiveFeignClients(clients = {
+			FooClient.class,
+			BarClient.class,
+			SingleDefaultHeaderClient.class,
+			SingleDefaultQueryClient.class,
+			MultipleDefaultHeaderClient.class,
+			MultipleDefaultQueryClient.class
+	})
 	protected static class Application {
 	}
 }

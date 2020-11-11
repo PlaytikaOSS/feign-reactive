@@ -29,11 +29,11 @@ import static reactivefeign.utils.FeignUtils.methodTag;
 /**
  * An immutable reactive request to an http server.
  *
+ *
  * @author Sergii Karpenko
  */
 public final class ReactiveHttpRequest {
 
-    public static final String KEY_VALUE_PAIR_TEMPLATE = "%s=%s";
     private final MethodMetadata methodMetadata;
     private final Target<?> target;
     private final URI uri;
@@ -64,25 +64,6 @@ public final class ReactiveHttpRequest {
     /* Method to invoke on the server. */
     public String method() {
         return methodMetadata.template().method();
-    }
-
-    public ReactiveHttpRequest withQuery(String key, String value) {
-        String query = uri.getQuery();
-        String keyValuePair = String.format(KEY_VALUE_PAIR_TEMPLATE, key, value);
-
-        if (query == null) {
-            query = keyValuePair;
-        } else {
-            query += "&" + keyValuePair;
-        }
-
-        try {
-            return new ReactiveHttpRequest(methodMetadata, target, new URI(uri.getScheme(), uri.getAuthority(),
-                    uri.getPath(), query, uri.getFragment()), headers, body);
-        } catch (URISyntaxException e) {
-            // Ignore error with malformed URL, cannot be sent here
-            return this;
-        }
     }
 
     /* Fully resolved URL including query. */

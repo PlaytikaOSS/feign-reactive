@@ -28,13 +28,16 @@ import reactivefeign.client.statushandler.ReactiveStatusHandlers;
 import reactivefeign.retry.ReactiveRetryPolicy;
 import reactor.core.publisher.Mono;
 
-import java.util.Collection;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 
 public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigurator{
+	private static final String QUERY_PAIRS_SEPARATOR = "&";
+	public static final String QUERY_KEY_VALUE_SEPARATOR = "=";
 
 	protected ReactiveFeignBasicConfigurator() {
 		super(1);
@@ -140,7 +143,7 @@ public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigu
 				// Every Map entry is gonna belong to it's own interceptor
 				resultBuilder = resultBuilder.addRequestInterceptor(reactiveHttpRequest -> {
 					for (String value : entry.getValue()) {
-						reactiveHttpRequest = reactiveHttpRequest.withQuery(entry.getKey(), value);
+						reactiveHttpRequest = reactiveHttpRequestWithQuery(reactiveHttpRequest, entry.getKey(), value);
 					}
 					return Mono.just(reactiveHttpRequest);
 				});
@@ -185,5 +188,25 @@ public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigu
 			retryPolicy = retryPolicyBuilder.build();
 		}
 		return retryPolicy;
+	}
+
+	private static ReactiveHttpRequest reactiveHttpRequestWithQuery(ReactiveHttpRequest reactiveHttpRequest, String key, String value) {
+		URI uri = reactiveHttpRequest.uri();
+		String query = uri.getQuery();
+		String keyValuePair = key + QUERY_KEY_VALUE_SEPARATOR + value;
+
+		if (query == null) {
+			query = keyValuePair;
+		} else {
+			query += QUERY_PAIRS_SEPARATOR + keyValuePair;
+		}
+
+		try {
+			return new ReactiveHttpRequest(reactiveHttpRequest, new URI(uri.getScheme(), uri.getAuthority(),
+					uri.getPath(), query, uri.getFragment()));
+		} catch (URISyntaxException e) {
+			// Ignore error with malformed URL, cannot be sent here
+			return reactiveHttpRequest;
+		}
 	}
 }
