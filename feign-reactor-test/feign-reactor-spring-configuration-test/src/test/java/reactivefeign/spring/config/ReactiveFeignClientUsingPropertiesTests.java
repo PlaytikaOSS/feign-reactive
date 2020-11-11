@@ -109,25 +109,25 @@ public class ReactiveFeignClientUsingPropertiesTests {
 	}
 
 	@Test
-    public void testDefaultHeaderClient() {
+    public void testDefaultSingleHeaderClient() {
         String response = singleDefaultHeaderClient.headers().block();
         assertEquals("OK", response);
     }
 
 	@Test
-	public void testDefaultQueryClient() {
+	public void testDefaultSingleQueryClient() {
 		String response = singleDefaultQueryClient.query().block();
 		assertEquals("OK", response);
 	}
 
 	@Test
-	public void testDefaultHeadersClient() {
+	public void testDefaultMultipleHeadersClient() {
 		String response = multipleSingleDefaultHeaderClient.headers().block();
 		assertEquals("OK", response);
 	}
 
 	@Test
-	public void testDefaultQueriesClient() {
+	public void testDefaultMultipleQueriesClient() {
 		String response = multipleSingleDefaultQueryClient.query().block();
 		assertEquals("OK", response);
 	}
