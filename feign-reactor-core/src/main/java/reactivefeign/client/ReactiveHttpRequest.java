@@ -16,10 +16,8 @@ package reactivefeign.client;
 import feign.MethodMetadata;
 import feign.Target;
 import org.reactivestreams.Publisher;
-import reactivefeign.utils.HttpUtils;
 
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 
@@ -29,62 +27,62 @@ import static reactivefeign.utils.FeignUtils.methodTag;
 /**
  * An immutable reactive request to an http server.
  *
- *
  * @author Sergii Karpenko
  */
 public final class ReactiveHttpRequest {
 
-    private final MethodMetadata methodMetadata;
-    private final Target<?> target;
-    private final URI uri;
-    private final Map<String, List<String>> headers;
-    private final Publisher<Object> body;
+  private final MethodMetadata methodMetadata;
+  private final Target<?> target;
+  private final URI uri;
+  private final Map<String, List<String>> headers;
+  private final Publisher<Object> body;
 
-    /**
-     * No parameters can be null except {@code body}. All parameters must be effectively immutable,
-     * via safe copies, not mutating or otherwise.
-     */
-    public ReactiveHttpRequest(MethodMetadata methodMetadata, Target<?> target,
-                               URI uri, Map<String, List<String>> headers, Publisher<Object> body) {
-        this.methodMetadata = checkNotNull(methodMetadata, "method of %s", uri);
-        this.target = checkNotNull(target, "target of %s", uri);
-        this.uri = checkNotNull(uri, "url");
-        this.headers = checkNotNull(headers, "headers of %s %s", methodMetadata, uri);
-        this.body = body; // nullable
-    }
+  /**
+   * No parameters can be null except {@code body}. All parameters must be effectively immutable,
+   * via safe copies, not mutating or otherwise.
+   */
+  public ReactiveHttpRequest(MethodMetadata methodMetadata, Target<?> target,
+                             URI uri, Map<String, List<String>> headers, Publisher<Object> body) {
+    this.methodMetadata = checkNotNull(methodMetadata, "method of %s", uri);
+    this.target = checkNotNull(target, "target of %s", uri);
+    this.uri = checkNotNull(uri, "url");
+    this.headers = checkNotNull(headers, "headers of %s %s", methodMetadata, uri);
+    this.body = body; // nullable
+  }
 
-    public ReactiveHttpRequest(ReactiveHttpRequest request, URI uri) {
-        this(request.methodMetadata, request.target, uri, request.headers, request.body);
-    }
+  public ReactiveHttpRequest(ReactiveHttpRequest request, URI uri) {
+    this(request.methodMetadata, request.target, uri, request.headers, request.body);
+  }
 
-    public ReactiveHttpRequest(ReactiveHttpRequest request, Publisher<Object> body) {
-        this(request.methodMetadata, request.target, request.uri, request.headers, body);
-    }
+  public ReactiveHttpRequest(ReactiveHttpRequest request, Publisher<Object> body) {
+    this(request.methodMetadata, request.target, request.uri, request.headers, body);
+  }
 
-    /* Method to invoke on the server. */
-    public String method() {
-        return methodMetadata.template().method();
-    }
+  /* Method to invoke on the server. */
+  public String method() {
+    return methodMetadata.template().method();
+  }
 
-    /* Fully resolved URL including query. */
-    public URI uri() {
-        return uri;
-    }
 
-    /* Ordered list of headers that will be sent to the server. */
-    public Map<String, List<String>> headers() {
-        return headers;
-    }
+  /* Fully resolved URL including query. */
+  public URI uri() {
+    return uri;
+  }
 
-    /**
-     * If present, this is the replayable body to send to the server.
-     */
-    public Publisher<Object> body() {
-        return body;
-    }
+  /* Ordered list of headers that will be sent to the server. */
+  public Map<String, List<String>> headers() {
+    return headers;
+  }
 
-    public String methodKey() {
-        return methodTag(methodMetadata);
-    }
+  /**
+   * If present, this is the replayable body to send to the server.
+   */
+  public Publisher<Object> body() {
+    return body;
+  }
+
+  public String methodKey() {
+    return methodTag(methodMetadata);
+  }
 
 }
