@@ -22,10 +22,12 @@ import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
+import reactivefeign.client.ReactiveHttpRequestInterceptors;
 import reactivefeign.client.log.ReactiveLoggerListener;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
 import reactivefeign.client.statushandler.ReactiveStatusHandlers;
 import reactivefeign.retry.ReactiveRetryPolicy;
+import reactivefeign.utils.Pair;
 import reactor.core.publisher.Mono;
 
 import java.net.URI;
@@ -33,11 +35,11 @@ import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 
 public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigurator{
-	private static final String QUERY_PAIRS_SEPARATOR = "&";
-	public static final String QUERY_KEY_VALUE_SEPARATOR = "=";
+
 
 	protected ReactiveFeignBasicConfigurator() {
 		super(1);
@@ -129,24 +131,22 @@ public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigu
 		}
 
 		if (config.getDefaultRequestHeaders() != null) {
-			for (Map.Entry<String, List<String>> entry : config.getDefaultRequestHeaders().entrySet()) {
-				// Every Map entry is gonna belong to it's own interceptor
-				resultBuilder = resultBuilder.addRequestInterceptor(reactiveHttpRequest -> {
-					reactiveHttpRequest.headers().put(entry.getKey(), entry.getValue());
-					return Mono.just(reactiveHttpRequest);
-				});
+			for (Map.Entry<String, List<String>> headerPair : config.getDefaultRequestHeaders().entrySet()) {
+				// Every Map headerPair is gonna belong to it's own interceptor
+				List<Pair<String, String>> headerSubPairs = headerPair.getValue().stream()
+								.map(value -> new Pair<>(headerPair.getKey(), value))
+								.collect(Collectors.toList());
+				resultBuilder.addRequestInterceptor(ReactiveHttpRequestInterceptors.addHeaders(headerSubPairs));
 			}
 		}
 
 		if (config.getDefaultQueryParameters() != null) {
-			for (Map.Entry<String, List<String>> entry : config.getDefaultQueryParameters().entrySet()) {
-				// Every Map entry is gonna belong to it's own interceptor
-				resultBuilder = resultBuilder.addRequestInterceptor(reactiveHttpRequest -> {
-					for (String value : entry.getValue()) {
-						reactiveHttpRequest = reactiveHttpRequestWithQuery(reactiveHttpRequest, entry.getKey(), value);
-					}
-					return Mono.just(reactiveHttpRequest);
-				});
+			for (Map.Entry<String, List<String>> queryPair : config.getDefaultQueryParameters().entrySet()) {
+				// Every Map queryPair is gonna belong to it's own interceptor
+                List<Pair<String, String>> querySubPairs = queryPair.getValue().stream()
+                        .map(value -> new Pair<>(queryPair.getKey(), value))
+                        .collect(Collectors.toList());
+                resultBuilder.addRequestInterceptor(ReactiveHttpRequestInterceptors.addQueries(querySubPairs));
 			}
 		}
 
@@ -188,25 +188,5 @@ public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigu
 			retryPolicy = retryPolicyBuilder.build();
 		}
 		return retryPolicy;
-	}
-
-	private static ReactiveHttpRequest reactiveHttpRequestWithQuery(ReactiveHttpRequest reactiveHttpRequest, String key, String value) {
-		URI uri = reactiveHttpRequest.uri();
-		String query = uri.getQuery();
-		String keyValuePair = key + QUERY_KEY_VALUE_SEPARATOR + value;
-
-		if (query == null) {
-			query = keyValuePair;
-		} else {
-			query += QUERY_PAIRS_SEPARATOR + keyValuePair;
-		}
-
-		try {
-			return new ReactiveHttpRequest(reactiveHttpRequest, new URI(uri.getScheme(), uri.getAuthority(),
-					uri.getPath(), query, uri.getFragment()));
-		} catch (URISyntaxException e) {
-			// Ignore error with malformed URL, cannot be sent here
-			return reactiveHttpRequest;
-		}
 	}
 }
