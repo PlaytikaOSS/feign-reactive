@@ -31,6 +31,7 @@ import reactivefeign.publisher.retry.MonoRetryPublisherHttpClient;
 import reactivefeign.retry.ReactiveRetryPolicy;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -283,7 +284,7 @@ public class ReactiveFeign {
     public static PublisherHttpClient retry(
             PublisherHttpClient publisherClient,
             MethodMetadata methodMetadata,
-            Function<Flux<Throwable>, Flux<Throwable>> retryFunction) {
+            Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction) {
       Type returnPublisherType = returnPublisherType(methodMetadata);
       if(returnPublisherType == Mono.class){
         return new MonoRetryPublisherHttpClient(publisherClient, methodMetadata, retryFunction);

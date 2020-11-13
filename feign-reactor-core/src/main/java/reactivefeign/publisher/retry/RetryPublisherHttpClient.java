@@ -22,6 +22,7 @@ import reactivefeign.publisher.PublisherHttpClient;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
 
 import java.util.function.Function;
 
@@ -38,20 +39,20 @@ abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
 
   private final String feignMethodTag;
   protected final PublisherHttpClient publisherClient;
-  protected final Function<Flux<Throwable>, Flux<Throwable>> retryFunction;
+  protected final Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction;
 
   protected RetryPublisherHttpClient(PublisherHttpClient publisherClient,
                                    MethodMetadata methodMetadata,
-                                   Function<Flux<Throwable>, Flux<Throwable>> retryFunction) {
+                                   Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction) {
     this.publisherClient = publisherClient;
     this.feignMethodTag = methodTag(methodMetadata);
     this.retryFunction = wrapWithLog(retryFunction, feignMethodTag);
   }
 
-  protected Function<Flux<Throwable>, Flux<Throwable>> wrapWithOutOfRetries(
-          Function<Flux<Throwable>, Flux<Throwable>> retryFunction,
+  protected Function<Flux<Retry.RetrySignal>, Flux<Throwable>> wrapWithOutOfRetries(
+          Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction,
           ReactiveHttpRequest request){
-     return throwableFlux -> retryFunction.apply(throwableFlux)
+     return signalFlux -> retryFunction.apply(signalFlux)
              .onErrorResume(throwable -> Mono.just(new OutOfRetriesWrapper(throwable, request)))
              .zipWith(Flux.range(1, Integer.MAX_VALUE), (throwable, index) -> {
                if(throwable instanceof OutOfRetriesWrapper){
@@ -67,8 +68,8 @@ abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
              });
   }
 
-  protected static Function<Flux<Throwable>, Flux<Throwable>> wrapWithLog(
-          Function<Flux<Throwable>, Flux<Throwable>> retryFunction,
+  protected static Function<Flux<Retry.RetrySignal>, Flux<Throwable>> wrapWithLog(
+          Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction,
           String feignMethodTag) {
     return throwableFlux -> retryFunction.apply(throwableFlux)
             .doOnNext(throwable -> {

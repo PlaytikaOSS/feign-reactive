@@ -18,16 +18,17 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--BOMs-->
-        <spring-cloud-bom.version>Hoxton.SR7</spring-cloud-bom.version>
-        <spring-boot-dependencies-bom.version>2.3.2.RELEASE</spring-boot-dependencies-bom.version>
+        <spring-cloud-bom.version>Hoxton.SR9</spring-cloud-bom.version>
+        <spring-boot-dependencies-bom.version>2.3.5.RELEASE</spring-boot-dependencies-bom.version>
 
         <!--other-->
         <json-reactor.version>0.0.4</json-reactor.version>
 
         <!-- Tests -->
+        <junit.version>4.13.1</junit.version>
         <wiremock.version>2.27.1</wiremock.version>
         <awaitility.version>4.0.3</awaitility.version>
-        <blockhound.version>1.0.3.RELEASE</blockhound.version>
+        <blockhound.version>1.0.4.RELEASE</blockhound.version>
         <disruptor.version>3.4.2</disruptor.version>
 
         <!-- Plugins -->
@@ -146,6 +147,13 @@
             </dependency>
 
             <!--Test-->
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+                <scope>test</scope>
+            </dependency>
+
             <dependency>
                 <groupId>org.awaitility</groupId>
                 <artifactId>awaitility</artifactId>

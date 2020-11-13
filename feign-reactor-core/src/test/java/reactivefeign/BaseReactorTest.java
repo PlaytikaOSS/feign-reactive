@@ -35,6 +35,7 @@ abstract public class BaseReactorTest {
             builder.allowBlockingCallsInside("java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue", "remove");
 
             //netty
+            builder.allowBlockingCallsInside("io.netty.resolver.DefaultHostsFileEntriesResolver", "parseEntries");
             builder.allowBlockingCallsInside("io.netty.util.concurrent.GlobalEventExecutor", "addTask");
             builder.allowBlockingCallsInside("io.netty.util.concurrent.GlobalEventExecutor", "takeTask");
 

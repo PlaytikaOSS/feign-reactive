@@ -2,6 +2,7 @@ package reactivefeign.retry;
 
 import reactor.core.Exceptions;
 import reactor.core.publisher.Flux;
+import reactor.util.retry.Retry;
 
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -24,19 +25,19 @@ public class FilteredReactiveRetryPolicy implements ReactiveRetryPolicy {
     }
 
     @Override
-    public Function<Flux<Throwable>, Flux<Throwable>> toRetryFunction() {
+    public Function<Flux<Retry.RetrySignal>, Flux<Throwable>> toRetryFunction() {
         return filter(retryPolicy.toRetryFunction(), toRetryOn);
     }
 
-    static Function<Flux<Throwable>, Flux<Throwable>> filter(
-            Function<Flux<Throwable>, Flux<Throwable>> retryFunction,
+    static Function<Flux<Retry.RetrySignal>, Flux<Throwable>> filter(
+            Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction,
             Predicate<Throwable> toRetryOn){
         return errors -> retryFunction.apply(
                 errors.map(throwable -> {
-                    if(toRetryOn.test(throwable)){
+                    if(toRetryOn.test(throwable.failure())){
                         return throwable;
                     } else {
-                        throw Exceptions.propagate(throwable);
+                        throw Exceptions.propagate(throwable.failure());
                     }
                 })
         );

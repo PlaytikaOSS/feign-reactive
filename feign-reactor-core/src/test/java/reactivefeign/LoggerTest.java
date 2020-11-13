@@ -367,7 +367,7 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
         assertThat(events).element(i)
                 .hasFieldOrPropertyWithValue("level", level)
                 .extracting("message")
-                .extracting("getFormattedMessage")
+                .extracting("formattedMessage")
                 .has(new Condition<>(o -> ((String) o).contains(message), "check message"));
         index.set(i + 1);
         return;
@@ -387,7 +387,7 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
         assertThat(events).element(i)
                 .hasFieldOrPropertyWithValue("level", level)
                 .extracting("message")
-                .extracting("getFormattedMessage")
+                .extracting("formattedMessage")
                 .has(new Condition<>(o -> ((String) o).toLowerCase().contains(message1.toLowerCase()), "check message1"))
                 .has(new Condition<>(o -> ((String) o).toLowerCase().contains(message2.toLowerCase()), "check message2"));
         index.set(i + 1);
