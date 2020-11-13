@@ -19,7 +19,7 @@
 
         <!--BOMs-->
         <spring-cloud-bom.version>Hoxton.SR9</spring-cloud-bom.version>
-        <spring-boot-dependencies-bom.version>2.3.5.RELEASE</spring-boot-dependencies-bom.version>
+        <spring-boot-dependencies-bom.version>2.4.0</spring-boot-dependencies-bom.version>
 
         <!--other-->
         <json-reactor.version>0.0.4</json-reactor.version>
