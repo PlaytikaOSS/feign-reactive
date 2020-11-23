@@ -75,10 +75,6 @@ Here is the list of bean classes that will be used by reactive feign client if t
 - Use `ReactiveOptions.Builder` as part of Reactive Feign configuration if you need to specify connect and read timeout.
   Each reactive http client has it's own set of properties that describes request timeouts.
   Ribbon request timeouts properties are ignored. 
-  
-- If you need to override default hystrix timeout the only way to do it is to specify it 
-in `CloudReactiveFeign.SetterFactory` bean in client configuration. `HystrixObservableCommand` has `SEMAPHORE` as default isolation strategy.
-And Spring does not provide ability to configure execution timeout for this strategy via properties.  
      
 # Cloud2 (CircuitBreaker + LoadBalancer)
 
