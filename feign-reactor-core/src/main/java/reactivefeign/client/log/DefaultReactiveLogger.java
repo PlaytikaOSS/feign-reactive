@@ -22,12 +22,17 @@ import java.util.stream.Collectors;
  */
 public class DefaultReactiveLogger implements ReactiveLoggerListener<DefaultReactiveLogger.LogContext>{
 
-    private final org.slf4j.Logger logger = LoggerFactory.getLogger(DefaultReactiveLogger.class);
+    private final org.slf4j.Logger logger;
 
     private final Clock clock;
 
     public DefaultReactiveLogger(Clock clock) {
-        this.clock = clock;
+        this(clock, LoggerFactory.getLogger(DefaultReactiveLogger.class));
+    }
+    
+    public DefaultReactiveLogger(Clock clock, org.slf4j.Logger logger) {
+      this.clock = clock;
+      this.logger = logger;
     }
 
     @Override
