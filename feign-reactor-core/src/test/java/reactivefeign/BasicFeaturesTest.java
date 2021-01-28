@@ -190,6 +190,21 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
   }
 
   @Test
+  public void shouldPassQueryParameters() {
+
+    String queryParameter = "queryParam";
+    String value1 = "1";
+    String value2 = "2";
+    wireMockRule.stubFor(get(urlEqualTo("?" + queryParameter + "=" + value1
+            +"&"+ queryParameter + "=" + value2))
+            .willReturn(aResponse().withStatus(200)));
+
+    StepVerifier.create(client.queryParam(asList(value1, value2))
+            .subscribeOn(testScheduler()))
+            .verifyComplete();
+  }
+
+  @Test
   public void shouldExpandPojoToQueryParameters() {
 
     wireMockRule.stubFor(post(urlEqualTo("/queryPojo?field=1"))
@@ -218,6 +233,9 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
 
     @RequestLine("POST /queryMap")
     Mono<Void> queryMap(@QueryMap Map<String, Object> queryParameters);
+
+    @RequestLine("GET ?queryParam={queryParamValue}")
+    Mono<Void> queryParam(@Param("queryParamValue") Iterable<String> queryParamValue);
 
     @RequestLine("POST /queryPojo")
     Mono<Void> queryPojo(@QueryMap TestObject queryPojo);
