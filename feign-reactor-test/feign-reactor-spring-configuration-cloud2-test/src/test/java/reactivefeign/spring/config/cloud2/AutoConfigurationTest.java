@@ -79,13 +79,6 @@ public class AutoConfigurationTest {
 	private static final String TEST_URL = "/testUrl";
 	private static final String BODY_TEXT = "test";
 
-	static final Customizer<ReactiveResilience4JCircuitBreakerFactory> SHORT_TIMEOUT_CUSTOMIZER = factory ->
-			factory.configureDefault(
-					id -> new Resilience4JConfigBuilder(id)
-							.circuitBreakerConfig(CircuitBreakerConfig.ofDefaults())
-							.timeLimiterConfig(TimeLimiterConfig.custom()
-									.timeoutDuration(Duration.ofMillis(100)).build()).build());
-
 	static final ReactiveFeignCircuitBreakerCustomizer<Resilience4JConfigBuilder, Resilience4JConfigBuilder.Resilience4JCircuitBreakerConfiguration>
 			CIRCUIT_BREAKER_TIMEOUT_DISABLED_CONFIGURATION_CUSTOMIZER
 			= configBuilder -> configBuilder

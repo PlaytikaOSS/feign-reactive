@@ -17,6 +17,8 @@
 package reactivefeign.spring.config;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import feign.MethodMetadata;
+import feign.Target;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -33,6 +35,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
+import reactivefeign.client.ReactiveHttpResponse;
+import reactivefeign.client.log.ReactiveLoggerListener;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -40,7 +44,6 @@ import reactor.test.StepVerifier;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 import static reactivefeign.spring.config.AutoConfigurationTest.MOCK_SERVER_PORT_PROPERTY;
@@ -58,6 +61,7 @@ import static reactivefeign.spring.config.SampleConfigurationsTest.VOLUME_THRESH
 		properties = {
 		        "hystrix.command.default.circuitBreaker.requestVolumeThreshold="+VOLUME_THRESHOLD,
 				"ribbon.listOfServers=localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}",
+
 				//config properties that disables LoadBalancer and CircuitBreaker and make client Istio compatible
 				"hystrix.command.default.circuitBreaker.enabled=false",
 				"reactive.feign.ribbon.enabled = false"
@@ -71,7 +75,6 @@ public class IstioConfigurationTest {
 	public static final String TEST_FEIGN_CLIENT = "test-feign-client";
 
 	private static final String TEST_URL = "/testUrl";
-	private static final String BODY_TEXT = "test";
 
 	private static final WireMockServer mockHttpServer = new WireMockServer(wireMockConfig().dynamicPort());
 
@@ -79,16 +82,11 @@ public class IstioConfigurationTest {
 	TestReactiveFeignClient feignClient;
 
 	@Test
-	public void shouldAutoconfigureInterceptor() {
+	public void shouldAutoconfigureInterceptor() throws InterruptedException {
 		RequestInterceptorConfiguration.calls.clear();
 
-		mockHttpServer.stubFor(get(urlPathMatching(TEST_URL))
-				.willReturn(aResponse()
-						.withBody(BODY_TEXT)
-						.withStatus(200)));
-
 		StepVerifier.create(
-				Flux.range(0, VOLUME_THRESHOLD * 2)
+				Flux.range(0, VOLUME_THRESHOLD * 5)
 				.flatMap(value -> feignClient.testMethod())
 				.collectList()
 		)
@@ -96,8 +94,20 @@ public class IstioConfigurationTest {
 				.expectNextMatches(results -> results.stream().allMatch(s -> s.equals(FALLBACK)))
 				.verifyComplete();
 
+		//wait for CB to get opened
+		Thread.sleep(100);
+
+		StepVerifier.create(
+				Flux.range(0, VOLUME_THRESHOLD * 5)
+						.flatMap(value -> feignClient.testMethod())
+						.collectList()
+		)
+				//verify that fallback is enabled
+				.expectNextMatches(results -> results.stream().allMatch(s -> s.equals(FALLBACK)))
+				.verifyComplete();
+
 		//check that CircuitBreaker is disabled and we got all requests
-		assertThat(RequestInterceptorConfiguration.calls.size()).isEqualTo(VOLUME_THRESHOLD * 2);
+		assertThat(RequestInterceptorConfiguration.calls.size()).isEqualTo(VOLUME_THRESHOLD * 10);
 		//check that LoadBalancer is disabled and we got original Urls without substitutions
 		assertThat(RequestInterceptorConfiguration.calls.stream()
 				.allMatch(request -> request.uri().toString().contains(TEST_FEIGN_CLIENT))).isTrue();
@@ -148,7 +158,7 @@ public class IstioConfigurationTest {
 	protected static class RequestInterceptorConfiguration {
 		static Queue<ReactiveHttpRequest> calls = new ConcurrentLinkedQueue<>();
 		@Bean
-		ReactiveHttpRequestInterceptor reactiveHttpRequestInterceptor(){
+		public ReactiveHttpRequestInterceptor reactiveHttpRequestInterceptor(){
 			return new ReactiveHttpRequestInterceptor() {
 				@Override
 				public Mono<ReactiveHttpRequest> apply(ReactiveHttpRequest reactiveHttpRequest) {
