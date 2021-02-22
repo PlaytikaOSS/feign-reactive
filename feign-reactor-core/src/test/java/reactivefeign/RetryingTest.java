@@ -141,7 +141,7 @@ public abstract class RetryingTest extends BaseReactorTest {
     assertThat(getEventsForPath(orderUrl).size()).isEqualTo(maxRetries);
   }
 
-  private static void mockResponseAfterSeveralAttempts(WireMockClassRule rule,
+  static void mockResponseAfterSeveralAttempts(WireMockClassRule rule,
                                                        int failedAttemptsNo,
                                                        String scenario,
                                                        String url,
