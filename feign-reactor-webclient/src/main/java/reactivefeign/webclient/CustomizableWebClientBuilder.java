@@ -267,6 +267,12 @@ public class CustomizableWebClientBuilder implements WebClient.Builder {
         if(builderConsumer != null){
             builder = builder.apply(builderConsumer);
         }
+        if(consumer != null) {
+            builder = builder.codecs(consumer);
+        }
+        if(exchangeStrategies != null) {
+            builder = builder.exchangeStrategies(exchangeStrategies);
+        }
 
         return builder.build();
     }
