@@ -76,7 +76,7 @@ public class AutoConfigurationTest {
 	private static WireMockServer mockHttpServer = new WireMockServer(wireMockConfig().dynamicPort());
 
 	@Autowired
-	TestReactiveFeignClientWInterceptor feignClient;
+	TestReactiveFeignClient feignClient;
 	@Autowired
 	TestReactiveFeignClientWithParamInPath feignClientWithParamInPath;
 	@Autowired
@@ -157,7 +157,7 @@ public class AutoConfigurationTest {
 			configuration = {
 					RequestInterceptorConfiguration.class,
 					HystrixTimeoutDisabledConfiguration.class})
-	public interface TestReactiveFeignClientWInterceptor {
+	public interface TestReactiveFeignClient {
 		@GetMapping(path = TEST_URL)
 		Mono<String> testMethod();
 	}
@@ -177,7 +177,7 @@ public class AutoConfigurationTest {
 	}
 
 	@EnableReactiveFeignClients(clients = {
-			TestReactiveFeignClientWInterceptor.class,
+			TestReactiveFeignClient.class,
 			TestReactiveFeignClientWithParamInPath.class,
 			TestReactiveFeignClientWithParamInQuery.class})
 	@EnableAutoConfiguration

@@ -101,7 +101,7 @@ abstract public class AbstractCircuitBreakerReactiveHttpClientTest extends BaseR
     }
 
     @Test
-    public void shouldOpenCircuitBreakerAndCloseAfterSleepTime() {
+    public void shouldOpenCircuitBreakerAndCloseAfterSleepTime() throws InterruptedException {
 
         assertThat(server.getAllServeEvents()).isEmpty();
 

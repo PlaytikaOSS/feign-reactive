@@ -17,8 +17,6 @@
 package reactivefeign.spring.config.cloud2;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -27,9 +25,6 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JCircuitBreakerFactory;
-import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
-import org.springframework.cloud.client.circuitbreaker.Customizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
@@ -44,13 +39,12 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.sql.Time;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_MINIMUM_NUMBER_OF_CALLS;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType.TIME_BASED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static reactivefeign.spring.config.cloud2.AutoConfigurationTest.TEST_FEIGN_CLIENT;
 
@@ -66,7 +60,7 @@ import static reactivefeign.spring.config.cloud2.AutoConfigurationTest.TEST_FEIG
 				"spring.cloud.discovery.client.simple.instances."+ TEST_FEIGN_CLIENT+"[0].uri=http://localhost:${"+ AutoConfigurationTest.MOCK_SERVER_PORT_PROPERTY+"}",
 
 				//config properties that disables LoadBalancer and CircuitBreaker and make client Istio compatible
-				//see disableCircuitBreakerCustomizer
+		        "resilience4j.circuitbreaker.configs.default.minimumNumberOfCalls="+Integer.MAX_VALUE,
 				"reactive.feign.loadbalancer.enabled = false"
 		})
 @TestPropertySource("classpath:common.properties")
@@ -78,6 +72,7 @@ public class IstioConfigurationTest {
 	public static final String TEST_FEIGN_CLIENT = "test-feign-client";
 
 	private static final String TEST_URL = "/testUrl";
+	private static final String BODY_TEXT = "test";
 
 	private static final WireMockServer mockHttpServer = new WireMockServer(wireMockConfig().dynamicPort());
 
@@ -85,11 +80,16 @@ public class IstioConfigurationTest {
 	TestReactiveFeignClient feignClient;
 
 	@Test
-	public void shouldAutoconfigureInterceptor() throws InterruptedException {
+	public void shouldAutoconfigureInterceptor() {
 		RequestInterceptorConfiguration.calls.clear();
 
+		mockHttpServer.stubFor(get(urlPathMatching(TEST_URL))
+				.willReturn(aResponse()
+						.withBody(BODY_TEXT)
+						.withStatus(200)));
+
 		StepVerifier.create(
-				Flux.range(0, DEFAULT_MINIMUM_NUMBER_OF_CALLS * 5)
+				Flux.range(0, DEFAULT_MINIMUM_NUMBER_OF_CALLS * 2)
 				.flatMap(value -> feignClient.testMethod())
 				.collectList()
 		)
@@ -97,20 +97,8 @@ public class IstioConfigurationTest {
 				.expectNextMatches(results -> results.stream().allMatch(s -> s.equals(Fallback.FALLBACK)))
 				.verifyComplete();
 
-		//wait for CB to get opened
-		Thread.sleep(100);
-
-		StepVerifier.create(
-				Flux.range(0, DEFAULT_MINIMUM_NUMBER_OF_CALLS * 5)
-						.flatMap(value -> feignClient.testMethod())
-						.collectList()
-		)
-				//verify that fallback is enabled
-				.expectNextMatches(results -> results.stream().allMatch(s -> s.equals(Fallback.FALLBACK)))
-				.verifyComplete();
-
 		//check that CircuitBreaker is disabled and we got all requests
-		assertThat(RequestInterceptorConfiguration.calls.size()).isEqualTo(DEFAULT_MINIMUM_NUMBER_OF_CALLS * 10);
+		assertThat(RequestInterceptorConfiguration.calls.size()).isEqualTo(DEFAULT_MINIMUM_NUMBER_OF_CALLS * 2);
 		//check that LoadBalancer is disabled and we got original Urls without substitutions
 		assertThat(RequestInterceptorConfiguration.calls.stream()
 				.allMatch(request -> request.uri().toString().contains(TEST_FEIGN_CLIENT))).isTrue();
@@ -155,23 +143,7 @@ public class IstioConfigurationTest {
 			TestReactiveFeignClient.class})
 	@EnableAutoConfiguration
 	@Configuration
-	public static class TestConfiguration{
-
-		@Bean
-		public Customizer<ReactiveResilience4JCircuitBreakerFactory> disableCircuitBreakerCustomizer(){
-			return reactiveCircuitBreakerFactory -> reactiveCircuitBreakerFactory.configureDefault(s -> {
-				Resilience4JConfigBuilder.Resilience4JCircuitBreakerConfiguration circuitBreakerConfiguration
-						= new Resilience4JConfigBuilder.Resilience4JCircuitBreakerConfiguration();
-				circuitBreakerConfiguration.setId(s);
-				circuitBreakerConfiguration.setCircuitBreakerConfig(new CircuitBreakerConfig.Builder()
-						.minimumNumberOfCalls(Integer.MAX_VALUE)
-						.slidingWindowType(TIME_BASED)
-								.build());
-				circuitBreakerConfiguration.setTimeLimiterConfig(TimeLimiterConfig.ofDefaults());
-				return circuitBreakerConfiguration;
-			});
-		}
-	}
+	public static class TestConfiguration{}
 
 	@Configuration
 	protected static class RequestInterceptorConfiguration {
