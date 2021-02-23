@@ -28,7 +28,7 @@ public class CircuitBreakerFuncTest extends AbstractCircuitBreakerFuncTest {
     private static ReactiveCircuitBreakerFactory circuitBreakerFactory;
 
     @BeforeClass
-    public static void setupCircuitBreakerFactory() {
+    public static void setupServersList() {
         circuitBreakerFactory = new ReactiveResilience4JCircuitBreakerFactory();
     }
 

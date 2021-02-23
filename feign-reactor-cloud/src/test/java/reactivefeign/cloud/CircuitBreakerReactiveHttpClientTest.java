@@ -9,7 +9,6 @@ import reactivefeign.cloud.common.AbstractCircuitBreakerReactiveHttpClientTest;
 
 import java.util.concurrent.TimeoutException;
 
-import static com.netflix.hystrix.exception.HystrixRuntimeException.FailureType.SHORTCIRCUIT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static reactivefeign.cloud.LoadBalancingReactiveHttpClientTest.TestMonoInterface;
 
@@ -41,8 +40,8 @@ public class CircuitBreakerReactiveHttpClientTest extends AbstractCircuitBreaker
     @Override
     protected void assertCircuitBreakerOpen(Throwable throwableCircuitOpened) {
         assertThat(throwableCircuitOpened).isInstanceOf(HystrixRuntimeException.class);
-        assertThat(((HystrixRuntimeException)throwableCircuitOpened)
-                .getFailureType()).isEqualTo(SHORTCIRCUIT);
+        assertThat(throwableCircuitOpened.getMessage())
+                .contains("short-circuited and no fallback available.");
     }
 
     @Override
