@@ -69,10 +69,17 @@ Here is the list of bean classes that will be used by reactive feign client if t
 `CloudReactiveFeign.SetterFactory` bean defined in configuration will be used to configure hystrix for client
 
 ## Not all the same
-- Use `ReactiveRetryPolicy` as part of Reactive Feign configuration if you need to specify backoff period between retries.
+#### Retry with backoff
+Use `ReactiveRetryPolicy` or `ReactiveRetryPolicy.Builder` as part of Reactive Feign configuration 
+  if you need to specify backoff period between retries.
   You can't anymore use Spring's `RetryPolicy` as part of Ribbon configuration if you need to configure backoff.
-
-- Use `ReactiveOptions.Builder` as part of Reactive Feign configuration if you need to specify connect and read timeout.
+```
+reactive.feign.client.config.<client-name>.retry.builder=reactivefeign.retry.BasicReactiveRetryPolicy.Builder
+reactive.feign.client.config.<client-name>.retry.args.maxRetries=2
+reactive.feign.client.config.<client-name>.retry.args.backoffInMs=10
+```
+#### Configure timeouts
+Use `ReactiveOptions.Builder` as part of Reactive Feign configuration if you need to specify connect and read timeout.
   Each reactive http client has it's own set of properties that describes request timeouts.
   Ribbon request timeouts properties are ignored. 
      
