@@ -25,15 +25,12 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.assertj.core.api.Condition;
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import reactivefeign.client.ReadTimeoutException;
 import reactivefeign.client.log.DefaultReactiveLogger;
-import reactivefeign.publisher.retry.RetryPublisherHttpClient;
-import reactivefeign.retry.BasicReactiveRetryPolicy;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.Bill;
 import reactivefeign.testcase.domain.IceCreamOrder;
@@ -42,9 +39,7 @@ import reactivefeign.utils.Pair;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -55,22 +50,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.when;
-import static org.springframework.http.HttpHeaders.RETRY_AFTER;
-import static reactivefeign.RetryingTest.mockResponseAfterSeveralAttempts;
 import static reactivefeign.client.ReactiveHttpRequestInterceptors.addHeaders;
-import static reactivefeign.utils.HttpStatus.SC_SERVICE_UNAVAILABLE;
 
 /**
  * @author Sergii Karpenko
  */
 abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReactorTest {
 
-  private static final String[] LOGGER_NAMES = {
-          DefaultReactiveLogger.class.getName(),
-          RetryPublisherHttpClient.class.getName()
-  };
-
-  private static final LoggerContext loggerContext = (LoggerContext) LogManager.getContext(false);
+  private static final String LOGGER_NAME = DefaultReactiveLogger.class.getName();
 
   @Rule
   public WireMockClassRule wireMockRule = new WireMockClassRule(
@@ -90,17 +77,12 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
     return WireMockConfiguration.wireMockConfig();
   }
 
-  @Before
-  public void resetServers() {
-    wireMockRule.resetAll();
-  }
-
   @Test
   public void shouldLogMono() throws Exception {
 
     Appender appender = createAppender("TestMonoAppender");
 
-    Map<LoggerConfig, Level> originalLevels = setLogLevel(Level.TRACE);
+    Level originalLevel = setLogLevel(Level.TRACE);
 
     IceCreamOrder order = new OrderGenerator().generate(20);
     Bill billExpected = Bill.makeBill(order);
@@ -146,7 +128,7 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
     assertLogEvent(logEvents, index, Level.DEBUG,
         "["+clientName+"#makeOrder]<--- body takes");
 
-    rollbackLogLevels(originalLevels);
+    setLogLevel(originalLevel);
     removeAppender(appender.getName());
   }
 
@@ -155,7 +137,7 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
 
     Appender appender = createAppender("TestFluxAppender");
 
-    Map<LoggerConfig, Level> originalLevels = setLogLevel(Level.TRACE);
+    Level originalLevel = setLogLevel(Level.TRACE);
 
     IceCreamOrder order1 = new OrderGenerator().generate(21);
     Bill billExpected1 = Bill.makeBill(order1);
@@ -212,7 +194,7 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
     assertLogEvent(logEvents, index, Level.DEBUG,
             "["+clientName+"#makeOrders]<--- body takes");
 
-    rollbackLogLevels(originalLevels);
+    setLogLevel(originalLevel);
     removeAppender(appender.getName());
   }
 
@@ -225,7 +207,7 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
 
     Appender appender = createAppender("TestPingAppender");
 
-    Map<LoggerConfig, Level> originalLevels = setLogLevel(Level.TRACE);
+    Level originalLevel = setLogLevel(Level.TRACE);
 
     wireMockRule.stubFor(get(urlEqualTo("/ping"))
             .willReturn(aResponse().withStatus(200)
@@ -258,7 +240,7 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
     assertLogEvent(logEvents, index, Level.DEBUG,
             "["+clientName+"#ping]<--- headers takes");
 
-    rollbackLogLevels(originalLevels);
+    setLogLevel(originalLevel);
     removeAppender(appender.getName());
   }
 
@@ -267,7 +249,7 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
 
     Appender appender = createAppender("TestTimeoutAppender");
 
-    Map<LoggerConfig, Level> originalLevels = setLogLevel(Level.TRACE);
+    Level originalLevel = setLogLevel(Level.TRACE);
 
     int readTimeoutInMillis = 100;
     wireMockRule.stubFor(get(urlEqualTo("/ping"))
@@ -307,7 +289,7 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
       throw e;
     }
     finally {
-      rollbackLogLevels(originalLevels);
+      setLogLevel(originalLevel);
       removeAppender(appender.getName());
     }
   }
@@ -317,7 +299,7 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
 
     Appender appender = createAppender("TestRequestInterceptorAppender");
 
-    Map<LoggerConfig, Level> originalLevels = setLogLevel(Level.TRACE);
+    Level originalLevel = setLogLevel(Level.TRACE);
 
     IceCreamOrder order = new OrderGenerator().generate(20);
     Bill billExpected = Bill.makeBill(order);
@@ -366,79 +348,7 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
     assertLogEvent(logEvents, index, Level.DEBUG,
             "["+clientName+"#makeOrder]<--- body takes");
 
-    rollbackLogLevels(originalLevels);
-    removeAppender(appender.getName());
-  }
-
-  @Test
-  public void shouldLogRetryMono() throws Exception {
-
-    Appender appender = createAppender("TestMonoRetryAppender");
-
-    Map<LoggerConfig, Level> originalLevels = setLogLevel(Level.TRACE);
-
-    String orderStr = TestUtils.MAPPER.writeValueAsString(new OrderGenerator().generate(1));
-    mockResponseAfterSeveralAttempts(wireMockRule, 2, "testRetrying_success",
-            "/icecream/orders/1",
-            aResponse().withStatus(SC_SERVICE_UNAVAILABLE).withHeader(RETRY_AFTER, "1"),
-            aResponse().withStatus(200).withHeader("Content-Type", "application/json")
-                    .withBody(orderStr));
-
-    int maxRetries = 3;
-    T client = builder()
-            .retryWhen(BasicReactiveRetryPolicy.retryWithBackoff(maxRetries, 0))
-            .target(target(),
-                    "http://localhost:" + wireMockRule.port());
-    String clientName = target().getSimpleName();
-
-    Mono<IceCreamOrder> order = client.findOrder(1).subscribeOn(testScheduler());
-
-    ArgumentCaptor<LogEvent> argumentCaptor = ArgumentCaptor.forClass(LogEvent.class);
-    assertNoEventsBeforeSubscription(appender, argumentCaptor, clientName);
-
-    order.block();
-
-    Mockito.verify(appender, atLeast(7)).append(argumentCaptor.capture());
-
-    List<LogEvent> logEvents = argumentCaptor.getAllValues();
-    AtomicInteger index = new AtomicInteger();
-    for(int i = 0; i < maxRetries - 1; i++) {
-      assertLogEvent(logEvents, index, Level.DEBUG,
-              "[" + clientName + "#findOrder]--->GET http://localhost");
-      assertLogEvent(logEvents, index, Level.TRACE,
-              "[" + clientName + "#findOrder] REQUEST HEADERS\n" +
-                      "Accept:[application/json]");
-      assertLogEvent(logEvents, index, Level.TRACE,
-              "[" + clientName + "#findOrder] RESPONSE HEADERS",
-              "Retry-After:1");
-      assertLogEvent(logEvents, index, Level.DEBUG,
-              "[" + clientName + "#findOrder]<--- headers takes");
-      assertLogEvent(logEvents, index, Level.TRACE,
-              "[" + clientName + "#findOrder] RESPONSE BODY\n" +
-                      "[]");
-      assertLogEvent(logEvents, index, Level.DEBUG,
-              "[" + clientName + "#findOrder]<--- body takes");
-      assertLogEvent(logEvents, index, Level.DEBUG,
-              "[" + clientName + "#findOrder]---> RETRYING on error");
-    }
-
-    assertLogEvent(logEvents, index, Level.DEBUG,
-            "[" + clientName + "#findOrder]--->GET http://localhost");
-    assertLogEvent(logEvents, index, Level.TRACE,
-            "[" + clientName + "#findOrder] REQUEST HEADERS\n" +
-                    "Accept:[application/json]");
-    assertLogEvent(logEvents, index, Level.TRACE,
-            "[" + clientName + "#findOrder] RESPONSE HEADERS",
-            "Content-Type:application/json");
-    assertLogEvent(logEvents, index, Level.DEBUG,
-            "[" + clientName + "#findOrder]<--- headers takes");
-    assertLogEvent(logEvents, index, Level.TRACE,
-            "[" + clientName + "#findOrder] RESPONSE BODY\n" +
-                    "IceCreamOrder");
-    assertLogEvent(logEvents, index, Level.DEBUG,
-            "[" + clientName + "#findOrder]<--- body takes");
-
-    rollbackLogLevels(originalLevels);
+    setLogLevel(originalLevel);
     removeAppender(appender.getName());
   }
 
@@ -495,35 +405,28 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
     Appender appender = Mockito.mock(Appender.class);
     when(appender.getName()).thenReturn(appenderPrefix()+name);
     when(appender.isStarted()).thenReturn(true);
-    getLoggerConfigs().forEach(loggerConfig -> loggerConfig.addAppender(appender, Level.ALL, null));
+    getLoggerConfig().addAppender(appender, Level.ALL, null);
     return appender;
   }
 
   public void removeAppender(String name) {
-    getLoggerConfigs().forEach(loggerConfig -> loggerConfig.removeAppender(name));
+    getLoggerConfig().removeAppender(name);
   }
 
-  private static Map<LoggerConfig, Level> setLogLevel(Level logLevel) {
-    List<LoggerConfig> loggerConfigs = getLoggerConfigs();
-    Map<LoggerConfig, Level> previousLevels = loggerConfigs.stream()
-            .collect(Collectors.toMap(
-                    loggerConfig -> loggerConfig,
-                    LoggerConfig::getLevel));
-    loggerConfigs.forEach(loggerConfig -> loggerConfig.setLevel(logLevel));
-    loggerContext.updateLoggers();
-    return previousLevels;
-  }
-
-  private static void rollbackLogLevels(Map<LoggerConfig, Level> previousLevels) {
-    previousLevels.forEach(LoggerConfig::setLevel);
-  }
-
-  private static List<LoggerConfig> getLoggerConfigs() {
+  private static Level setLogLevel(Level logLevel) {
+    LoggerContext loggerContext = (LoggerContext) LogManager.getContext(false);
     Configuration configuration = loggerContext.getConfiguration();
-    return Arrays.stream(LOGGER_NAMES).map(loggerName -> {
-      configuration.addLogger(loggerName, new LoggerConfig());
-      return configuration.getLoggerConfig(loggerName);
-    }).collect(Collectors.toList());
+    LoggerConfig loggerConfig = configuration.getLoggerConfig(LOGGER_NAME);
+    Level previousLevel = loggerConfig.getLevel();
+    loggerConfig.setLevel(logLevel);
+    loggerContext.updateLoggers();
+    return previousLevel;
+  }
 
+  private static LoggerConfig getLoggerConfig() {
+    LoggerContext loggerContext = (LoggerContext) LogManager.getContext(false);
+    Configuration configuration = loggerContext.getConfiguration();
+    configuration.addLogger(LOGGER_NAME, new LoggerConfig());
+    return configuration.getLoggerConfig(LOGGER_NAME);
   }
 }
