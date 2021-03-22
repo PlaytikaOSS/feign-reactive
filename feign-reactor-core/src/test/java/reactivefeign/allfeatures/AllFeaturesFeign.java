@@ -26,6 +26,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.nio.ByteBuffer;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -154,4 +155,15 @@ public interface AllFeaturesFeign extends AllFeaturesApi{
 	@RequestLine("GET /encode/{id}")
     Mono<TestObject> encodePath(@Param("id") String param);
 
+	@Override
+	@RequestLine("GET /expand/{timestamp}")
+	Mono<TestObject> expandParameter(@Param(value = "timestamp", expander = TimestampToDateExpander.class) long timestamp);
+
+	class TimestampToDateExpander implements Param.Expander {
+
+		@Override
+		public String expand(Object value) {
+			return new Date((Long)value).toString();
+		}
+	}
 }

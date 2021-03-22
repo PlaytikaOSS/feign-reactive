@@ -86,6 +86,8 @@ public interface AllFeaturesApi {
 
 	Mono<TestObject> encodePath(String param);
 
+	Mono<TestObject> expandParameter(long timestamp);
+
 	class TestObject {
 
 		public String payload;

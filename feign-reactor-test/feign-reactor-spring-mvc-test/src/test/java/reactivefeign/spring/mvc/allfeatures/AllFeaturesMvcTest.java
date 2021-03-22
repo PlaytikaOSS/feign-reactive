@@ -16,6 +16,7 @@
 
 package reactivefeign.spring.mvc.allfeatures;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
@@ -77,5 +78,14 @@ public class AllFeaturesMvcTest extends AllFeaturesTest{
 		assertThat(returned).containsEntry("paramInPath", "555");
 		assertThat(returned).containsEntry("paramInUrl", "777");
 		assertThat(returned).containsAllEntriesOf(paramMap);
+	}
+
+	@Test
+	@Override
+	@Ignore
+	//expanders not supported by Spring
+	//you should use FeignFormatterRegistrar
+	//https://stackoverflow.com/questions/35621062/how-to-custom-feignclient-expander-to-convert-param
+	public void shouldExpandParam() {
 	}
 }

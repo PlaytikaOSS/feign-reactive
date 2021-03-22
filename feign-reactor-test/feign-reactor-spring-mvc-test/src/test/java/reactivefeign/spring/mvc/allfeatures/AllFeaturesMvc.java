@@ -150,4 +150,8 @@ public interface AllFeaturesMvc extends reactivefeign.allfeatures.AllFeaturesApi
 	@GetMapping(path = "/encode/{id}")
 	Mono<TestObject> encodePath(@PathVariable("id") String param);
 
+	@Override
+	@GetMapping(path = "/expand/{timestamp}")
+	Mono<TestObject> expandParameter(@PathVariable("timestamp") long timestamp);
+
 }

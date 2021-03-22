@@ -48,7 +48,6 @@ public class DefaultReactiveLogger implements ReactiveLoggerListener<DefaultReac
             logRequestHeaders(request, logContext.feignMethodTag);
         }
 
-
         return logContext;
     }
 

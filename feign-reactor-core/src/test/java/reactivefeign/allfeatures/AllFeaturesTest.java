@@ -37,10 +37,7 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.nio.ByteBuffer;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
@@ -474,6 +471,17 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 		StepVerifier.create(client.encodePath(PATH_PARAM)
 				.subscribeOn(testScheduler()))
 				.expectNextMatches(testObject -> testObject.payload.equals(PATH_PARAM))
+				.verifyComplete();
+
+	}
+
+	@Test
+	public void shouldExpandParam() {
+
+		int timestamp = 1234;
+		StepVerifier.create(client.expandParameter(timestamp)
+				.subscribeOn(testScheduler()))
+				.expectNextMatches(result -> result.payload.equals(new Date(timestamp).toString()))
 				.verifyComplete();
 
 	}

@@ -31,6 +31,7 @@ import java.util.Map;
 import static java.util.Collections.emptyList;
 import static reactivefeign.ReactivityTest.DELAY_IN_MILLIS;
 import static reactor.core.publisher.Mono.just;
+import static reactivefeign.allfeatures.AllFeaturesApi.TestObject;
 
 @RestController
 public class AllFeaturesController implements AllFeaturesMvc {
@@ -71,13 +72,6 @@ public class AllFeaturesController implements AllFeaturesMvc {
 		return Mono.just(dynamicArrayParam);
 	}
 
-	//Spring can't treat Map<String, List<String>> correctly
-	@Override
-	public Mono<Map<String, List<String>>> mirrorMapParametersNew(
-			Map<String, List<String>> paramMap) {
-		throw new UnsupportedOperationException();
-	}
-
 	@Override
 	public Mono<Map<String, List<String>>> mirrorMapParametersNew(
 			//Spring can't treat Map<String, List<String>> correctly
@@ -96,13 +90,6 @@ public class AllFeaturesController implements AllFeaturesMvc {
 	public Mono<List<Long>> mirrorListHeaders(
 			List<Long> param) {
 		return just(param);
-	}
-
-	//Spring can't treat Map<String, List<String>> correctly
-	@Override
-	public Mono<Map<String, List<String>>> mirrorMultiMapHeaders(
-			Map<String, List<String>> param) {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -175,6 +162,11 @@ public class AllFeaturesController implements AllFeaturesMvc {
 	@Override
 	public Mono<TestObject> encodePath(String param) {
 		return Mono.just(new TestObject(param));
+	}
+
+	@Override
+	public Mono<TestObject> expandParameter(String date) {
+		return Mono.just(new TestObject(date));
 	}
 
 	@Override

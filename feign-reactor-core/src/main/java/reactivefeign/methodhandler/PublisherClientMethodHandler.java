@@ -13,10 +13,7 @@
  */
 package reactivefeign.methodhandler;
 
-import feign.MethodMetadata;
-import feign.QueryMapEncoder;
-import feign.RequestTemplate;
-import feign.Target;
+import feign.*;
 import feign.querymap.FieldQueryMapEncoder;
 import feign.template.UriUtils;
 import org.reactivestreams.Publisher;
@@ -26,6 +23,7 @@ import reactivefeign.publisher.PublisherHttpClient;
 import reactivefeign.utils.Pair;
 import reactor.core.publisher.Mono;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.*;
 import java.util.function.Function;
@@ -89,6 +87,10 @@ public class PublisherClientMethodHandler implements MethodHandler {
         } else {
             staticUri = null;
         }
+
+        if(methodMetadata.indexToExpander() == null && methodMetadata.indexToExpanderClass() != null) {
+            methodMetadata.indexToExpander(instantiateExpanders(methodMetadata.indexToExpanderClass()));
+        }
     }
 
     @Override
@@ -98,13 +100,15 @@ public class PublisherClientMethodHandler implements MethodHandler {
 
     protected ReactiveHttpRequest buildRequest(Object[] argv) {
 
-        Substitutions substitutions = buildSubstitutions(argv);
+        Object[] argsExpanded = expandArguments(argv);
 
-        URI uri = buildUri(argv, substitutions);
+        Substitutions substitutions = buildSubstitutions(argsExpanded);
 
-        Map<String, List<String>> headers = headers(argv, substitutions);
+        URI uri = buildUri(argsExpanded, substitutions);
 
-        return new ReactiveHttpRequest(methodMetadata, target, uri, headers, body(argv));
+        Map<String, List<String>> headers = headers(argsExpanded, substitutions);
+
+        return new ReactiveHttpRequest(methodMetadata, target, uri, headers, body(argsExpanded));
     }
 
     private URI buildUri(Object[] argv, Substitutions substitutions) {
@@ -370,6 +374,56 @@ public class PublisherClientMethodHandler implements MethodHandler {
             this.url = url;
             this.placeholderToSubstitution = placeholderToSubstitution;
         }
+    }
+
+    private Map<Integer, Param.Expander> instantiateExpanders(Map<Integer, Class<? extends Param.Expander>> indexToExpanderClass) {
+        Map<Integer, Param.Expander> indexToExpanderMap = new HashMap<>(indexToExpanderClass.size());
+        indexToExpanderClass.forEach((index, expanderClass) -> {
+            try {
+                indexToExpanderMap.put(index, expanderClass.getDeclaredConstructor().newInstance());
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                throw new IllegalStateException(e);
+            }
+        });
+        return indexToExpanderMap;
+    }
+
+    private Object[] expandArguments(Object[] args) {
+        if(args == null || args.length == 0){
+            return args;
+        }
+
+        Map<Integer, Param.Expander> integerExpanderMap = methodMetadata.indexToExpander();
+        if(integerExpanderMap == null || integerExpanderMap.size() == 0){
+            return args;
+        }
+        Object[] argsExpanded = new Object[args.length];
+        for(int i = 0, n = args.length; i < n; i++){
+            Param.Expander expander = integerExpanderMap.get(i);
+            if(expander != null){
+                argsExpanded[i] = expandElements(expander, args[i]);
+            } else {
+                argsExpanded[i] = args[i];
+            }
+        }
+        return argsExpanded;
+    }
+
+    private Object expandElements(Param.Expander expander, Object value) {
+        if (value instanceof Iterable) {
+            return expandIterable(expander, (Iterable) value);
+        }
+        return expander.expand(value);
+    }
+
+    private List<String> expandIterable(Param.Expander expander, Iterable value) {
+        List<String> values = new ArrayList<String>();
+        for (Object element : value) {
+            if (element != null) {
+                values.add(expander.expand(element));
+            }
+        }
+        return values;
     }
 
 }
