@@ -53,6 +53,9 @@ public interface IcecreamServiceApi {
   @RequestLine("GET /icecream/orders/{orderId}")
   Mono<IceCreamOrder> findOrder(@Param("orderId") int orderId);
 
+  @RequestLine("GET /icecream/orders/redirect/{orderId}")
+  Mono<IceCreamOrder> findOrderWithRedirect(@Param("orderId") int orderId);
+
   @RequestLine("POST /icecream/bills/pay")
   @Headers("Content-Type: application/json")
   Mono<Void> payBill(Bill bill);

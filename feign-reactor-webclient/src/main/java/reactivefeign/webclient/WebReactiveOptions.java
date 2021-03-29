@@ -30,8 +30,8 @@ public class WebReactiveOptions extends ReactiveOptions {
   private final Long writeTimeoutMillis;
 
   private WebReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis, Long readTimeoutMillis,
-                             Long writeTimeoutMillis, Boolean tryUseCompression) {
-    super(useHttp2, connectTimeoutMillis, tryUseCompression);
+                             Long writeTimeoutMillis, Boolean tryUseCompression, Boolean followRedirects) {
+    super(useHttp2, connectTimeoutMillis, tryUseCompression, followRedirects);
 
     this.readTimeoutMillis = readTimeoutMillis;
     this.writeTimeoutMillis = writeTimeoutMillis;
@@ -67,7 +67,7 @@ public class WebReactiveOptions extends ReactiveOptions {
 
     public WebReactiveOptions build() {
       return new WebReactiveOptions(useHttp2, connectTimeoutMillis, readTimeoutMillis,
-              writeTimeoutMillis, acceptCompressed);
+              writeTimeoutMillis, acceptCompressed, followRedirects);
     }
   }
 }

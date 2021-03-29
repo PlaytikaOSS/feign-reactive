@@ -15,9 +15,13 @@ package reactivefeign.resttemplate.client;
 
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveOptions;
+
+import java.io.IOException;
+import java.net.HttpURLConnection;
 
 import static java.util.Optional.ofNullable;
 
@@ -40,6 +44,20 @@ public class RestTemplateFakeReactiveFeign {
         HttpComponentsClientHttpRequestFactory requestFactory =
                 new HttpComponentsClientHttpRequestFactory(
                         HttpClientBuilder.create().build());
+
+//        SimpleClientHttpRequestFactory requestFactory;
+//        if(options.isFollowRedirects() != null){
+//          requestFactory = new SimpleClientHttpRequestFactory(){
+//            @Override
+//            protected void prepareConnection(HttpURLConnection connection, String httpMethod) throws IOException {
+//              super.prepareConnection(connection, httpMethod);
+//              connection.setInstanceFollowRedirects(options.isFollowRedirects());
+//            }
+//          };
+//        } else {
+//          requestFactory = new SimpleClientHttpRequestFactory();
+//        }
+
         if (options.getConnectTimeoutMillis() != null) {
           requestFactory.setConnectTimeout(options.getConnectTimeoutMillis().intValue());
         }

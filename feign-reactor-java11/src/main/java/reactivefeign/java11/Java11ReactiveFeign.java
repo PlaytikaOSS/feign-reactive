@@ -68,7 +68,8 @@ public final class Java11ReactiveFeign {
         protected Java11ReactiveOptions options;
 
         protected Builder(HttpClient.Builder httpClientBuilder, JsonFactory jsonFactory, ObjectMapper objectMapper) {
-            setHttpClient(httpClientBuilder, jsonFactory, objectMapper);
+            this.httpClientBuilder = httpClientBuilder;
+            setHttpClient(jsonFactory, objectMapper);
             this.jsonFactory = jsonFactory;
             this.objectMapper = objectMapper;
         }
@@ -82,14 +83,17 @@ public final class Java11ReactiveFeign {
                         Duration.ofMillis(options.getConnectTimeoutMillis()));
             }
 
-            setHttpClient(httpClientBuilder, jsonFactory, objectMapper);
+            if(options.isFollowRedirects() != null){
+                this.httpClientBuilder = this.httpClientBuilder.followRedirects(
+                        options.isFollowRedirects() ? HttpClient.Redirect.ALWAYS : HttpClient.Redirect.NEVER);
+            }
+
+            setHttpClient(jsonFactory, objectMapper);
 
             return this;
         }
 
-        protected void setHttpClient(HttpClient.Builder httpClientBuilder, JsonFactory jsonFactory, ObjectMapper objectMapper){
-            this.httpClientBuilder = httpClientBuilder;
-
+        protected void setHttpClient(JsonFactory jsonFactory, ObjectMapper objectMapper){
             this.httpClientBuilder = httpClientBuilder.version(
                     useHttp2(this.options) ? HttpClient.Version.HTTP_2 : HttpClient.Version.HTTP_1_1);
 

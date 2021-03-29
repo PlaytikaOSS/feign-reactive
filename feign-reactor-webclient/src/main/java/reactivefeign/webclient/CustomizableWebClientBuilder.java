@@ -298,6 +298,9 @@ public class CustomizableWebClientBuilder implements WebClient.Builder {
         if (webOptions.isTryUseCompression() != null) {
             httpClient = httpClient.compress(true);
         }
+        if(webOptions.isFollowRedirects() != null){
+            httpClient = httpClient.followRedirect(webOptions.isFollowRedirects());
+        }
         return new ReactorClientHttpConnector(httpClient);
     }
 }

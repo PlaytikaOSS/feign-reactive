@@ -106,6 +106,10 @@ public final class JettyReactiveFeign {
                 httpClient.setConnectTimeout(options.getConnectTimeoutMillis());
             }
 
+            if(options != null && this.options.isFollowRedirects() != null){
+                httpClient.setFollowRedirects(this.options.isFollowRedirects());
+            }
+
             clientFactory(methodMetadata -> {
                 JettyReactiveHttpClient jettyClient = JettyReactiveHttpClient.jettyClient(methodMetadata, httpClient, jsonFactory, objectMapper);
                 if (options != null && options.getRequestTimeoutMillis() != null) {

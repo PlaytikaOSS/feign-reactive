@@ -11,20 +11,28 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package reactivefeign.webclient;
+package reactivefeign.jetty.h1;
 
 import reactivefeign.ReactiveFeign;
+import reactivefeign.ReactiveFeignBuilder;
+import reactivefeign.jetty.JettyReactiveFeign;
+import reactivefeign.jetty.JettyReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 /**
  * @author Sergii Karpenko
  */
-public class ReadTimeoutTest extends reactivefeign.ReadTimeoutTest {
+public class OptionsTest extends reactivefeign.OptionsTest {
 
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
-    return WebReactiveFeign.<IcecreamServiceApi>builder().options(
-            new WebReactiveOptions.Builder().setReadTimeoutMillis(readTimeoutInMillis).build()
-    );
+    return JettyReactiveFeign.<IcecreamServiceApi>builder().options(
+            new JettyReactiveOptions.Builder().setRequestTimeoutMillis(readTimeoutInMillis).build());
+  }
+
+  @Override
+  protected ReactiveFeignBuilder<IcecreamServiceApi> builder(boolean followRedirects) {
+    return JettyReactiveFeign.<IcecreamServiceApi>builder().options(
+            new JettyReactiveOptions.Builder().setFollowRedirects(followRedirects).build());
   }
 }

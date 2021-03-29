@@ -22,8 +22,9 @@ public class RestTemplateReactiveOptions extends ReactiveOptions {
 
   private final Long readTimeoutMillis;
 
-  private RestTemplateReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis, Long readTimeoutMillis, Boolean tryUseCompression) {
-    super(useHttp2, connectTimeoutMillis, tryUseCompression);
+  private RestTemplateReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis, Long readTimeoutMillis,
+                                      Boolean tryUseCompression, Boolean followRedirects) {
+    super(useHttp2, connectTimeoutMillis, tryUseCompression, followRedirects);
 
     this.readTimeoutMillis = readTimeoutMillis;
   }
@@ -47,7 +48,7 @@ public class RestTemplateReactiveOptions extends ReactiveOptions {
     }
 
     public RestTemplateReactiveOptions build() {
-      return new RestTemplateReactiveOptions(useHttp2, connectTimeoutMillis, readTimeoutMillis, acceptCompressed);
+      return new RestTemplateReactiveOptions(useHttp2, connectTimeoutMillis, readTimeoutMillis, acceptCompressed, followRedirects);
     }
   }
 }

@@ -21,11 +21,13 @@ abstract public class ReactiveOptions {
   private final Boolean useHttp2;
   private final Long connectTimeoutMillis;
   private final Boolean acceptCompressed;
+  private final Boolean followRedirects;
 
-  protected ReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis, Boolean acceptCompressed) {
+  protected ReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis, Boolean acceptCompressed, Boolean followRedirects) {
     this.useHttp2 = useHttp2;
     this.connectTimeoutMillis = connectTimeoutMillis;
     this.acceptCompressed = acceptCompressed;
+    this.followRedirects = followRedirects;
   }
 
   public Boolean getUseHttp2() {
@@ -40,8 +42,15 @@ abstract public class ReactiveOptions {
     return acceptCompressed;
   }
 
+  public Boolean isFollowRedirects() {
+    return followRedirects;
+  }
+
   public boolean isEmpty() {
-    return useHttp2 == null && connectTimeoutMillis == null && acceptCompressed == null;
+    return useHttp2 == null
+            && connectTimeoutMillis == null
+            && acceptCompressed == null
+            && followRedirects == null;
   }
 
   public static boolean useHttp2(ReactiveOptions options){
@@ -53,6 +62,7 @@ abstract public class ReactiveOptions {
     protected Boolean useHttp2;
     protected Long connectTimeoutMillis;
     protected Boolean acceptCompressed;
+    protected Boolean followRedirects;
 
     public Builder() {}
 
@@ -68,6 +78,11 @@ abstract public class ReactiveOptions {
 
     public Builder setAcceptCompressed(boolean acceptCompressed) {
       this.acceptCompressed = acceptCompressed;
+      return this;
+    }
+
+    public Builder setFollowRedirects(boolean followRedirects) {
+      this.followRedirects = followRedirects;
       return this;
     }
 

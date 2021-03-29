@@ -15,6 +15,7 @@ package reactivefeign.jetty.h2c;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import reactivefeign.ReactiveFeign;
+import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.jetty.JettyReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
@@ -24,7 +25,7 @@ import static reactivefeign.wiremock.WireMockServerConfigurations.h2cConfig;
 /**
  * @author Sergii Karpenko
  */
-public class ReadTimeoutTest extends reactivefeign.ReadTimeoutTest {
+public class OptionsTest extends reactivefeign.OptionsTest {
 
   @Override
   protected WireMockConfiguration wireMockConfig(){
@@ -36,6 +37,15 @@ public class ReadTimeoutTest extends reactivefeign.ReadTimeoutTest {
     return JettyReactiveFeign.<IcecreamServiceApi>builder().options(
             new JettyReactiveOptions.Builder()
                     .setRequestTimeoutMillis(readTimeoutInMillis)
+                    .setUseHttp2(true)
+                    .build());
+  }
+
+  @Override
+  protected ReactiveFeignBuilder<IcecreamServiceApi> builder(boolean followRedirects) {
+    return JettyReactiveFeign.<IcecreamServiceApi>builder().options(
+            new JettyReactiveOptions.Builder()
+                    .setFollowRedirects(followRedirects)
                     .setUseHttp2(true)
                     .build());
   }
