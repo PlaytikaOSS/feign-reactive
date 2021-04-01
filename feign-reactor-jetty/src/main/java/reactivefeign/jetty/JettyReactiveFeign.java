@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.async_.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.HttpProxy;
 import org.eclipse.jetty.http2.client.HTTP2Client;
 import org.eclipse.jetty.http2.client.http.HttpClientTransportOverHTTP2;
 import reactivefeign.ReactiveFeign;
@@ -108,6 +109,12 @@ public final class JettyReactiveFeign {
 
             if(options != null && this.options.isFollowRedirects() != null){
                 httpClient.setFollowRedirects(this.options.isFollowRedirects());
+            }
+
+            if(options != null && this.options.getProxySettings() != null){
+                ReactiveOptions.ProxySettings proxySettings = this.options.getProxySettings();
+                httpClient.getProxyConfiguration().getProxies()
+                        .add(new HttpProxy(proxySettings.getHost(), proxySettings.getPort()));
             }
 
             clientFactory(methodMetadata -> {

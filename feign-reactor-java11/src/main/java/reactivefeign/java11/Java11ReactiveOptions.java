@@ -23,8 +23,8 @@ public class Java11ReactiveOptions extends ReactiveOptions {
   private final Long requestTimeoutMillis;
 
   private Java11ReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis, Long requestTimeoutMillis,
-                                Boolean tryUseCompression, Boolean followRedirects) {
-    super(useHttp2, connectTimeoutMillis, tryUseCompression, followRedirects);
+                                Boolean tryUseCompression, Boolean followRedirects, ProxySettings proxySettings) {
+    super(useHttp2, connectTimeoutMillis, tryUseCompression, followRedirects, proxySettings);
 
     this.requestTimeoutMillis = requestTimeoutMillis;
   }
@@ -49,7 +49,7 @@ public class Java11ReactiveOptions extends ReactiveOptions {
 
     public Java11ReactiveOptions build() {
       return new Java11ReactiveOptions(useHttp2, connectTimeoutMillis, requestTimeoutMillis,
-              acceptCompressed, followRedirects);
+              acceptCompressed, followRedirects, proxySettings);
     }
   }
 }

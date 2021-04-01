@@ -20,6 +20,8 @@ import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.java11.client.Java11ReactiveHttpClientFactory;
 
+import java.net.InetSocketAddress;
+import java.net.ProxySelector;
 import java.net.http.HttpClient;
 import java.time.Duration;
 
@@ -86,6 +88,13 @@ public final class Java11ReactiveFeign {
             if(options.isFollowRedirects() != null){
                 this.httpClientBuilder = this.httpClientBuilder.followRedirects(
                         options.isFollowRedirects() ? HttpClient.Redirect.ALWAYS : HttpClient.Redirect.NEVER);
+            }
+
+            ReactiveOptions.ProxySettings proxySettings = options.getProxySettings();
+            if(proxySettings != null){
+                this.httpClientBuilder = this.httpClientBuilder.proxy(
+                        ProxySelector.of(new InetSocketAddress(proxySettings.getHost(), proxySettings.getPort()))
+                );
             }
 
             setHttpClient(jsonFactory, objectMapper);

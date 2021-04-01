@@ -15,6 +15,7 @@ package reactivefeign.java11.h1;
 
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveFeignBuilder;
+import reactivefeign.ReactiveOptions;
 import reactivefeign.java11.Java11ReactiveFeign;
 import reactivefeign.java11.Java11ReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
@@ -34,5 +35,11 @@ public class OptionsTest extends reactivefeign.OptionsTest {
   protected ReactiveFeignBuilder<IcecreamServiceApi> builder(boolean followRedirects) {
     return Java11ReactiveFeign.<IcecreamServiceApi>builder().options(
             new Java11ReactiveOptions.Builder().setFollowRedirects(followRedirects).build());
+  }
+
+  @Override
+  protected ReactiveFeignBuilder<IcecreamServiceApi> builder(ReactiveOptions.ProxySettings proxySettings) {
+    return Java11ReactiveFeign.<IcecreamServiceApi>builder().options(
+            new Java11ReactiveOptions.Builder().setProxySettings(proxySettings).build());
   }
 }

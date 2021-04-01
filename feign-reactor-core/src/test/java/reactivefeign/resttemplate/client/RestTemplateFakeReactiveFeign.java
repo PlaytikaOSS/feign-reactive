@@ -22,6 +22,8 @@ import reactivefeign.ReactiveOptions;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 
 import static java.util.Optional.ofNullable;
 
@@ -41,39 +43,69 @@ public class RestTemplateFakeReactiveFeign {
 
       @Override
       public ReactiveFeign.Builder<T> options(ReactiveOptions options) {
-        HttpComponentsClientHttpRequestFactory requestFactory =
-                new HttpComponentsClientHttpRequestFactory(
-                        HttpClientBuilder.create().build());
 
-//        SimpleClientHttpRequestFactory requestFactory;
-//        if(options.isFollowRedirects() != null){
-//          requestFactory = new SimpleClientHttpRequestFactory(){
-//            @Override
-//            protected void prepareConnection(HttpURLConnection connection, String httpMethod) throws IOException {
-//              super.prepareConnection(connection, httpMethod);
-//              connection.setInstanceFollowRedirects(options.isFollowRedirects());
-//            }
-//          };
-//        } else {
-//          requestFactory = new SimpleClientHttpRequestFactory();
-//        }
+        if(options.isFollowRedirects() != null || options.getProxySettings() != null){
+          SimpleClientHttpRequestFactory requestFactory;
+          if(options.isFollowRedirects() != null){
+            requestFactory = new SimpleClientHttpRequestFactory(){
+              @Override
+              protected void prepareConnection(HttpURLConnection connection, String httpMethod) throws IOException {
+                super.prepareConnection(connection, httpMethod);
+                connection.setInstanceFollowRedirects(options.isFollowRedirects());
+              }
+            };
+          } else {
+            requestFactory = new SimpleClientHttpRequestFactory();
+          }
 
-        if (options.getConnectTimeoutMillis() != null) {
-          requestFactory.setConnectTimeout(options.getConnectTimeoutMillis().intValue());
+          ReactiveOptions.ProxySettings proxySettings = options.getProxySettings();
+          if(proxySettings != null){
+            requestFactory.setProxy(new Proxy(Proxy.Type.HTTP,
+                    new InetSocketAddress(proxySettings.getHost(), proxySettings.getPort())));
+          }
+
+          if (options.getConnectTimeoutMillis() != null) {
+            requestFactory.setConnectTimeout(options.getConnectTimeoutMillis().intValue());
+          }
+
+          RestTemplateReactiveOptions restTemplateOptions = (RestTemplateReactiveOptions)options;
+          if (restTemplateOptions.getReadTimeoutMillis() != null) {
+            requestFactory.setReadTimeout(restTemplateOptions.getReadTimeoutMillis().intValue());
+          }
+
+          this.clientFactory((methodMetadata) -> {
+            boolean acceptGzip = ofNullable(options.isTryUseCompression()).orElse(false);
+            return new RestTemplateFakeReactiveHttpClient(
+                    methodMetadata, new RestTemplate(requestFactory), acceptGzip);
+          });
+
+          return this;
+
         }
 
-        RestTemplateReactiveOptions restTemplateOptions = (RestTemplateReactiveOptions)options;
-        if (restTemplateOptions.getReadTimeoutMillis() != null) {
-          requestFactory.setReadTimeout(restTemplateOptions.getReadTimeoutMillis().intValue());
+        else {
+
+          HttpComponentsClientHttpRequestFactory requestFactory =
+                  new HttpComponentsClientHttpRequestFactory(
+                          HttpClientBuilder.create().build());
+          if (options.getConnectTimeoutMillis() != null) {
+            requestFactory.setConnectTimeout(options.getConnectTimeoutMillis().intValue());
+          }
+
+          RestTemplateReactiveOptions restTemplateOptions = (RestTemplateReactiveOptions)options;
+          if (restTemplateOptions.getReadTimeoutMillis() != null) {
+            requestFactory.setReadTimeout(restTemplateOptions.getReadTimeoutMillis().intValue());
+          }
+
+          this.clientFactory((methodMetadata) -> {
+            boolean acceptGzip = ofNullable(options.isTryUseCompression()).orElse(false);
+            return new RestTemplateFakeReactiveHttpClient(
+                    methodMetadata, new RestTemplate(requestFactory), acceptGzip);
+          });
+
+          return this;
+
         }
-
-        this.clientFactory((methodMetadata) -> {
-          boolean acceptGzip = ofNullable(options.isTryUseCompression()).orElse(false);
-          return new RestTemplateFakeReactiveHttpClient(
-                  methodMetadata, new RestTemplate(requestFactory), acceptGzip);
-        });
-
-        return this;
       }
     };
   }

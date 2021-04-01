@@ -30,8 +30,9 @@ public class WebReactiveOptions extends ReactiveOptions {
   private final Long writeTimeoutMillis;
 
   private WebReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis, Long readTimeoutMillis,
-                             Long writeTimeoutMillis, Boolean tryUseCompression, Boolean followRedirects) {
-    super(useHttp2, connectTimeoutMillis, tryUseCompression, followRedirects);
+                             Long writeTimeoutMillis, Boolean tryUseCompression, Boolean followRedirects,
+                             ProxySettings proxySettings) {
+    super(useHttp2, connectTimeoutMillis, tryUseCompression, followRedirects, proxySettings);
 
     this.readTimeoutMillis = readTimeoutMillis;
     this.writeTimeoutMillis = writeTimeoutMillis;
@@ -67,7 +68,61 @@ public class WebReactiveOptions extends ReactiveOptions {
 
     public WebReactiveOptions build() {
       return new WebReactiveOptions(useHttp2, connectTimeoutMillis, readTimeoutMillis,
-              writeTimeoutMillis, acceptCompressed, followRedirects);
+              writeTimeoutMillis, acceptCompressed, followRedirects, proxySettings);
+    }
+  }
+
+  public static class WebProxySettings extends ProxySettings{
+
+    private final String username;
+    private final String password;
+    private final Long timeout;
+
+    protected WebProxySettings(String host, int port, String username, String password, Long timeout) {
+      super(host, port);
+
+      this.username = username;
+      this.password = password;
+      this.timeout = timeout;
+    }
+
+    public String getUsername() {
+      return username;
+    }
+
+    public String getPassword() {
+      return password;
+    }
+
+    public Long getTimeout() {
+      return timeout;
+    }
+  }
+
+  public static class WebProxySettingsBuilder extends ProxySettingsBuilder {
+
+    private String username;
+    private String password;
+    private Long timeout;
+
+
+    public ReactiveOptions.ProxySettingsBuilder username(String username) {
+      this.username = username;
+      return this;
+    }
+
+    public ReactiveOptions.ProxySettingsBuilder password(String password) {
+      this.password = password;
+      return this;
+    }
+
+    public ReactiveOptions.ProxySettingsBuilder timeout(Long timeout) {
+      this.timeout = timeout;
+      return this;
+    }
+
+    public WebProxySettings build() {
+      return new WebProxySettings(host, port, username, password, timeout);
     }
   }
 }

@@ -13,9 +13,8 @@
  */
 package reactivefeign.resttemplate;
 
-import org.junit.Ignore;
-import org.junit.Test;
 import reactivefeign.ReactiveFeignBuilder;
+import reactivefeign.ReactiveOptions;
 import reactivefeign.resttemplate.client.RestTemplateFakeReactiveFeign;
 import reactivefeign.resttemplate.client.RestTemplateReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
@@ -39,17 +38,16 @@ public class OptionsTest extends reactivefeign.OptionsTest {
             new RestTemplateReactiveOptions.Builder().setFollowRedirects(followRedirects).build());
   }
 
+  @Override
+  protected ReactiveFeignBuilder<IcecreamServiceApi> builder(ReactiveOptions.ProxySettings proxySettings) {
+    return RestTemplateFakeReactiveFeign.<IcecreamServiceApi>builder().options(
+            new RestTemplateReactiveOptions.Builder().setProxySettings(proxySettings).build());
+  }
+
   //to not detect blocking calls
   @Override
   protected Scheduler testScheduler(){
     return Schedulers.elastic();
   }
 
-  //It's to difficult to configure
-  @Test
-  @Override
-  @Ignore
-  public void shouldNotFollowRedirects(){
-
-  }
 }

@@ -23,8 +23,8 @@ public class JettyReactiveOptions extends ReactiveOptions {
   private final Long requestTimeoutMillis;
 
   private JettyReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis, Long requestTimeoutMillis,
-                               Boolean tryUseCompression, Boolean followRedirects) {
-    super(useHttp2, connectTimeoutMillis, tryUseCompression, followRedirects);
+                               Boolean tryUseCompression, Boolean followRedirects, ProxySettings proxySettings) {
+    super(useHttp2, connectTimeoutMillis, tryUseCompression, followRedirects, proxySettings);
 
     this.requestTimeoutMillis = requestTimeoutMillis;
   }
@@ -49,7 +49,7 @@ public class JettyReactiveOptions extends ReactiveOptions {
 
     public JettyReactiveOptions build() {
       return new JettyReactiveOptions(useHttp2, connectTimeoutMillis, requestTimeoutMillis,
-              acceptCompressed, followRedirects);
+              acceptCompressed, followRedirects, proxySettings);
     }
   }
 }

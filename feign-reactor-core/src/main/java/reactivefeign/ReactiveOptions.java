@@ -22,12 +22,15 @@ abstract public class ReactiveOptions {
   private final Long connectTimeoutMillis;
   private final Boolean acceptCompressed;
   private final Boolean followRedirects;
+  private final ProxySettings proxySettings;
 
-  protected ReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis, Boolean acceptCompressed, Boolean followRedirects) {
+  protected ReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis, Boolean acceptCompressed,
+                            Boolean followRedirects, ProxySettings proxySettings) {
     this.useHttp2 = useHttp2;
     this.connectTimeoutMillis = connectTimeoutMillis;
     this.acceptCompressed = acceptCompressed;
     this.followRedirects = followRedirects;
+    this.proxySettings = proxySettings;
   }
 
   public Boolean getUseHttp2() {
@@ -46,11 +49,16 @@ abstract public class ReactiveOptions {
     return followRedirects;
   }
 
+  public ProxySettings getProxySettings() {
+    return proxySettings;
+  }
+
   public boolean isEmpty() {
     return useHttp2 == null
             && connectTimeoutMillis == null
             && acceptCompressed == null
-            && followRedirects == null;
+            && followRedirects == null
+            && proxySettings == null;
   }
 
   public static boolean useHttp2(ReactiveOptions options){
@@ -63,6 +71,7 @@ abstract public class ReactiveOptions {
     protected Long connectTimeoutMillis;
     protected Boolean acceptCompressed;
     protected Boolean followRedirects;
+    protected ProxySettings proxySettings;
 
     public Builder() {}
 
@@ -86,6 +95,50 @@ abstract public class ReactiveOptions {
       return this;
     }
 
+    public Builder setProxySettings(ProxySettings proxySettings) {
+      this.proxySettings = proxySettings;
+      return this;
+    }
+
     abstract public ReactiveOptions build();
+  }
+
+  public static class ProxySettings {
+    private final String host;
+    private final int port;
+
+    protected ProxySettings(String host, int port) {
+      this.host = host;
+      this.port = port;
+    }
+
+    public String getHost() {
+      return host;
+    }
+
+    public int getPort() {
+      return port;
+    }
+
+  }
+  
+  public static class ProxySettingsBuilder {
+    protected String host;
+    protected int port;
+
+    public ProxySettingsBuilder host(String host) {
+      this.host = host;
+      return this;
+    }
+
+    public ProxySettingsBuilder port(int port) {
+      this.port = port;
+      return this;
+    }
+
+    public ProxySettings build(){
+      return new ProxySettings(host, port);
+    }
+
   }
 }

@@ -16,6 +16,7 @@ package reactivefeign;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import feign.FeignException;
 import org.junit.Rule;
 import org.junit.Test;
@@ -25,9 +26,15 @@ import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.OrderGenerator;
 import reactor.test.StepVerifier;
 
+import java.util.List;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static reactivefeign.TestUtils.MAPPER;
 import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
+
+import static reactivefeign.ReactiveOptions.ProxySettings;
+import static reactivefeign.ReactiveOptions.ProxySettingsBuilder;
 
 /**
  * @author Sergii Karpenko
@@ -38,9 +45,15 @@ abstract public class OptionsTest extends BaseReactorTest {
   public WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig().dynamicPort());
 
+  @Rule
+  public WireMockClassRule wireMockProxyRule = new WireMockClassRule(
+          wireMockConfig().dynamicPort().enableBrowserProxying(true));
+
   abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder(long readTimeoutInMillis);
 
   abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder(boolean followRedirects);
+
+  abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder(ProxySettings proxySettings);
 
   protected WireMockConfiguration wireMockConfig(){
     return WireMockConfiguration.wireMockConfig();
@@ -113,5 +126,29 @@ abstract public class OptionsTest extends BaseReactorTest {
             .expectErrorMatches(throwable -> throwable instanceof FeignException
                     && ((FeignException) throwable).status() == 301)
             .verify();
+  }
+
+  @Test
+  public void shouldUseProxy() throws JsonProcessingException {
+
+    String orderUrl = "/icecream/orders/1";
+
+    IceCreamOrder orderExpected = new OrderGenerator().generate(1);
+    wireMockRule.stubFor(any(urlEqualTo(orderUrl))
+            .willReturn(aResponse().withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(MAPPER.writeValueAsString(orderExpected))));
+
+    IcecreamServiceApi client = builder(
+            new ProxySettingsBuilder().host("localhost").port(wireMockProxyRule.port()).build())
+            .target(IcecreamServiceApi.class,
+                    "http://localhost:" + wireMockRule.port());
+
+    StepVerifier.create(client.findOrder(1).subscribeOn(testScheduler()))
+            .expectNextMatches(equalsComparingFieldByFieldRecursively(orderExpected))
+            .verifyComplete();
+
+    List<ServeEvent> proxyEvents = wireMockProxyRule.getAllServeEvents();
+    assertThat(proxyEvents.get(0).getRequest().isBrowserProxyRequest()).isTrue();
   }
 }

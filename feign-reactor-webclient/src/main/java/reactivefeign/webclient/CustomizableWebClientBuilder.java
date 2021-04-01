@@ -1,13 +1,9 @@
 package reactivefeign.webclient;
 
-import io.netty.channel.ChannelOption;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.reactive.ClientHttpConnector;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.http.codec.ClientCodecConfigurer;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
@@ -15,16 +11,14 @@ import org.springframework.web.reactive.function.client.ExchangeFunction;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriBuilderFactory;
-import reactor.netty.http.client.HttpClient;
-import reactor.netty.tcp.TcpClient;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import static reactivefeign.webclient.NettyClientHttpConnectorBuilder.getNettyClientHttpConnector;
 import static reactivefeign.webclient.WebReactiveOptions.DEFAULT_OPTIONS;
 
 /**
@@ -262,7 +256,7 @@ public class CustomizableWebClientBuilder implements WebClient.Builder {
         if(connector != null){
             builder = builder.clientConnector(connector);
         } else {
-            builder = builder.clientConnector(getReactorClientHttpConnector(webOptions));
+            builder = builder.clientConnector(clientHttpConnector());
         }
         if(builderConsumer != null){
             builder = builder.apply(builderConsumer);
@@ -277,30 +271,9 @@ public class CustomizableWebClientBuilder implements WebClient.Builder {
         return builder.build();
     }
 
-    public static ReactorClientHttpConnector getReactorClientHttpConnector(WebReactiveOptions webOptions) {
-        TcpClient tcpClient = TcpClient.create();
-        if (webOptions.getConnectTimeoutMillis() != null) {
-            tcpClient = tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
-                    webOptions.getConnectTimeoutMillis().intValue());
-        }
-        tcpClient = tcpClient.doOnConnected(connection -> {
-            if(webOptions.getReadTimeoutMillis() != null){
-                connection.addHandlerLast(new ReadTimeoutHandler(
-                        webOptions.getReadTimeoutMillis(), TimeUnit.MILLISECONDS));
-            }
-            if(webOptions.getWriteTimeoutMillis() != null){
-                connection.addHandlerLast(new WriteTimeoutHandler(
-                        webOptions.getWriteTimeoutMillis(), TimeUnit.MILLISECONDS));
-            }
-        });
-
-        HttpClient httpClient = HttpClient.from(tcpClient);
-        if (webOptions.isTryUseCompression() != null) {
-            httpClient = httpClient.compress(true);
-        }
-        if(webOptions.isFollowRedirects() != null){
-            httpClient = httpClient.followRedirect(webOptions.isFollowRedirects());
-        }
-        return new ReactorClientHttpConnector(httpClient);
+    protected ClientHttpConnector clientHttpConnector(){
+        return getNettyClientHttpConnector(webOptions);
     }
+
+
 }

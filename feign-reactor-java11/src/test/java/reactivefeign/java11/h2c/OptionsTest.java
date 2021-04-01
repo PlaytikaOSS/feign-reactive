@@ -14,8 +14,11 @@
 package reactivefeign.java11.h2c;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
+import org.junit.Ignore;
+import org.junit.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveFeignBuilder;
+import reactivefeign.ReactiveOptions;
 import reactivefeign.java11.Java11ReactiveFeign;
 import reactivefeign.java11.Java11ReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
@@ -48,5 +51,15 @@ public class OptionsTest extends reactivefeign.OptionsTest {
                     .setFollowRedirects(followRedirects)
                     .setUseHttp2(true).build());
   }
+
+  @Override
+  protected ReactiveFeignBuilder<IcecreamServiceApi> builder(ReactiveOptions.ProxySettings proxySettings) {
+    throw new IllegalArgumentException();
+  }
+
+  @Ignore
+  @Override
+  @Test
+  public void shouldUseProxy() {}
 
 }

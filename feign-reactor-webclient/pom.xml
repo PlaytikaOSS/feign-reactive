@@ -27,6 +27,7 @@
             <artifactId>spring-web</artifactId>
         </dependency>
 
+        <!-- Netty       -->
         <dependency>
             <groupId>io.projectreactor.netty</groupId>
             <artifactId>reactor-netty</artifactId>
