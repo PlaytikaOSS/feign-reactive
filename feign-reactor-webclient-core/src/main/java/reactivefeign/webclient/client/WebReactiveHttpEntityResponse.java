@@ -5,15 +5,9 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import reactivefeign.client.ReactiveHttpRequest;
-import reactivefeign.client.ReactiveHttpResponse;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.Type;
-import java.util.List;
-import java.util.Map;
-
-import static org.springframework.http.HttpStatus.resolve;
-import static org.springframework.util.CollectionUtils.toMultiValueMap;
 
 class WebReactiveHttpEntityResponse<P extends Publisher<?>> extends WebReactiveHttpResponse<P>{
 

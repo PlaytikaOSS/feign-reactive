@@ -9,11 +9,12 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.ProxyProvider;
 import reactor.netty.tcp.TcpClient;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
 class NettyClientHttpConnectorBuilder {
 
-    public static ClientHttpConnector getNettyClientHttpConnector(WebReactiveOptions webOptions) {
+    public static ClientHttpConnector buildNettyClientHttpConnector(WebReactiveOptions webOptions) {
         TcpClient tcpClient = TcpClient.create();
         if (webOptions.getConnectTimeoutMillis() != null) {
             tcpClient = tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
@@ -45,6 +46,11 @@ class NettyClientHttpConnectorBuilder {
         }
 
         HttpClient httpClient = HttpClient.from(tcpClient);
+
+        if(webOptions.getResponseTimeoutMillis() != null){
+            httpClient = httpClient.responseTimeout(Duration.ofMillis(webOptions.getResponseTimeoutMillis()));
+        }
+
         if (webOptions.isTryUseCompression() != null) {
             httpClient = httpClient.compress(true);
         }

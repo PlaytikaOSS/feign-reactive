@@ -9,8 +9,8 @@
         <version>2.0.31-SNAPSHOT</version>
     </parent>
 
-    <artifactId>feign-reactor-webclient</artifactId>
-    <description>WebClient with ReactorClientHttpConnector (Netty) </description>
+    <artifactId>feign-reactor-webclient-jetty</artifactId>
+    <description>WebClient with JettyClientHttpConnector</description>
 
     <dependencies>
         <dependency>
@@ -28,15 +28,22 @@
             <artifactId>spring-web</artifactId>
         </dependency>
 
-        <!-- Netty       -->
+        <!-- Jetty       -->
         <dependency>
-            <groupId>io.projectreactor.netty</groupId>
-            <artifactId>reactor-netty</artifactId>
+            <groupId>org.eclipse.jetty</groupId>
+            <artifactId>jetty-reactive-httpclient</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
+            <groupId>org.eclipse.jetty.http2</groupId>
+            <artifactId>http2-client</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <dependency>
+            <groupId>org.eclipse.jetty.http2</groupId>
+            <artifactId>http2-http-client-transport</artifactId>
+            <optional>true</optional>
         </dependency>
 
         <!-- Tests -->

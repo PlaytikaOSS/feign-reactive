@@ -27,7 +27,10 @@ import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactivefeign.client.*;
+import reactivefeign.client.ReactiveFeignException;
+import reactivefeign.client.ReactiveHttpClient;
+import reactivefeign.client.ReactiveHttpRequest;
+import reactivefeign.client.ReactiveHttpResponse;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.ParameterizedType;
@@ -47,8 +50,11 @@ public class WebReactiveHttpClient<P extends Publisher<?>> implements ReactiveHt
 	private final WebClient webClient;
 	private final ParameterizedTypeReference<Object> bodyActualType;
 	private final BiFunction<ReactiveHttpRequest, ClientResponse, ReactiveHttpResponse<P>> responseFunction;
+	private final BiFunction<ReactiveHttpRequest, Throwable, Throwable> errorMapper;
 
-	public static <P extends Publisher<?>> WebReactiveHttpClient<P> webClient(MethodMetadata methodMetadata, WebClient webClient) {
+	public static <P extends Publisher<?>> WebReactiveHttpClient<P> webClient(
+			MethodMetadata methodMetadata, WebClient webClient,
+			BiFunction<ReactiveHttpRequest, Throwable, Throwable> errorMapper) {
 
 		Type returnPublisherType = returnPublisherType(methodMetadata);
 		ParameterizedTypeReference<?> returnActualType =
@@ -68,11 +74,13 @@ public class WebReactiveHttpClient<P extends Publisher<?>> implements ReactiveHt
 					ParameterizedTypeReference.forType(returnActualType(entityType));
 
 			return new WebReactiveHttpClient<>(webClient, bodyActualType,
-					(request, response) -> new WebReactiveHttpEntityResponse<>(request, response, entityPublisherType, entityActualType));
+					(request, response) -> new WebReactiveHttpEntityResponse<>(request, response, entityPublisherType, entityActualType),
+					errorMapper);
 		}
 
 		return new WebReactiveHttpClient<>(webClient, bodyActualType,
-				webReactiveHttpResponse(returnPublisherType, returnActualType));
+				webReactiveHttpResponse(returnPublisherType, returnActualType),
+				errorMapper);
 	}
 
 	public static <P extends Publisher<?>> BiFunction<ReactiveHttpRequest, ClientResponse, ReactiveHttpResponse<P>> webReactiveHttpResponse(Type returnPublisherType, ParameterizedTypeReference<?> returnActualType) {
@@ -81,10 +89,12 @@ public class WebReactiveHttpClient<P extends Publisher<?>> implements ReactiveHt
 
 	public WebReactiveHttpClient(WebClient webClient,
 								 ParameterizedTypeReference<Object> bodyActualType,
-								 BiFunction<ReactiveHttpRequest, ClientResponse, ReactiveHttpResponse<P>> responseFunction) {
+								 BiFunction<ReactiveHttpRequest, ClientResponse, ReactiveHttpResponse<P>> responseFunction,
+								 BiFunction<ReactiveHttpRequest, Throwable, Throwable> errorMapper) {
 		this.webClient = webClient;
 		this.bodyActualType = bodyActualType;
 		this.responseFunction = responseFunction;
+		this.errorMapper = errorMapper;
 	}
 
 	@Override
@@ -95,8 +105,9 @@ public class WebReactiveHttpClient<P extends Publisher<?>> implements ReactiveHt
 				.body(provideBody(request))
 				.exchange()
 				.onErrorMap(ex -> {
-					if(ex instanceof io.netty.handler.timeout.ReadTimeoutException){
-						return new ReadTimeoutException(ex, request);
+					Throwable errorMapped = errorMapper.apply(request, ex);
+					if(errorMapped != null){
+						return errorMapped;
 					} else {
 						return new ReactiveFeignException(ex, request);
 					}

@@ -10,7 +10,9 @@
 
     <modules>
         <module>feign-reactor-core</module>
+        <module>feign-reactor-webclient-core</module>
         <module>feign-reactor-webclient</module>
+        <module>feign-reactor-webclient-jetty</module>
         <module>feign-reactor-cloud</module>
         <module>feign-reactor-cloud2</module>
         <module>feign-reactor-rx2</module>

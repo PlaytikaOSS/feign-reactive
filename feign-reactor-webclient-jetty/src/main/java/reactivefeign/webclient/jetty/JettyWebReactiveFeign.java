@@ -11,18 +11,22 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package reactivefeign.webclient;
+package reactivefeign.webclient.jetty;
 
+import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReadTimeoutException;
+import reactivefeign.webclient.CustomizableWebClientBuilder;
+import reactivefeign.webclient.WebClientFeignCustomizer;
 
+import java.time.Duration;
 import java.util.function.BiFunction;
 
-import static reactivefeign.webclient.NettyClientHttpConnectorBuilder.buildNettyClientHttpConnector;
 import static reactivefeign.webclient.client.WebReactiveHttpClient.webClient;
+import static reactivefeign.webclient.jetty.JettyClientHttpConnectorBuilder.buildJettyClientHttpConnector;
 
 
 /**
@@ -30,7 +34,7 @@ import static reactivefeign.webclient.client.WebReactiveHttpClient.webClient;
  *
  * @author Sergii Karpenko
  */
-public class WebReactiveFeign {
+public class JettyWebReactiveFeign {
 
     public static <T> Builder<T> builder() {
         return builder(WebClient.builder());
@@ -52,14 +56,14 @@ public class WebReactiveFeign {
         protected Builder(WebClient.Builder webClientBuilder) {
             this.webClientBuilder = new CustomizableWebClientBuilder(webClientBuilder);
             this.webClientBuilder.clientConnector(
-                    buildNettyClientHttpConnector(WebReactiveOptions.DEFAULT_OPTIONS));
+                    buildJettyClientHttpConnector(JettyReactiveOptions.DEFAULT_OPTIONS));
             updateClientFactory();
         }
 
         protected Builder(WebClient.Builder webClientBuilder, WebClientFeignCustomizer webClientCustomizer) {
             this.webClientBuilder = new CustomizableWebClientBuilder(webClientBuilder);
             this.webClientBuilder.clientConnector(
-                    buildNettyClientHttpConnector(WebReactiveOptions.DEFAULT_OPTIONS));
+                    buildJettyClientHttpConnector(JettyReactiveOptions.DEFAULT_OPTIONS));
             webClientCustomizer.accept(this.webClientBuilder);
             updateClientFactory();
         }
@@ -67,7 +71,7 @@ public class WebReactiveFeign {
         @Override
         public Builder<T> options(ReactiveOptions options) {
             webClientBuilder.clientConnector(
-                    buildNettyClientHttpConnector((WebReactiveOptions)options));
+                    buildJettyClientHttpConnector((JettyReactiveOptions)options));
             updateClientFactory();
             return this;
         }
@@ -79,11 +83,16 @@ public class WebReactiveFeign {
 
         public static BiFunction<ReactiveHttpRequest, Throwable, Throwable> errorMapper(){
             return (request, throwable) -> {
-                if(throwable instanceof io.netty.handler.timeout.ReadTimeoutException){
+                if(throwable instanceof java.util.concurrent.TimeoutException){
                     return new ReadTimeoutException(throwable, request);
                 }
                 return null;
             };
+        }
+
+        //TODO use after 5.3
+        public void setRequestTimeout(long requestTimeout){
+//            Builder defaultRequest(Consumer<RequestHeadersSpec<?>> defaultRequest
         }
     }
 

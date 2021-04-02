@@ -28,14 +28,17 @@ public class WebReactiveOptions extends ReactiveOptions {
 
   private final Long readTimeoutMillis;
   private final Long writeTimeoutMillis;
+  private final Long responseTimeoutMillis;
 
-  private WebReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis, Long readTimeoutMillis,
-                             Long writeTimeoutMillis, Boolean tryUseCompression, Boolean followRedirects,
+  private WebReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis,
+                             Long readTimeoutMillis, Long writeTimeoutMillis, Long responseTimeoutMillis,
+                             Boolean tryUseCompression, Boolean followRedirects,
                              ProxySettings proxySettings) {
     super(useHttp2, connectTimeoutMillis, tryUseCompression, followRedirects, proxySettings);
 
     this.readTimeoutMillis = readTimeoutMillis;
     this.writeTimeoutMillis = writeTimeoutMillis;
+    this.responseTimeoutMillis = responseTimeoutMillis;
   }
 
   public Long getReadTimeoutMillis() {
@@ -46,6 +49,10 @@ public class WebReactiveOptions extends ReactiveOptions {
     return writeTimeoutMillis;
   }
 
+  public Long getResponseTimeoutMillis() {
+    return writeTimeoutMillis;
+  }
+
   public boolean isEmpty() {
     return super.isEmpty() && readTimeoutMillis == null && writeTimeoutMillis == null;
   }
@@ -53,6 +60,7 @@ public class WebReactiveOptions extends ReactiveOptions {
   public static class Builder extends ReactiveOptions.Builder{
     private Long readTimeoutMillis;
     private Long writeTimeoutMillis;
+    private Long responseTimeoutMillis;
 
     public Builder() {}
 
@@ -66,9 +74,15 @@ public class WebReactiveOptions extends ReactiveOptions {
       return this;
     }
 
+    public Builder setResponseTimeoutMillis(long responseTimeoutMillis) {
+      this.responseTimeoutMillis = responseTimeoutMillis;
+      return this;
+    }
+
     public WebReactiveOptions build() {
-      return new WebReactiveOptions(useHttp2, connectTimeoutMillis, readTimeoutMillis,
-              writeTimeoutMillis, acceptCompressed, followRedirects, proxySettings);
+      return new WebReactiveOptions(useHttp2, connectTimeoutMillis,
+              readTimeoutMillis, writeTimeoutMillis, responseTimeoutMillis,
+              acceptCompressed, followRedirects, proxySettings);
     }
   }
 

@@ -139,7 +139,8 @@ public final class Rx2ReactiveFeign {
                     .orElse(null);
 
             return new WebReactiveHttpClient(webClient, bodyActualType,
-                    webReactiveHttpResponse(rx2ToReactor(returnPublisherType), returnActualType));
+                    webReactiveHttpResponse(rx2ToReactor(returnPublisherType), returnActualType),
+                    errorMapper());
         }
 
         private static Class rx2ToReactor(Type type){

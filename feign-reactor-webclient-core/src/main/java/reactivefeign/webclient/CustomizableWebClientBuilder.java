@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.ExchangeFunction;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriBuilderFactory;
+import reactivefeign.ReactiveOptions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,8 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import static reactivefeign.webclient.NettyClientHttpConnectorBuilder.getNettyClientHttpConnector;
-import static reactivefeign.webclient.WebReactiveOptions.DEFAULT_OPTIONS;
 
 /**
  * The main purpose of this class is to protect properties that already have been set by customizer and do not overwrite them
@@ -29,6 +28,7 @@ public class CustomizableWebClientBuilder implements WebClient.Builder {
     private static final Logger logger = LoggerFactory.getLogger(CustomizableWebClientBuilder.class);
 
     private final WebClient.Builder builder;
+
     private String baseUrl;
     private Map<String, ?> defaultUriVariables;
     private UriBuilderFactory uriBuilderFactory;
@@ -45,8 +45,6 @@ public class CustomizableWebClientBuilder implements WebClient.Builder {
     private List<ExchangeFilterFunction> filters = new ArrayList<>();
     private Consumer<ClientCodecConfigurer> consumer;
     private Consumer<ExchangeStrategies.Builder> exchangeStrategies;
-
-    private WebReactiveOptions webOptions = DEFAULT_OPTIONS;
 
     public CustomizableWebClientBuilder(WebClient.Builder builder) {
         this.builder = builder;
@@ -146,11 +144,10 @@ public class CustomizableWebClientBuilder implements WebClient.Builder {
 
     @Override
     public WebClient.Builder clientConnector(ClientHttpConnector connector) {
-        if(this.connector == null){
-            this.connector = connector;
-        } else {
-            logger.warn("Will ignore connector parameter as it's already been set");
+        if(this.connector != null){
+            logger.warn("Will override connector parameter as it's already been set");
         }
+        this.connector = connector;
         return this;
     }
 
@@ -209,11 +206,6 @@ public class CustomizableWebClientBuilder implements WebClient.Builder {
         return this;
     }
 
-    //this parameter overrides previous value
-    public void setWebOptions(WebReactiveOptions webOptions) {
-        this.webOptions = webOptions;
-    }
-
     @Override
     public WebClient build() {
         WebClient.Builder builder = this.builder;
@@ -255,8 +247,6 @@ public class CustomizableWebClientBuilder implements WebClient.Builder {
         }
         if(connector != null){
             builder = builder.clientConnector(connector);
-        } else {
-            builder = builder.clientConnector(clientHttpConnector());
         }
         if(builderConsumer != null){
             builder = builder.apply(builderConsumer);
@@ -270,10 +260,5 @@ public class CustomizableWebClientBuilder implements WebClient.Builder {
 
         return builder.build();
     }
-
-    protected ClientHttpConnector clientHttpConnector(){
-        return getNettyClientHttpConnector(webOptions);
-    }
-
 
 }
