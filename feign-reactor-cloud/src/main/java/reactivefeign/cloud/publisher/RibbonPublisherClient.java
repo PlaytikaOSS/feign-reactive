@@ -2,6 +2,7 @@ package reactivefeign.cloud.publisher;
 
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.reactive.LoadBalancerCommand;
+import com.netflix.niws.loadbalancer.DiscoveryEnabledServer;
 import org.reactivestreams.Publisher;
 import org.springframework.web.util.UriComponentsBuilder;
 import reactivefeign.client.ReactiveHttpRequest;
@@ -73,10 +74,18 @@ public class RibbonPublisherClient implements PublisherHttpClient {
     }
 
     protected ReactiveHttpRequest loadBalanceRequest(ReactiveHttpRequest request, Server server) {
-        URI lbUrl = UriComponentsBuilder.fromUri(request.uri())
+        String scheme = "http";
+        if (server instanceof DiscoveryEnabledServer
+            && ((DiscoveryEnabledServer) server).getInstanceInfo() != null
+            && server.getPort() == ((DiscoveryEnabledServer) server).getInstanceInfo().getSecurePort())
+            scheme = "https";
+        URI lbUrl =
+            UriComponentsBuilder.fromUri(request.uri())
                 .host(server.getHost())
+                .scheme(scheme)
                 .port(server.getPort())
-                .build(true).toUri();
+                .build(true)
+                .toUri();
         return new ReactiveHttpRequest(request, lbUrl);
     }
 }

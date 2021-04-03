@@ -48,6 +48,17 @@
         </dependency>
 
         <dependency>
+          <groupId>com.netflix.ribbon</groupId>
+          <artifactId>ribbon-eureka</artifactId>
+        </dependency>
+      
+        <dependency>
+          <groupId>com.netflix.eureka</groupId>
+          <artifactId>eureka-client</artifactId>
+          <scope>provided</scope>
+        </dependency>
+
+        <dependency>
             <groupId>com.netflix.ribbon</groupId>
             <artifactId>ribbon-loadbalancer</artifactId>
         </dependency>
