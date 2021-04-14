@@ -29,7 +29,7 @@
         <wiremock.version>2.27.2</wiremock.version>
         <awaitility.version>4.0.3</awaitility.version>
         <blockhound.version>1.0.4.RELEASE</blockhound.version>
-        <disruptor.version>3.4.2</disruptor.version>
+        <disruptor.version>3.4.3</disruptor.version>
 
         <!-- Plugins -->
         <jacoco-plugin.version>0.8.5</jacoco-plugin.version>
