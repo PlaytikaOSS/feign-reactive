@@ -18,7 +18,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--BOMs-->
-        <spring-cloud-bom.version>Hoxton.SR9</spring-cloud-bom.version>
+        <spring-cloud-bom.version>Hoxton.SR11</spring-cloud-bom.version>
         <spring-boot-dependencies-bom.version>2.3.5.RELEASE</spring-boot-dependencies-bom.version>
 
         <!--other-->
