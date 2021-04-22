@@ -25,7 +25,7 @@
         <json-reactor.version>0.0.4</json-reactor.version>
 
         <!-- Tests -->
-        <junit.version>4.13.1</junit.version>
+        <junit.version>4.13.2</junit.version>
         <wiremock.version>2.27.2</wiremock.version>
         <awaitility.version>4.1.1</awaitility.version>
         <blockhound.version>1.0.4.RELEASE</blockhound.version>
