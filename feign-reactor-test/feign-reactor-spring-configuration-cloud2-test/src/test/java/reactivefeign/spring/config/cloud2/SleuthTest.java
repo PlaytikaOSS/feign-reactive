@@ -3,14 +3,18 @@ package reactivefeign.spring.config.cloud2;
 
 import brave.Span;
 import brave.Tracer;
+import brave.handler.SpanHandler;
 import brave.sampler.Sampler;
+import brave.test.TestSpanHandler;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.sleuth.util.ArrayListSpanReporter;
+import org.springframework.cloud.sleuth.CurrentTraceContext;
+import org.springframework.cloud.sleuth.TraceContext;
+import org.springframework.cloud.sleuth.brave.bridge.BraveTraceContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -26,7 +30,9 @@ import reactivefeign.spring.config.ReactiveFeignClient;
 import reactor.core.publisher.Mono;
 import zipkin2.reporter.Reporter;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -53,14 +59,17 @@ public class SleuthTest {
     TestFeignInterface feignClient;
 
     @Autowired
-    ArrayListSpanReporter reporter;
+    TestSpanHandler spans;
 
     @Autowired
     Tracer tracer;
 
+    @Autowired
+    CurrentTraceContext currentTraceContext;
+
     @After
     public void reset() {
-        this.reporter.clear();
+        this.spans.clear();
     }
 
     @Test
@@ -71,7 +80,9 @@ public class SleuthTest {
             String currentTraceId = tracer.currentSpan().context().traceIdString();
             String currentSpanId = tracer.currentSpan().context().spanIdString();
 
-            Map<String, String> response = feignClient.headers().block();
+            Map<String, String> response = feignClient.headers()
+                    .contextWrite(context -> context.put(TraceContext.class, new BraveTraceContext(span.context())))
+                    .block();
 
             assertThat(response.get(TRACE_ID_NAME)).isEqualTo(currentTraceId);
             assertThat(response.get(PARENT_SPAN_ID_NAME)).isEqualTo(currentSpanId);
@@ -82,7 +93,7 @@ public class SleuthTest {
         }
 
         then(this.tracer.currentSpan()).isNull();
-        then(this.reporter.getSpans()).isNotEmpty();
+        then(this.spans.spans()).isNotEmpty();
     }
 
     @ReactiveFeignClient(name = FEIGN_CLIENT_TEST_SLEUTH)
@@ -101,9 +112,10 @@ public class SleuthTest {
         Sampler sampler() {
             return Sampler.ALWAYS_SAMPLE;
         }
+
         @Bean
-        Reporter<zipkin2.Span> spanReporter() {
-            return new ArrayListSpanReporter();
+        SpanHandler testSpanHandler() {
+            return new TestSpanHandler();
         }
     }
 
@@ -120,5 +132,4 @@ public class SleuthTest {
         }
 
     }
-
 }

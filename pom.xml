@@ -5,7 +5,7 @@
 
     <groupId>com.playtika.reactivefeign</groupId>
     <artifactId>feign-reactor</artifactId>
-    <version>2.0.32-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -13,7 +13,6 @@
         <module>feign-reactor-webclient-core</module>
         <module>feign-reactor-webclient</module>
         <module>feign-reactor-webclient-jetty</module>
-        <module>feign-reactor-cloud</module>
         <module>feign-reactor-cloud2</module>
         <module>feign-reactor-rx2</module>
         <module>feign-reactor-jetty</module>
@@ -22,7 +21,7 @@
         <module>feign-reactor-spring-configuration</module>
         <module>feign-reactor-test</module>
         <module>feign-reactor-bom</module>
-        <module>feign-reactor-spring-cloud-starter</module>
+        <module>feign-reactor-spring-cloud-starter2</module>
         <module>feign-reactor-parent</module>
     </modules>
 

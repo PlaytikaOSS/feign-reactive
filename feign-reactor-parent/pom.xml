@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.playtika.reactivefeign</groupId>
         <artifactId>feign-reactor</artifactId>
-        <version>2.0.32-SNAPSHOT</version>
+        <version>3.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>feign-reactor-parent</artifactId>
@@ -18,8 +18,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--BOMs-->
-        <spring-cloud-bom.version>Hoxton.SR9</spring-cloud-bom.version>
-        <spring-boot-dependencies-bom.version>2.3.5.RELEASE</spring-boot-dependencies-bom.version>
+        <spring-cloud-bom.version><!--Hoxton.SR11-->2020.0.2</spring-cloud-bom.version>
+        <spring-boot-dependencies-bom.version>2.4.5</spring-boot-dependencies-bom.version>
 
         <!--other-->
         <json-reactor.version>0.0.4</json-reactor.version>
@@ -30,6 +30,8 @@
         <awaitility.version>4.0.3</awaitility.version>
         <blockhound.version>1.0.4.RELEASE</blockhound.version>
         <disruptor.version>3.4.2</disruptor.version>
+        <spring-cloud-starter-sleuth.version>3.0.2</spring-cloud-starter-sleuth.version>
+        <brave-tests.version>5.13.3</brave-tests.version>
 
         <!-- Plugins -->
         <jacoco-plugin.version>0.8.5</jacoco-plugin.version>
@@ -95,11 +97,6 @@
             </dependency>
             <dependency>
                 <groupId>com.playtika.reactivefeign</groupId>
-                <artifactId>feign-reactor-cloud</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.playtika.reactivefeign</groupId>
                 <artifactId>feign-reactor-cloud2</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -115,31 +112,6 @@
                 <version>${project.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.playtika.reactivefeign</groupId>
-                <artifactId>feign-reactor-cloud</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
-                <exclusions>
-                    <exclusion>
-                        <groupId>com.netflix.hystrix</groupId>
-                        <artifactId>hystrix-core</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.netflix.ribbon</groupId>
-                        <artifactId>ribbon</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.netflix.ribbon</groupId>
-                        <artifactId>ribbon-httpclient</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.netflix.ribbon</groupId>
-                        <artifactId>ribbon-core</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.playtika.reactivefeign</groupId>
@@ -190,6 +162,19 @@
                 <groupId>com.lmax</groupId>
                 <artifactId>disruptor</artifactId>
                 <version>${disruptor.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-starter-sleuth</artifactId>
+                <version>${spring-cloud-starter-sleuth.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.zipkin.brave</groupId>
+                <artifactId>brave-tests</artifactId>
+                <version>${brave-tests.version}</version>
                 <scope>test</scope>
             </dependency>
 

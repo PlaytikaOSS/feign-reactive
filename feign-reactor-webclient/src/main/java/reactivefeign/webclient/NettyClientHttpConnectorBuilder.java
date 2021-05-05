@@ -6,8 +6,8 @@ import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import reactor.netty.http.client.HttpClient;
-import reactor.netty.tcp.ProxyProvider;
 import reactor.netty.tcp.TcpClient;
+import reactor.netty.transport.ProxyProvider;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;

@@ -50,7 +50,7 @@ public class WebReactiveOptions extends ReactiveOptions {
   }
 
   public Long getResponseTimeoutMillis() {
-    return writeTimeoutMillis;
+    return responseTimeoutMillis;
   }
 
   public boolean isEmpty() {

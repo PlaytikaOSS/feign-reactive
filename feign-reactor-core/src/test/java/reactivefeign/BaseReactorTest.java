@@ -43,12 +43,15 @@ abstract public class BaseReactorTest {
             builder.allowBlockingCallsInside("org.eclipse.jetty.client.AbstractConnectionPool", "acquire");
             builder.allowBlockingCallsInside("org.eclipse.jetty.client.MultiplexConnectionPool", "acquire");
             builder.allowBlockingCallsInside("org.eclipse.jetty.client.MultiplexConnectionPool", "lock");
+
             builder.allowBlockingCallsInside("org.eclipse.jetty.util.BlockingArrayQueue", "poll");
             builder.allowBlockingCallsInside("org.eclipse.jetty.util.BlockingArrayQueue", "offer");
             builder.allowBlockingCallsInside("org.eclipse.jetty.util.BlockingArrayQueue", "peek");
             //java.net.InMemoryCookieStore.get
             builder.allowBlockingCallsInside("org.eclipse.jetty.client.HttpConnection", "normalizeRequest");
             builder.allowBlockingCallsInside("java.util.concurrent.FutureTask", "handlePossibleCancellationInterrupt");
+            builder.allowBlockingCallsInside("org.eclipse.jetty.http2.HTTP2Session$StreamsState", "reserveSlot");
+            builder.allowBlockingCallsInside("org.eclipse.jetty.http2.HTTP2Session$StreamsState", "flush");
 
             //jetty http2 server
             builder.allowBlockingCallsInside("org.eclipse.jetty.util.IteratingCallback", "processing");

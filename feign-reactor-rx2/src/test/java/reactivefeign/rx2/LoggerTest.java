@@ -114,7 +114,7 @@ public class LoggerTest {
     assertThat(events).element(index)
             .hasFieldOrPropertyWithValue("level", level)
             .extracting("message")
-            .extracting("getFormattedMessage")
+            .extracting("formattedMessage")
             .has(new Condition<>(o -> ((String) o).contains(message), "check message"));
   }
 
@@ -122,7 +122,7 @@ public class LoggerTest {
     assertThat(events).element(index)
         .hasFieldOrPropertyWithValue("level", level)
         .extracting("message")
-        .extracting("getFormattedMessage")
+        .extracting("formattedMessage")
         .has(new Condition<>(o -> ((String) o).contains(message1), "check message1"))
         .has(new Condition<>(o -> ((String) o).contains(message2), "check message2"));
   }

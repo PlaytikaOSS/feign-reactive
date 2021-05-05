@@ -14,6 +14,7 @@
 package reactivefeign.webclient;
 
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReactiveHttpRequest;
@@ -79,7 +80,8 @@ public class WebReactiveFeign {
 
         public static BiFunction<ReactiveHttpRequest, Throwable, Throwable> errorMapper(){
             return (request, throwable) -> {
-                if(throwable instanceof io.netty.handler.timeout.ReadTimeoutException){
+                if(throwable instanceof WebClientRequestException
+                   && throwable.getCause() instanceof io.netty.handler.timeout.ReadTimeoutException){
                     return new ReadTimeoutException(throwable, request);
                 }
                 return null;
