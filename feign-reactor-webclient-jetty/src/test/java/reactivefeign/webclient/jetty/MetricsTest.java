@@ -13,10 +13,7 @@
  */
 package reactivefeign.webclient.jetty;
 
-import org.junit.Ignore;
-import org.junit.Test;
 import reactivefeign.ReactiveFeign;
-import reactivefeign.client.ReadTimeoutException;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 /**
@@ -36,10 +33,4 @@ public class MetricsTest extends reactivefeign.MetricsTest {
         );
     }
 
-    //TODO fix after 5.3
-    @Ignore
-    @Override
-    @Test(expected = ReadTimeoutException.class)
-    public void shouldLogTimeout() {
-    }
 }

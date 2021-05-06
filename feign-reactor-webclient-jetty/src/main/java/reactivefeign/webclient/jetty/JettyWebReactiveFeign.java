@@ -13,8 +13,10 @@
  */
 package reactivefeign.webclient.jetty;
 
+import org.eclipse.jetty.client.api.Request;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReactiveHttpRequest;
@@ -23,6 +25,7 @@ import reactivefeign.webclient.CustomizableWebClientBuilder;
 import reactivefeign.webclient.WebClientFeignCustomizer;
 
 import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
 import static reactivefeign.webclient.client.WebReactiveHttpClient.webClient;
@@ -72,6 +75,13 @@ public class JettyWebReactiveFeign {
         public Builder<T> options(ReactiveOptions options) {
             webClientBuilder.clientConnector(
                     buildJettyClientHttpConnector((JettyReactiveOptions)options));
+            Long requestTimeoutMillis = ((JettyReactiveOptions) options).getRequestTimeoutMillis();
+            if(requestTimeoutMillis != null){
+                webClientBuilder.filter((request, next) -> next.exchange(
+                        ClientRequest.from(request).httpRequest(
+                                clientHttpRequest -> clientHttpRequest.<Request>getNativeRequest()
+                                        .timeout(requestTimeoutMillis, TimeUnit.MILLISECONDS)).build()));
+            }
             updateClientFactory();
             return this;
         }
@@ -83,17 +93,14 @@ public class JettyWebReactiveFeign {
 
         public static BiFunction<ReactiveHttpRequest, Throwable, Throwable> errorMapper(){
             return (request, throwable) -> {
-                if(throwable instanceof java.util.concurrent.TimeoutException){
+                if(throwable instanceof WebClientRequestException
+                   && throwable.getCause() instanceof java.util.concurrent.TimeoutException){
                     return new ReadTimeoutException(throwable, request);
                 }
                 return null;
             };
         }
 
-        //TODO use after 5.3
-        public void setRequestTimeout(long requestTimeout){
-//            Builder defaultRequest(Consumer<RequestHeadersSpec<?>> defaultRequest
-        }
     }
 
 

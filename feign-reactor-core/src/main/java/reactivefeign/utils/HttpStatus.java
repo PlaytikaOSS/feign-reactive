@@ -40,8 +40,7 @@ package reactivefeign.utils;
  * @author <a href="mailto:mbowler@GargoyleSoftware.com">Mike Bowler</a>
  * @author <a href="mailto:jsdever@apache.org">Jeff Dever</a>
  * 
- * TODO: Internationalization of reason phrases 
- * 
+ *
  * @version $Id: HttpStatus.java 480424 2006-11-29 05:56:49Z bayard $
  */
 public class HttpStatus {

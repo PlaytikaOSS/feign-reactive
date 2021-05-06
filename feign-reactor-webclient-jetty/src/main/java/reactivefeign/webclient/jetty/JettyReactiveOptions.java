@@ -21,40 +21,40 @@ import reactivefeign.ReactiveOptions;
 public class JettyReactiveOptions extends ReactiveOptions {
 
   public static final JettyReactiveOptions DEFAULT_OPTIONS = (JettyReactiveOptions)new JettyReactiveOptions.Builder()
-//          .setRequestTimeoutMillis(15000)
+          .setRequestTimeoutMillis(15000)
           .setConnectTimeoutMillis(5000)
           .build();
 
-//  private final Long requestTimeoutMillis;
+  private final Long requestTimeoutMillis;
 
-  private JettyReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis, /*Long requestTimeoutMillis,*/
+  private JettyReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis, Long requestTimeoutMillis,
                                Boolean tryUseCompression, Boolean followRedirects,
                                ProxySettings proxySettings) {
     super(useHttp2, connectTimeoutMillis, tryUseCompression, followRedirects, proxySettings);
 
-//    this.requestTimeoutMillis = requestTimeoutMillis;
+    this.requestTimeoutMillis = requestTimeoutMillis;
   }
 
-//  public Long getRequestTimeoutMillis() {
-//    return requestTimeoutMillis;
-//  }
+  public Long getRequestTimeoutMillis() {
+    return requestTimeoutMillis;
+  }
 
   public boolean isEmpty() {
     return super.isEmpty() /*&& requestTimeoutMillis == null*/;
   }
 
   public static class Builder extends ReactiveOptions.Builder{
-//    private Long requestTimeoutMillis;
+    private Long requestTimeoutMillis;
 
     public Builder() {}
 
     public Builder setRequestTimeoutMillis(long requestTimeoutMillis) {
-//      this.requestTimeoutMillis = requestTimeoutMillis;
+      this.requestTimeoutMillis = requestTimeoutMillis;
       return this;
     }
 
     public JettyReactiveOptions build() {
-      return new JettyReactiveOptions(useHttp2, connectTimeoutMillis, /*requestTimeoutMillis,*/
+      return new JettyReactiveOptions(useHttp2, connectTimeoutMillis, requestTimeoutMillis,
               acceptCompressed, followRedirects, proxySettings);
     }
   }

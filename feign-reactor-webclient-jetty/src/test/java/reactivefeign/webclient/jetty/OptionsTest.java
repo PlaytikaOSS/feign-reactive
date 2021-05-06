@@ -13,12 +13,9 @@
  */
 package reactivefeign.webclient.jetty;
 
-import org.junit.Ignore;
-import org.junit.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
-import reactivefeign.client.ReadTimeoutException;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 /**
@@ -44,10 +41,4 @@ public class OptionsTest extends reactivefeign.OptionsTest {
             new JettyReactiveOptions.Builder().setProxySettings(proxySettings).build());
   }
 
-  //TODO fix after 5.3
-  @Ignore
-  @Override
-  @Test(expected = ReadTimeoutException.class)
-  public void shouldFailOnReadTimeout() {
-  }
 }
