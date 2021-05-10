@@ -46,7 +46,7 @@
 
     <properties>
         <nexus-staging-maven-plugin.version>1.6.8</nexus-staging-maven-plugin.version>
-        <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
+        <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
         <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
         <versions-maven-plugin.version>2.3</versions-maven-plugin.version>
 
