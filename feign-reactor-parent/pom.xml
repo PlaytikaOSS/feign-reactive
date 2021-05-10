@@ -27,7 +27,7 @@
         <!-- Tests -->
         <junit.version>4.13.1</junit.version>
         <wiremock.version>2.27.2</wiremock.version>
-        <awaitility.version>4.0.3</awaitility.version>
+        <awaitility.version>4.1.0</awaitility.version>
         <blockhound.version>1.0.4.RELEASE</blockhound.version>
         <disruptor.version>3.4.2</disruptor.version>
         <spring-cloud-starter-sleuth.version>3.0.2</spring-cloud-starter-sleuth.version>
