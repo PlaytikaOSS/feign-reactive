@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JCircuitBreakerFactory;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
@@ -65,7 +66,8 @@ import static reactivefeign.spring.config.cloud2.AutoConfigurationTest.*;
 		properties = {
 				"spring.cloud.discovery.client.simple.instances."+ TEST_FEIGN_CLIENT+"[0].uri=http://localhost:${"+ MOCK_SERVER_PORT_PROPERTY+"}",
 				"spring.cloud.discovery.client.simple.instances."+ TEST_FEIGN_CLIENT_W_PATH_PARAM +"[0].uri=http://localhost:${"+ MOCK_SERVER_PORT_PROPERTY+"}",
-				"spring.cloud.discovery.client.simple.instances."+ TEST_FEIGN_CLIENT_W_QUERY_PARAM +"[0].uri=http://localhost:${"+ MOCK_SERVER_PORT_PROPERTY+"}"
+				"spring.cloud.discovery.client.simple.instances."+ TEST_FEIGN_CLIENT_W_QUERY_PARAM +"[0].uri=http://localhost:${"+ MOCK_SERVER_PORT_PROPERTY+"}",
+				"conditional.interceptor1=true"
 		})
 @TestPropertySource("classpath:common.properties")
 @DirtiesContext
@@ -200,6 +202,8 @@ public class AutoConfigurationTest {
 	@Configuration
 	protected static class RequestInterceptorConfiguration {
 		volatile static int counter;
+
+		@ConditionalOnProperty("conditional.interceptor1")
 		@Bean
 		ReactiveHttpRequestInterceptor reactiveHttpRequestInterceptor(){
 			return new ReactiveHttpRequestInterceptor() {
@@ -207,6 +211,20 @@ public class AutoConfigurationTest {
 				public Mono<ReactiveHttpRequest> apply(ReactiveHttpRequest reactiveHttpRequest) {
 					return Mono.defer(() -> {
 						counter++;
+						return Mono.just(reactiveHttpRequest);
+					});
+				}
+			};
+		}
+
+		@ConditionalOnProperty("conditional.interceptor2")
+		@Bean
+		ReactiveHttpRequestInterceptor conditionalReactiveHttpRequestInterceptor(){
+			return new ReactiveHttpRequestInterceptor() {
+				@Override
+				public Mono<ReactiveHttpRequest> apply(ReactiveHttpRequest reactiveHttpRequest) {
+					return Mono.defer(() -> {
+						counter += 10;
 						return Mono.just(reactiveHttpRequest);
 					});
 				}

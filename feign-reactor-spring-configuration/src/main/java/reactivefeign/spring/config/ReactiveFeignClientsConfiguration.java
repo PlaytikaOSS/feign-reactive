@@ -86,20 +86,20 @@ public class ReactiveFeignClientsConfiguration {
 			}
 		}
 
-//		@Configuration
-//		@ConditionalOnClass({Java11ReactiveFeign.class, java.net.http.HttpClient.class})
-//		@ConditionalOnProperty(name = "reactive.feign.java11", havingValue = "true")
-//		protected static class ReactiveFeignJava11Configuration {
-//
-//			@Bean
-//			@Scope("prototype")
-//			public ReactiveFeignBuilder reactiveFeignBuilder(
-//					@Autowired(required = false) HttpClientFeignCustomizer httpClientCustomizer) {
-//				return httpClientCustomizer != null
-//						? Java11ReactiveFeign.builder(httpClientCustomizer)
-//						: Java11ReactiveFeign.builder();
-//			}
-//		}
+		@Configuration
+		@ConditionalOnClass({Java11ReactiveFeign.class, java.net.http.HttpClient.class})
+		@ConditionalOnProperty(name = "reactive.feign.java11", havingValue = "true")
+		protected static class ReactiveFeignJava11Configuration {
+
+			@Bean
+			@Scope("prototype")
+			public ReactiveFeignBuilder reactiveFeignBuilder(
+					@Autowired(required = false) HttpClientFeignCustomizer httpClientCustomizer) {
+				return httpClientCustomizer != null
+						? Java11ReactiveFeign.builder(httpClientCustomizer)
+						: Java11ReactiveFeign.builder();
+			}
+		}
 
 		@Configuration
 		@ConditionalOnClass({WebReactiveFeign.class, WebClient.class})
