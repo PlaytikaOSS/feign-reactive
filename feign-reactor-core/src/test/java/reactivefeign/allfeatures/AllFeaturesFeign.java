@@ -26,6 +26,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.nio.ByteBuffer;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +36,8 @@ import static org.springframework.http.MediaType.*;
 
 @Headers({ "Accept: application/json" })
 public interface AllFeaturesFeign extends AllFeaturesApi{
+
+	public static final String DATE_TIME_FORMAT = "dd-MM-yyyy'T'HH:mm:ss";
 
 	@Override
 	@RequestLine("GET /mirrorParameters/{parameterInPathPlaceholder}?paramInUrl={paramInQueryPlaceholder}")
@@ -157,13 +161,26 @@ public interface AllFeaturesFeign extends AllFeaturesApi{
 
 	@Override
 	@RequestLine("GET /expand/{timestamp}")
-	Mono<TestObject> expandParameter(@Param(value = "timestamp", expander = TimestampToDateExpander.class) long timestamp);
+	Mono<TestObject> expandPathParameter(@Param(value = "timestamp", expander = TimestampToDateExpander.class) long timestamp);
+
+	@Override
+	@RequestLine("GET /expand")
+	Mono<TestObject> expandDataTimeParameterWithCustomFormat(
+			@Param(value = "dateTime", expander = LocalDateTimeExpander.class) LocalDateTime dateTime);
 
 	class TimestampToDateExpander implements Param.Expander {
 
 		@Override
 		public String expand(Object value) {
 			return new Date((Long)value).toString();
+		}
+	}
+
+	class LocalDateTimeExpander implements Param.Expander {
+
+		@Override
+		public String expand(Object value) {
+			return ((LocalDateTime)value).format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT));
 		}
 	}
 }

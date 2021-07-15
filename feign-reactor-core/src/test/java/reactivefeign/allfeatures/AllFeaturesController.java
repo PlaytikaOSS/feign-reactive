@@ -30,8 +30,8 @@ import java.util.Map;
 
 import static java.util.Collections.emptyList;
 import static reactivefeign.ReactivityTest.DELAY_IN_MILLIS;
-import static reactor.core.publisher.Mono.just;
 import static reactivefeign.allfeatures.AllFeaturesApi.TestObject;
+import static reactor.core.publisher.Mono.just;
 
 @RestController
 public class AllFeaturesController implements AllFeaturesMvc {
@@ -165,7 +165,12 @@ public class AllFeaturesController implements AllFeaturesMvc {
 	}
 
 	@Override
-	public Mono<TestObject> expandParameter(String date) {
+	public Mono<TestObject> expandPathParameter(String date) {
+		return Mono.just(new TestObject(date));
+	}
+
+	@Override
+	public Mono<TestObject> expandRequestParameter(String date){
 		return Mono.just(new TestObject(date));
 	}
 

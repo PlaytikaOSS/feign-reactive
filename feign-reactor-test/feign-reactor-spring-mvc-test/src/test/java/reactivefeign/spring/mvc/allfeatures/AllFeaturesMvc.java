@@ -18,18 +18,17 @@ package reactivefeign.spring.mvc.allfeatures;
 
 import org.reactivestreams.Publisher;
 import org.springframework.cloud.openfeign.SpringQueryMap;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.nio.ByteBuffer;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+
+import static reactivefeign.allfeatures.AllFeaturesFeign.DATE_TIME_FORMAT;
 
 public interface AllFeaturesMvc extends reactivefeign.allfeatures.AllFeaturesApi {
 
@@ -152,6 +151,13 @@ public interface AllFeaturesMvc extends reactivefeign.allfeatures.AllFeaturesApi
 
 	@Override
 	@GetMapping(path = "/expand/{timestamp}")
-	Mono<TestObject> expandParameter(@PathVariable("timestamp") long timestamp);
+	Mono<TestObject> expandPathParameter(@PathVariable("timestamp") long timestamp);
+
+	@GetMapping(path = "/expand")
+	Mono<TestObject> expandDataTimeParameterWithCustomFormat(
+			@DateTimeFormat(pattern = DATE_TIME_FORMAT)
+			@RequestParam("dateTime") LocalDateTime dateTime);
+
+
 
 }

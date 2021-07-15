@@ -25,11 +25,15 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer;
+import org.springframework.cloud.openfeign.AnnotatedParameterProcessor;
+import org.springframework.cloud.openfeign.FeignFormatterRegistrar;
 import org.springframework.cloud.openfeign.support.SpringMvcContract;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Scope;
+import org.springframework.format.support.DefaultFormattingConversionService;
+import org.springframework.format.support.FormattingConversionService;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.client.log.DefaultReactiveLogger;
@@ -43,6 +47,8 @@ import reactivefeign.webclient.WebClientFeignCustomizer;
 import reactivefeign.webclient.WebReactiveFeign;
 
 import java.time.Clock;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * patterned after org.springframework.cloud.netflix.feign.FeignClientsConfiguration
@@ -50,10 +56,17 @@ import java.time.Clock;
 @Configuration
 public class ReactiveFeignClientsConfiguration {
 
+	@Autowired(required = false)
+	private List<AnnotatedParameterProcessor> parameterProcessors = new ArrayList<>();
+
+	@Autowired(required = false)
+	private List<FeignFormatterRegistrar> feignFormatterRegistrars = new ArrayList<>();
+
 	@Bean
 	@ConditionalOnMissingBean
-	public Contract reactiveFeignContract() {
-		return new SpringMvcContract();
+	public Contract reactiveFeignContract(
+			List<AnnotatedParameterProcessor> parameterProcessors, FormattingConversionService feignConversionService) {
+		return new SpringMvcContract(parameterProcessors, feignConversionService);
 	}
 
 	@Bean
@@ -69,6 +82,15 @@ public class ReactiveFeignClientsConfiguration {
 	@ConditionalOnProperty(name = "reactive.feign.logger.enabled", havingValue = "true")
 	public ReactiveLoggerListener reactiveLogger() {
 		return new DefaultReactiveLogger(Clock.systemUTC());
+	}
+
+	@Bean
+	public FormattingConversionService feignConversionService() {
+		FormattingConversionService conversionService = new DefaultFormattingConversionService();
+		for (FeignFormatterRegistrar feignFormatterRegistrar : feignFormatterRegistrars) {
+			feignFormatterRegistrar.registerFormatters(conversionService);
+		}
+		return conversionService;
 	}
 
 	@Configuration

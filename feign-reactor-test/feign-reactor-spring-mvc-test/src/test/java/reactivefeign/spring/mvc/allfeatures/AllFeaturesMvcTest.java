@@ -22,6 +22,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.cloud.openfeign.support.SpringMvcContract;
+import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ActiveProfiles;
 import reactivefeign.allfeatures.AllFeaturesApi;
 import reactivefeign.allfeatures.AllFeaturesTest;
@@ -31,6 +32,7 @@ import reactor.test.StepVerifier;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -46,7 +48,7 @@ public class AllFeaturesMvcTest extends AllFeaturesTest{
 	protected AllFeaturesApi buildClient(String url){
 		return JettyReactiveFeign.<AllFeaturesMvc>builder()
 				.decode404()
-				.contract(new SpringMvcContract())
+				.contract(new SpringMvcContract(emptyList(), new DefaultFormattingConversionService()))
 				.target(AllFeaturesMvc.class, url);
 	}
 
@@ -84,8 +86,6 @@ public class AllFeaturesMvcTest extends AllFeaturesTest{
 	@Override
 	@Ignore
 	//expanders not supported by Spring
-	//you should use FeignFormatterRegistrar
-	//https://stackoverflow.com/questions/35621062/how-to-custom-feignclient-expander-to-convert-param
-	public void shouldExpandParam() {
+	public void shouldExpandPathParam() {
 	}
 }

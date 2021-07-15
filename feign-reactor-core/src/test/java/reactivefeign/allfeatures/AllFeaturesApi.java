@@ -21,6 +21,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.nio.ByteBuffer;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -86,7 +87,9 @@ public interface AllFeaturesApi {
 
 	Mono<TestObject> encodePath(String param);
 
-	Mono<TestObject> expandParameter(long timestamp);
+	Mono<TestObject> expandPathParameter(long timestamp);
+
+	Mono<TestObject> expandDataTimeParameterWithCustomFormat(LocalDateTime dateTime);
 
 	class TestObject {
 

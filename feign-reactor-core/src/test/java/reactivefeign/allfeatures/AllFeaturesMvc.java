@@ -119,5 +119,8 @@ public interface AllFeaturesMvc {
 	Mono<TestObject> encodePath(@PathVariable("id") String param);
 
 	@GetMapping(path = "/expand/{date}")
-	Mono<TestObject> expandParameter(@PathVariable("date") String date);
+	Mono<TestObject> expandPathParameter(@PathVariable("date") String date);
+
+	@GetMapping(path = "/expand")
+	Mono<TestObject> expandRequestParameter(@RequestParam("dateTime") String date);
 }

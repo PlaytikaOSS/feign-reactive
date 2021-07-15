@@ -37,6 +37,9 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.nio.ByteBuffer;
+import java.time.LocalDateTime;
+import java.time.Month;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -50,6 +53,7 @@ import static org.awaitility.Awaitility.waitAtMost;
 import static reactivefeign.ReactivityTest.CALLS_NUMBER;
 import static reactivefeign.ReactivityTest.timeToCompleteReactively;
 import static reactivefeign.TestUtils.toLowerCaseKeys;
+import static reactivefeign.allfeatures.AllFeaturesFeign.DATE_TIME_FORMAT;
 import static reactor.core.publisher.Flux.empty;
 import static reactor.core.publisher.Flux.fromArray;
 import static reactor.core.publisher.Mono.fromFuture;
@@ -476,14 +480,23 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 	}
 
 	@Test
-	public void shouldExpandParam() {
+	public void shouldExpandPathParam() {
 
 		int timestamp = 1234;
-		StepVerifier.create(client.expandParameter(timestamp)
+		StepVerifier.create(client.expandPathParameter(timestamp)
 				.subscribeOn(testScheduler()))
 				.expectNextMatches(result -> result.payload.equals(new Date(timestamp).toString()))
 				.verifyComplete();
+	}
 
+	@Test
+	public void shouldExpandRequestParamWithCustomFormat() {
+
+		LocalDateTime dateTime = LocalDateTime.of(2021, Month.DECEMBER, 1, 1, 1);
+		StepVerifier.create(client.expandDataTimeParameterWithCustomFormat(dateTime)
+				.subscribeOn(testScheduler()))
+				.expectNextMatches(result -> result.payload.equals(dateTime.format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT))))
+				.verifyComplete();
 	}
 
 	private static ByteBuffer fromByteArray(byte[] data){
