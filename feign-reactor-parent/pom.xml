@@ -19,7 +19,7 @@
 
         <!--BOMs-->
         <spring-cloud-bom.version>2020.0.2</spring-cloud-bom.version>
-        <spring-boot-dependencies-bom.version>2.4.5</spring-boot-dependencies-bom.version>
+        <spring-boot-dependencies-bom.version>2.5.3</spring-boot-dependencies-bom.version>
 
         <!--other-->
         <json-reactor.version>0.0.4</json-reactor.version>
