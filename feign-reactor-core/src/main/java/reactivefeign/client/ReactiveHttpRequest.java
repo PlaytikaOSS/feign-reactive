@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.Map;
 
 import static feign.Util.checkNotNull;
-import static reactivefeign.utils.FeignUtils.methodTag;
 
 /**
  * An immutable reactive request to an http server.
@@ -83,7 +82,7 @@ public final class ReactiveHttpRequest {
   }
 
   public String methodKey(){
-    return methodTag(methodMetadata);
+    return methodMetadata.configKey();
   }
 
 }

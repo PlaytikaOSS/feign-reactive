@@ -91,23 +91,23 @@ public class LoggerTest {
 
     List<LogEvent> logEvents = argumentCaptor.getAllValues();
     assertLogEvent(logEvents, 0, Level.DEBUG,
-        "[IcecreamServiceApi#makeOrder]--->POST http://localhost");
+        "[IcecreamServiceApi#makeOrder(IceCreamOrder)]--->POST http://localhost");
     assertLogEvent(logEvents, 1, Level.TRACE,
-        "[IcecreamServiceApi#makeOrder] REQUEST HEADERS",
+        "[IcecreamServiceApi#makeOrder(IceCreamOrder)] REQUEST HEADERS",
             "Accept:[application/json]");
     assertLogEvent(logEvents, 2, Level.TRACE,
-        "[IcecreamServiceApi#makeOrder] REQUEST BODY",
+        "[IcecreamServiceApi#makeOrder(IceCreamOrder)] REQUEST BODY",
             "IceCreamOrder{ id=20, balls=");
     assertLogEvent(logEvents, 3, Level.TRACE,
-        "[IcecreamServiceApi#makeOrder] RESPONSE HEADERS",
+        "[IcecreamServiceApi#makeOrder(IceCreamOrder)] RESPONSE HEADERS",
             "Content-Type:application/json");
     assertLogEvent(logEvents, 4, Level.DEBUG,
-        "[IcecreamServiceApi#makeOrder]<--- headers takes");
+        "[IcecreamServiceApi#makeOrder(IceCreamOrder)]<--- headers takes");
     assertLogEvent(logEvents, 5, Level.TRACE,
-        "[IcecreamServiceApi#makeOrder] RESPONSE BODY",
+        "[IcecreamServiceApi#makeOrder(IceCreamOrder)] RESPONSE BODY",
             "reactivefeign.rx2.testcase.domain.Bill");
     assertLogEvent(logEvents, 6, Level.DEBUG,
-        "[IcecreamServiceApi#makeOrder]<--- body takes");
+        "[IcecreamServiceApi#makeOrder(IceCreamOrder)]<--- body takes");
   }
 
   private void assertLogEvent(List<LogEvent> events, int index, Level level, String message) {

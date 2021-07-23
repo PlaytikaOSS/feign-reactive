@@ -31,11 +31,6 @@ import static java.util.Optional.ofNullable;
 
 public class FeignUtils {
 
-  public static String methodTag(MethodMetadata methodMetadata) {
-    return methodMetadata.configKey().substring(0,
-            methodMetadata.configKey().indexOf('('));
-  }
-
   public static Class returnPublisherType(MethodMetadata methodMetadata) {
     return returnPublisherType(methodMetadata.returnType());
   }

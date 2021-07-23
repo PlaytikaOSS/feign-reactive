@@ -41,12 +41,12 @@ public class StatusHandlerPostProcessor<P extends Publisher<?>> implements React
 
   @Override
   public Mono<ReactiveHttpResponse<P>> apply(ReactiveHttpResponse<P> response) {
-    String methodTag = response.request().methodKey();
+    String methodKey = response.request().methodKey();
     ReactiveHttpResponse<P> errorResponse = response;
     if (statusHandler.shouldHandle(response.status())) {
-      errorResponse = new ErrorReactiveHttpResponse<>(response, statusHandler.decode(methodTag, response));
+      errorResponse = new ErrorReactiveHttpResponse<>(response, statusHandler.decode(methodKey, response));
     } else if(defaultStatusHandler.shouldHandle(response.status())){
-      errorResponse = new ErrorReactiveHttpResponse<>(response, defaultStatusHandler.decode(methodTag, response));
+      errorResponse = new ErrorReactiveHttpResponse<>(response, defaultStatusHandler.decode(methodKey, response));
     }
     return Mono.just(errorResponse);
   }

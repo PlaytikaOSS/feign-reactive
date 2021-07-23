@@ -43,10 +43,10 @@ public class ReactiveStatusHandlers {
       }
 
       @Override
-      public Mono<? extends Throwable> decode(String methodTag, ReactiveHttpResponse<?> response) {
+      public Mono<? extends Throwable> decode(String methodKey, ReactiveHttpResponse<?> response) {
         return response.bodyData()
                 .defaultIfEmpty(new byte[0])
-                .map(bodyData -> errorDecoder.decode(methodTag,
+                .map(bodyData -> errorDecoder.decode(methodKey,
                         buildFeignResponseForDecoder(response, bodyData)));
       }
     };

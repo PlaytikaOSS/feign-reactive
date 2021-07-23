@@ -26,7 +26,6 @@ import reactor.util.retry.Retry;
 
 import java.util.function.Function;
 
-import static reactivefeign.utils.FeignUtils.methodTag;
 
 /**
  * Wraps {@link PublisherHttpClient} with retry logic provided by retryFunction
@@ -37,7 +36,7 @@ abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
 
   private static final Logger logger = LoggerFactory.getLogger(RetryPublisherHttpClient.class);
 
-  private final String feignMethodTag;
+  private final String feignMethodKey;
   protected final PublisherHttpClient publisherClient;
   protected final Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction;
 
@@ -45,8 +44,8 @@ abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
                                    MethodMetadata methodMetadata,
                                    Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction) {
     this.publisherClient = publisherClient;
-    this.feignMethodTag = methodTag(methodMetadata);
-    this.retryFunction = wrapWithLog(retryFunction, feignMethodTag);
+    this.feignMethodKey = methodMetadata.configKey();
+    this.retryFunction = wrapWithLog(retryFunction, feignMethodKey);
   }
 
   protected Function<Flux<Retry.RetrySignal>, Flux<Throwable>> wrapWithOutOfRetries(
@@ -59,7 +58,7 @@ abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
                  if(index == 1){
                    throw Exceptions.propagate(throwable.getCause());
                  } else {
-                   logger.error("[{}]---> USED ALL RETRIES", feignMethodTag, throwable);
+                   logger.error("[{}]---> USED ALL RETRIES", feignMethodKey, throwable);
                    throw Exceptions.propagate(new OutOfRetriesException(throwable.getCause(), request));
                  }
                } else {

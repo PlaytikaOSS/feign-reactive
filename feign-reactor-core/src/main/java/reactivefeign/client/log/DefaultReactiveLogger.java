@@ -6,7 +6,6 @@ import org.reactivestreams.Publisher;
 import org.slf4j.LoggerFactory;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
-import reactivefeign.utils.FeignUtils;
 import reactivefeign.utils.Pair;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -40,12 +39,12 @@ public class DefaultReactiveLogger implements ReactiveLoggerListener<DefaultReac
         LogContext logContext = new LogContext(request, target, methodMetadata, clock);
 
         if (logger.isDebugEnabled()) {
-            logger.debug("[{}]--->{} {} HTTP/1.1", logContext.feignMethodTag, request.method(),
+            logger.debug("[{}]--->{} {} HTTP/1.1", logContext.feignMethodKey, request.method(),
                     request.uri());
         }
 
         if (logger.isTraceEnabled()) {
-            logRequestHeaders(request, logContext.feignMethodTag);
+            logRequestHeaders(request, logContext.feignMethodKey);
         }
 
         return logContext;
@@ -71,9 +70,9 @@ public class DefaultReactiveLogger implements ReactiveLoggerListener<DefaultReac
         if (logger.isTraceEnabled()) {
             Publisher<Object> requestBody = logContext.request.body();
             if (requestBody instanceof Mono) {
-                logger.trace("[{}] REQUEST BODY\n{}", logContext.feignMethodTag, body);
+                logger.trace("[{}] REQUEST BODY\n{}", logContext.feignMethodKey, body);
             } else if (requestBody instanceof Flux) {
-                logger.trace("[{}] REQUEST BODY ELEMENT\n{}", logContext.feignMethodTag, body);
+                logger.trace("[{}] REQUEST BODY ELEMENT\n{}", logContext.feignMethodKey, body);
             } else {
                 throw new IllegalArgumentException("Unsupported publisher type: " + requestBody.getClass());
             }
@@ -83,13 +82,13 @@ public class DefaultReactiveLogger implements ReactiveLoggerListener<DefaultReac
     @Override
     public void responseReceived(ReactiveHttpResponse response, LogContext logContext) {
         logContext.setResponse(response);
-        logResponseHeaders(response, logContext.feignMethodTag, logContext.timeSpent());
+        logResponseHeaders(response, logContext.feignMethodKey, logContext.timeSpent());
     }
 
     @Override
     public void errorReceived(Throwable throwable, LogContext logContext) {
         if (logger.isErrorEnabled()) {
-            logger.error("[{}]--->{} {} HTTP/1.1", logContext.feignMethodTag,
+            logger.error("[{}]--->{} {} HTTP/1.1", logContext.feignMethodKey,
                     logContext.request.method(), logContext.request.uri(), throwable);
         }
     }
@@ -119,14 +118,14 @@ public class DefaultReactiveLogger implements ReactiveLoggerListener<DefaultReac
     public void bodyReceived(Object body, LogContext logContext) {
         if (logger.isTraceEnabled()) {
             if(logContext.getResponse().body() instanceof Mono) {
-                logger.trace("[{}] RESPONSE BODY\n{}", logContext.feignMethodTag, body);
+                logger.trace("[{}] RESPONSE BODY\n{}", logContext.feignMethodKey, body);
             } else {
-                logger.trace("[{}] RESPONSE BODY ELEMENT\n{}", logContext.feignMethodTag, body);
+                logger.trace("[{}] RESPONSE BODY ELEMENT\n{}", logContext.feignMethodKey, body);
             }
         }
 
         if (logger.isDebugEnabled()) {
-            logger.debug("[{}]<--- body takes {} milliseconds", logContext.feignMethodTag, logContext.timeSpent());
+            logger.debug("[{}]<--- body takes {} milliseconds", logContext.feignMethodKey, logContext.timeSpent());
         }
     }
 
@@ -137,7 +136,7 @@ public class DefaultReactiveLogger implements ReactiveLoggerListener<DefaultReac
         private final Clock clock;
         private final long startTime;
 
-        private final String feignMethodTag;
+        private final String feignMethodKey;
 
         private ReactiveHttpResponse response;
 
@@ -147,7 +146,7 @@ public class DefaultReactiveLogger implements ReactiveLoggerListener<DefaultReac
             this.methodMetadata = methodMetadata;
             this.clock = clock;
             this.startTime = clock.millis();
-            this.feignMethodTag = FeignUtils.methodTag(methodMetadata);
+            this.feignMethodKey = methodMetadata.configKey();
         }
 
         public long timeSpent(){

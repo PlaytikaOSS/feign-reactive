@@ -128,23 +128,23 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
     List<LogEvent> logEvents = argumentCaptor.getAllValues();
     AtomicInteger index = new AtomicInteger();
     assertLogEvent(logEvents, index, Level.DEBUG,
-        "["+clientName+"#makeOrder]--->POST http://localhost");
+        "["+clientName+"#makeOrder(IceCreamOrder)]--->POST http://localhost");
     assertLogEvent(logEvents, index, Level.TRACE,
-        "["+clientName+"#makeOrder] REQUEST HEADERS\n" +
+        "["+clientName+"#makeOrder(IceCreamOrder)] REQUEST HEADERS\n" +
             "Accept:[application/json]");
     assertLogEvent(logEvents, index, Level.TRACE,
-        "["+clientName+"#makeOrder] REQUEST BODY\n" +
+        "["+clientName+"#makeOrder(IceCreamOrder)] REQUEST BODY\n" +
             "IceCreamOrder{ id=20, balls=");
     assertLogEvent(logEvents, index, Level.TRACE,
-        "["+clientName+"#makeOrder] RESPONSE HEADERS",
+        "["+clientName+"#makeOrder(IceCreamOrder)] RESPONSE HEADERS",
             "Content-Type:application/json");
     assertLogEvent(logEvents, index, Level.DEBUG,
-        "["+clientName+"#makeOrder]<--- headers takes");
+        "["+clientName+"#makeOrder(IceCreamOrder)]<--- headers takes");
     assertLogEvent(logEvents, index, Level.TRACE,
-        "["+clientName+"#makeOrder] RESPONSE BODY\n" +
+        "["+clientName+"#makeOrder(IceCreamOrder)] RESPONSE BODY\n" +
             "reactivefeign.testcase.domain.Bill");
     assertLogEvent(logEvents, index, Level.DEBUG,
-        "["+clientName+"#makeOrder]<--- body takes");
+        "["+clientName+"#makeOrder(IceCreamOrder)]<--- body takes");
 
     rollbackLogLevels(originalLevels);
     removeAppender(appender.getName());
@@ -186,31 +186,31 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
     List<LogEvent> logEvents = argumentCaptor.getAllValues();
     AtomicInteger index = new AtomicInteger();
     assertLogEvent(logEvents, index, Level.DEBUG,
-            "["+clientName+"#makeOrders]--->POST http://localhost");
+            "["+clientName+"#makeOrders(Flux)]--->POST http://localhost");
     assertLogEvent(logEvents, index, Level.TRACE,
-            "["+clientName+"#makeOrders] REQUEST HEADERS\n" +
+            "["+clientName+"#makeOrders(Flux)] REQUEST HEADERS\n" +
                     "Accept:[application/json]");
     assertLogEvent(logEvents, index, Level.TRACE,
-            "["+clientName+"#makeOrders] REQUEST BODY ELEMENT\n" +
+            "["+clientName+"#makeOrders(Flux)] REQUEST BODY ELEMENT\n" +
                     "IceCreamOrder{ id=21, balls=");
     assertLogEvent(logEvents, index, Level.TRACE,
-            "["+clientName+"#makeOrders] REQUEST BODY ELEMENT\n" +
+            "["+clientName+"#makeOrders(Flux)] REQUEST BODY ELEMENT\n" +
                     "IceCreamOrder{ id=22, balls=");
     assertLogEvent(logEvents, index, Level.TRACE,
-            "["+clientName+"#makeOrders] RESPONSE HEADERS",
+            "["+clientName+"#makeOrders(Flux)] RESPONSE HEADERS",
             "Content-Type:application/json");
     assertLogEvent(logEvents, index, Level.DEBUG,
-            "["+clientName+"#makeOrders]<--- headers takes");
+            "["+clientName+"#makeOrders(Flux)]<--- headers takes");
     assertLogEvent(logEvents, index, Level.TRACE,
-            "["+clientName+"#makeOrders] RESPONSE BODY ELEMENT\n" +
+            "["+clientName+"#makeOrders(Flux)] RESPONSE BODY ELEMENT\n" +
                     "reactivefeign.testcase.domain.Bill");
     assertLogEvent(logEvents, index, Level.DEBUG,
-            "["+clientName+"#makeOrders]<--- body takes");
+            "["+clientName+"#makeOrders(Flux)]<--- body takes");
     assertLogEvent(logEvents, index, Level.TRACE,
-            "["+clientName+"#makeOrders] RESPONSE BODY ELEMENT\n" +
+            "["+clientName+"#makeOrders(Flux)] RESPONSE BODY ELEMENT\n" +
                     "reactivefeign.testcase.domain.Bill");
     assertLogEvent(logEvents, index, Level.DEBUG,
-            "["+clientName+"#makeOrders]<--- body takes");
+            "["+clientName+"#makeOrders(Flux)]<--- body takes");
 
     rollbackLogLevels(originalLevels);
     removeAppender(appender.getName());
@@ -248,15 +248,15 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
     List<LogEvent> logEvents = argumentCaptor.getAllValues();
     AtomicInteger index = new AtomicInteger();
     assertLogEvent(logEvents, index, Level.DEBUG,
-            "["+clientName+"#ping]--->GET http://localhost");
+            "["+clientName+"#ping()]--->GET http://localhost");
     assertLogEvent(logEvents, index, Level.TRACE,
-            "["+clientName+"#ping] REQUEST HEADERS\n" +
+            "["+clientName+"#ping()] REQUEST HEADERS\n" +
                     "Accept:[application/json]");
     assertLogEvent(logEvents, index, Level.TRACE,
-            "["+clientName+"#ping] RESPONSE HEADERS",
+            "["+clientName+"#ping()] RESPONSE HEADERS",
             "Content-Type:application/json");
     assertLogEvent(logEvents, index, Level.DEBUG,
-            "["+clientName+"#ping]<--- headers takes");
+            "["+clientName+"#ping()]<--- headers takes");
 
     rollbackLogLevels(originalLevels);
     removeAppender(appender.getName());
@@ -297,12 +297,12 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
       List<LogEvent> logEvents = argumentCaptor.getAllValues();
       AtomicInteger index = new AtomicInteger();
       assertLogEvent(logEvents, index, Level.DEBUG,
-              "["+clientName+"#ping]--->GET http://localhost");
+              "["+clientName+"#ping()]--->GET http://localhost");
       assertLogEvent(logEvents, index, Level.TRACE,
-              "["+clientName+"#ping] REQUEST HEADERS\n" +
+              "["+clientName+"#ping()] REQUEST HEADERS\n" +
                       "Accept:[application/json]");
       assertLogEvent(logEvents, index, Level.ERROR,
-              "["+clientName+"#ping]--->GET http://localhost");
+              "["+clientName+"#ping()]--->GET http://localhost");
 
       throw e;
     }
@@ -346,25 +346,25 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
     List<LogEvent> logEvents = argumentCaptor.getAllValues();
     AtomicInteger index = new AtomicInteger();
     assertLogEvent(logEvents, index, Level.DEBUG,
-            "["+clientName+"#makeOrder]--->POST http://localhost");
+            "["+clientName+"#makeOrder(IceCreamOrder)]--->POST http://localhost");
     assertLogEvent(logEvents, index, Level.TRACE,
-            "["+clientName+"#makeOrder] REQUEST HEADERS\n" +
+            "["+clientName+"#makeOrder(IceCreamOrder)] REQUEST HEADERS\n" +
                     "Accept:[application/json]\n" +
                     "Content-Type:[application/json]\n" +
                     "Authorization:[Bearer mytoken123]");
     assertLogEvent(logEvents, index, Level.TRACE,
-            "["+clientName+"#makeOrder] REQUEST BODY\n" +
+            "["+clientName+"#makeOrder(IceCreamOrder)] REQUEST BODY\n" +
                     "IceCreamOrder{ id=20, balls=");
     assertLogEvent(logEvents, index, Level.TRACE,
-            "["+clientName+"#makeOrder] RESPONSE HEADERS",
+            "["+clientName+"#makeOrder(IceCreamOrder)] RESPONSE HEADERS",
             "Content-Type:application/json");
     assertLogEvent(logEvents, index, Level.DEBUG,
-            "["+clientName+"#makeOrder]<--- headers takes");
+            "["+clientName+"#makeOrder(IceCreamOrder)]<--- headers takes");
     assertLogEvent(logEvents, index, Level.TRACE,
-            "["+clientName+"#makeOrder] RESPONSE BODY\n" +
+            "["+clientName+"#makeOrder(IceCreamOrder)] RESPONSE BODY\n" +
                     "reactivefeign.testcase.domain.Bill");
     assertLogEvent(logEvents, index, Level.DEBUG,
-            "["+clientName+"#makeOrder]<--- body takes");
+            "["+clientName+"#makeOrder(IceCreamOrder)]<--- body takes");
 
     rollbackLogLevels(originalLevels);
     removeAppender(appender.getName());
@@ -404,39 +404,39 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
     AtomicInteger index = new AtomicInteger();
     for(int i = 0; i < maxRetries - 1; i++) {
       assertLogEvent(logEvents, index, Level.DEBUG,
-              "[" + clientName + "#findOrder]--->GET http://localhost");
+              "[" + clientName + "#findOrder(int)]--->GET http://localhost");
       assertLogEvent(logEvents, index, Level.TRACE,
-              "[" + clientName + "#findOrder] REQUEST HEADERS\n" +
+              "[" + clientName + "#findOrder(int)] REQUEST HEADERS\n" +
                       "Accept:[application/json]");
       assertLogEvent(logEvents, index, Level.TRACE,
-              "[" + clientName + "#findOrder] RESPONSE HEADERS",
+              "[" + clientName + "#findOrder(int)] RESPONSE HEADERS",
               "Retry-After:1");
       assertLogEvent(logEvents, index, Level.DEBUG,
-              "[" + clientName + "#findOrder]<--- headers takes");
+              "[" + clientName + "#findOrder(int)]<--- headers takes");
       assertLogEvent(logEvents, index, Level.TRACE,
-              "[" + clientName + "#findOrder] RESPONSE BODY\n" +
+              "[" + clientName + "#findOrder(int)] RESPONSE BODY\n" +
                       "[]");
       assertLogEvent(logEvents, index, Level.DEBUG,
-              "[" + clientName + "#findOrder]<--- body takes");
+              "[" + clientName + "#findOrder(int)]<--- body takes");
       assertLogEvent(logEvents, index, Level.DEBUG,
-              "[" + clientName + "#findOrder]---> RETRYING on error");
+              "[" + clientName + "#findOrder(int)]---> RETRYING on error");
     }
 
     assertLogEvent(logEvents, index, Level.DEBUG,
-            "[" + clientName + "#findOrder]--->GET http://localhost");
+            "[" + clientName + "#findOrder(int)]--->GET http://localhost");
     assertLogEvent(logEvents, index, Level.TRACE,
-            "[" + clientName + "#findOrder] REQUEST HEADERS\n" +
+            "[" + clientName + "#findOrder(int)] REQUEST HEADERS\n" +
                     "Accept:[application/json]");
     assertLogEvent(logEvents, index, Level.TRACE,
-            "[" + clientName + "#findOrder] RESPONSE HEADERS",
+            "[" + clientName + "#findOrder(int)] RESPONSE HEADERS",
             "Content-Type:application/json");
     assertLogEvent(logEvents, index, Level.DEBUG,
-            "[" + clientName + "#findOrder]<--- headers takes");
+            "[" + clientName + "#findOrder(int)]<--- headers takes");
     assertLogEvent(logEvents, index, Level.TRACE,
-            "[" + clientName + "#findOrder] RESPONSE BODY\n" +
+            "[" + clientName + "#findOrder(int)] RESPONSE BODY\n" +
                     "IceCreamOrder");
     assertLogEvent(logEvents, index, Level.DEBUG,
-            "[" + clientName + "#findOrder]<--- body takes");
+            "[" + clientName + "#findOrder(int)]<--- body takes");
 
     rollbackLogLevels(originalLevels);
     removeAppender(appender.getName());
