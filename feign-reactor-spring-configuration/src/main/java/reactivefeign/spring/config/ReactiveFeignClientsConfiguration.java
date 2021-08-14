@@ -17,6 +17,7 @@
 
 package reactivefeign.spring.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Contract;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
@@ -116,10 +117,12 @@ public class ReactiveFeignClientsConfiguration {
 			@Bean
 			@Scope("prototype")
 			public ReactiveFeignBuilder reactiveFeignBuilder(
-					@Autowired(required = false) HttpClientFeignCustomizer httpClientCustomizer) {
+					@Autowired(required = false) HttpClientFeignCustomizer httpClientCustomizer,
+					@Autowired(required = false) ObjectMapper objectMapper
+			) {
 				return httpClientCustomizer != null
-						? Java11ReactiveFeign.builder(httpClientCustomizer)
-						: Java11ReactiveFeign.builder();
+						? Java11ReactiveFeign.builder(httpClientCustomizer, null, objectMapper)
+						: Java11ReactiveFeign.builder(null, objectMapper);
 			}
 		}
 
