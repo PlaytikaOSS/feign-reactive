@@ -14,17 +14,17 @@
 package reactivefeign.webclient.jetty;
 
 import org.eclipse.jetty.client.api.Request;
+import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
-import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReadTimeoutException;
+import reactivefeign.webclient.CoreWebBuilder;
 import reactivefeign.webclient.CustomizableWebClientBuilder;
 import reactivefeign.webclient.WebClientFeignCustomizer;
 
-import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
@@ -52,23 +52,14 @@ public class JettyWebReactiveFeign {
         return new Builder<>(webClientBuilder, webClientCustomizer);
     }
 
-    public static class Builder<T> extends ReactiveFeign.Builder<T> {
-
-        protected CustomizableWebClientBuilder webClientBuilder;
+    public static class Builder<T> extends CoreWebBuilder<T> {
 
         protected Builder(WebClient.Builder webClientBuilder) {
-            this.webClientBuilder = new CustomizableWebClientBuilder(webClientBuilder);
-            this.webClientBuilder.clientConnector(
-                    buildJettyClientHttpConnector(JettyReactiveOptions.DEFAULT_OPTIONS));
-            updateClientFactory();
+            super(webClientBuilder);
         }
 
         protected Builder(WebClient.Builder webClientBuilder, WebClientFeignCustomizer webClientCustomizer) {
-            this.webClientBuilder = new CustomizableWebClientBuilder(webClientBuilder);
-            this.webClientBuilder.clientConnector(
-                    buildJettyClientHttpConnector(JettyReactiveOptions.DEFAULT_OPTIONS));
-            webClientCustomizer.accept(this.webClientBuilder);
-            updateClientFactory();
+            super(webClientBuilder, webClientCustomizer);
         }
 
         @Override
@@ -91,7 +82,8 @@ public class JettyWebReactiveFeign {
                     methodMetadata, webClientBuilder.build(), errorMapper()));
         }
 
-        public static BiFunction<ReactiveHttpRequest, Throwable, Throwable> errorMapper(){
+        @Override
+        public BiFunction<ReactiveHttpRequest, Throwable, Throwable> errorMapper(){
             return (request, throwable) -> {
                 if(throwable instanceof WebClientRequestException
                    && throwable.getCause() instanceof java.util.concurrent.TimeoutException){
@@ -99,6 +91,11 @@ public class JettyWebReactiveFeign {
                 }
                 return null;
             };
+        }
+
+        @Override
+        protected ClientHttpConnector buildClientConnector() {
+            return buildJettyClientHttpConnector(JettyReactiveOptions.DEFAULT_OPTIONS);
         }
 
     }

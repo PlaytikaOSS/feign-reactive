@@ -13,6 +13,7 @@
  */
 package reactivefeign;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.*;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.*;

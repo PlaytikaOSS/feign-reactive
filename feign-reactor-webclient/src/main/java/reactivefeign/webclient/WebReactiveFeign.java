@@ -13,9 +13,9 @@
  */
 package reactivefeign.webclient;
 
+import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
-import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReadTimeoutException;
@@ -23,7 +23,6 @@ import reactivefeign.client.ReadTimeoutException;
 import java.util.function.BiFunction;
 
 import static reactivefeign.webclient.NettyClientHttpConnectorBuilder.buildNettyClientHttpConnector;
-import static reactivefeign.webclient.client.WebReactiveHttpClient.webClient;
 
 
 /**
@@ -46,23 +45,14 @@ public class WebReactiveFeign {
         return new Builder<>(webClientBuilder, webClientCustomizer);
     }
 
-    public static class Builder<T> extends ReactiveFeign.Builder<T> {
-
-        protected CustomizableWebClientBuilder webClientBuilder;
+    public static class Builder<T> extends CoreWebBuilder<T> {
 
         protected Builder(WebClient.Builder webClientBuilder) {
-            this.webClientBuilder = new CustomizableWebClientBuilder(webClientBuilder);
-            this.webClientBuilder.clientConnector(
-                    buildNettyClientHttpConnector(WebReactiveOptions.DEFAULT_OPTIONS));
-            updateClientFactory();
+            super(webClientBuilder);
         }
 
         protected Builder(WebClient.Builder webClientBuilder, WebClientFeignCustomizer webClientCustomizer) {
-            this.webClientBuilder = new CustomizableWebClientBuilder(webClientBuilder);
-            this.webClientBuilder.clientConnector(
-                    buildNettyClientHttpConnector(WebReactiveOptions.DEFAULT_OPTIONS));
-            webClientCustomizer.accept(this.webClientBuilder);
-            updateClientFactory();
+            super(webClientBuilder, webClientCustomizer);
         }
 
         @Override
@@ -73,12 +63,13 @@ public class WebReactiveFeign {
             return this;
         }
 
-        protected void updateClientFactory(){
-            clientFactory(methodMetadata -> webClient(
-                    methodMetadata, webClientBuilder.build(), errorMapper()));
+        @Override
+        protected ClientHttpConnector buildClientConnector() {
+            return buildNettyClientHttpConnector(WebReactiveOptions.DEFAULT_OPTIONS);
         }
 
-        public static BiFunction<ReactiveHttpRequest, Throwable, Throwable> errorMapper(){
+        @Override
+        public BiFunction<ReactiveHttpRequest, Throwable, Throwable> errorMapper(){
             return (request, throwable) -> {
                 if(throwable instanceof WebClientRequestException
                    && throwable.getCause() instanceof io.netty.handler.timeout.ReadTimeoutException){

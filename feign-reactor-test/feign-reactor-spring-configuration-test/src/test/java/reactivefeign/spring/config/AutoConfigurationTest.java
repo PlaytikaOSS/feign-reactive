@@ -17,7 +17,6 @@
 package reactivefeign.spring.config;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -25,19 +24,24 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
-import reactivefeign.FallbackFactory;
-import reactivefeign.webclient.WebClientFeignCustomizer;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import reactivefeign.client.ReactiveHttpRequest;
+import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.assertj.core.api.Assertions.assertThat;
+import static reactivefeign.spring.config.AutoConfigurationTest.*;
 
 /**
  * @author Sergii Karpenko
@@ -47,75 +51,91 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = AutoConfigurationTest.TestConfiguration.class,
-		webEnvironment = SpringBootTest.WebEnvironment.NONE)
+		webEnvironment = SpringBootTest.WebEnvironment.NONE,
+		properties = {
+				"spring.cloud.discovery.client.simple.instances."+ TEST_FEIGN_CLIENT+"[0].uri=http://localhost:${"+ MOCK_SERVER_PORT_PROPERTY+"}",
+				"spring.cloud.discovery.client.simple.instances."+ TEST_FEIGN_CLIENT_W_PATH_PARAM +"[0].uri=http://localhost:${"+ MOCK_SERVER_PORT_PROPERTY+"}",
+				"spring.cloud.discovery.client.simple.instances."+ TEST_FEIGN_CLIENT_W_QUERY_PARAM +"[0].uri=http://localhost:${"+ MOCK_SERVER_PORT_PROPERTY+"}",
+				"conditional.interceptor1=true"
+		})
 @DirtiesContext
 public class AutoConfigurationTest {
 
 	static final String MOCK_SERVER_PORT_PROPERTY = "mock.server.port";
+
+	static final String TEST_FEIGN_CLIENT = "test-feign-client";
+	static final String TEST_FEIGN_CLIENT_W_PATH_PARAM = "test-feign-client-w-path-param";
+	static final String TEST_FEIGN_CLIENT_W_QUERY_PARAM = "test-feign-client-w-query-param";
 	private static final String TEST_URL = "/testUrl";
 	private static final String BODY_TEXT = "test";
-	private static final String FALLBACK_TEXT = "test fallback";
-	public static final String CUSTOM = "custom";
-	public static final String HEADER = "header";
+
 	private static WireMockServer mockHttpServer = new WireMockServer(wireMockConfig().dynamicPort());
 
 	@Autowired
 	TestReactiveFeignClient feignClient;
-
 	@Autowired
-	TestReactiveFeignClientFallbackFactory feignClientFallbackFactory;
+	TestReactiveFeignClientWithParamInPath feignClientWithParamInPath;
+	@Autowired
+	TestReactiveFeignClientWithParamInQuery feignClientWithParamInQuery;
 
 	@Test
-	public void shouldReturnBody() {
-		mockHttpServer.stubFor(WireMock.get(WireMock.urlPathMatching(TEST_URL))
-				.withHeader(CUSTOM, equalTo(HEADER))
-				.willReturn(WireMock.aResponse()
-						.withBody(BODY_TEXT)));
+	public void shouldAutoconfigureInterceptor() {
+		int counter = RequestInterceptorConfiguration.counter;
+
+		mockHttpServer.stubFor(get(urlPathMatching(TEST_URL))
+				.willReturn(aResponse()
+						.withBody(BODY_TEXT)
+						.withStatus(200)));
+
 		Mono<String> result = feignClient.testMethod();
 
 		StepVerifier.create(result)
 				.expectNext(BODY_TEXT)
 				.verifyComplete();
+
+		assertThat(RequestInterceptorConfiguration.counter).isEqualTo(counter+1);
 	}
 
 	@Test
-	public void shouldReturnFallbackOnError() {
-		mockHttpServer.stubFor(get(urlPathMatching(TEST_URL))
-				.withHeader(CUSTOM, equalTo(HEADER))
-				.willReturn(aResponse()
-						.withStatus(598)));
+	public void shouldUseParameterFromPath() {
+		int counter = RequestInterceptorConfiguration.counter;
 
-		Mono<String> result = feignClient.testMethod();
+		mockHttpServer.stubFor(get(urlPathMatching("/test/1"+TEST_URL))
+				.willReturn(aResponse()
+						.withBody(BODY_TEXT)
+						.withStatus(200)));
+
+		Mono<String> result = feignClientWithParamInPath.testMethod(1);
 
 		StepVerifier.create(result)
-				.expectNext(FALLBACK_TEXT)
+				.expectNext(BODY_TEXT)
 				.verifyComplete();
+
+		assertThat(RequestInterceptorConfiguration.counter).isEqualTo(counter);
 	}
 
 	@Test
-	public void shouldReturnFallbackFromFactoryOnError() {
-		mockHttpServer.stubFor(get(urlPathMatching(TEST_URL))
-				.withHeader(CUSTOM, equalTo(HEADER))
-				.willReturn(aResponse()
-						.withStatus(598)));
+	public void shouldUseParameterFromQuery() {
+		int counter = RequestInterceptorConfiguration.counter;
 
-		Mono<String> result = feignClientFallbackFactory.testMethod();
+		mockHttpServer.stubFor(get(urlPathMatching("/test"+TEST_URL))
+				.willReturn(aResponse()
+						.withBody(BODY_TEXT)
+						.withStatus(200)));
+
+		Mono<String> result = feignClientWithParamInQuery.testMethod(1);
 
 		StepVerifier.create(result)
-				.expectNext(FALLBACK_TEXT)
+				.expectNext(BODY_TEXT)
 				.verifyComplete();
+
+		assertThat(RequestInterceptorConfiguration.counter).isEqualTo(counter);
 	}
 
 	@BeforeClass
 	public static void setup() {
 		mockHttpServer.start();
-
 		System.setProperty(MOCK_SERVER_PORT_PROPERTY, Integer.toString(mockHttpServer.port()));
-	}
-
-	@Before
-	public void before(){
-		mockHttpServer.resetAll();
 	}
 
 	@AfterClass
@@ -123,62 +143,69 @@ public class AutoConfigurationTest {
 		mockHttpServer.stop();
 	}
 
-	@ReactiveFeignClient(name = "test-feign-client", url = "localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}",
-						fallback = TestFallback.class)
+	@Before
+	public void reset(){
+		mockHttpServer.resetAll();
+	}
+
+	@ReactiveFeignClient(name = TEST_FEIGN_CLIENT,
+			configuration = RequestInterceptorConfiguration.class, url = "localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}")
 	public interface TestReactiveFeignClient {
-
 		@GetMapping(path = TEST_URL)
 		Mono<String> testMethod();
-
 	}
 
-	public static class TestFallback implements TestReactiveFeignClient{
-
-		@Override
-		public Mono<String> testMethod() {
-			return Mono.just(FALLBACK_TEXT);
-		}
-	}
-
-	@ReactiveFeignClient(name = "test-feign-client-fallback-factory", url = "localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}",
-			fallbackFactory = TestFallbackFactory.class)
-	public interface TestReactiveFeignClientFallbackFactory {
+	@ReactiveFeignClient(name = TEST_FEIGN_CLIENT_W_PATH_PARAM, path = "test/{id}", url = "localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}")
+	public interface TestReactiveFeignClientWithParamInPath {
 
 		@GetMapping(path = TEST_URL)
-		Mono<String> testMethod();
-
+		Mono<String> testMethod(@PathVariable("id") long id);
 	}
 
-	public static class TestFallbackFactory implements FallbackFactory<TestReactiveFeignClientFallbackFactory> {
-
-		@Override
-		public TestReactiveFeignClientFallbackFactory apply(Throwable throwable) {
-			return () -> Mono.just(FALLBACK_TEXT);
-		}
+	@ReactiveFeignClient(name = TEST_FEIGN_CLIENT_W_QUERY_PARAM, path = "/test"+TEST_URL, url = "localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}")
+	public interface TestReactiveFeignClientWithParamInQuery {
+		@GetMapping
+		Mono<String> testMethod(@RequestParam("id") long id);
 	}
-
 
 	@EnableReactiveFeignClients(clients = {
 			AutoConfigurationTest.TestReactiveFeignClient.class,
-			AutoConfigurationTest.TestReactiveFeignClientFallbackFactory.class
-	})
+			TestReactiveFeignClientWithParamInPath.class,
+			TestReactiveFeignClientWithParamInQuery.class})
 	@EnableAutoConfiguration
 	@Configuration
-	public static class TestConfiguration{
+	public static class TestConfiguration{}
 
+	@Configuration
+	protected static class RequestInterceptorConfiguration {
+		volatile static int counter;
+
+		@ConditionalOnProperty("conditional.interceptor1")
 		@Bean
-		public TestFallback reactiveFallback(){
-			return new TestFallback();
+		ReactiveHttpRequestInterceptor reactiveHttpRequestInterceptor(){
+			return new ReactiveHttpRequestInterceptor() {
+				@Override
+				public Mono<ReactiveHttpRequest> apply(ReactiveHttpRequest reactiveHttpRequest) {
+					return Mono.defer(() -> {
+						counter++;
+						return Mono.just(reactiveHttpRequest);
+					});
+				}
+			};
 		}
 
+		@ConditionalOnProperty("conditional.interceptor2")
 		@Bean
-		public TestFallbackFactory reactiveFallbackFactory(){
-			return new TestFallbackFactory();
-		}
-
-		@Bean
-		public WebClientFeignCustomizer webClientCustomizer(){
-			return webClientBuilder -> webClientBuilder.defaultHeader(CUSTOM, HEADER);
+		ReactiveHttpRequestInterceptor conditionalReactiveHttpRequestInterceptor(){
+			return new ReactiveHttpRequestInterceptor() {
+				@Override
+				public Mono<ReactiveHttpRequest> apply(ReactiveHttpRequest reactiveHttpRequest) {
+					return Mono.defer(() -> {
+						counter += 10;
+						return Mono.just(reactiveHttpRequest);
+					});
+				}
+			};
 		}
 	}
 }

@@ -17,10 +17,10 @@
 
 package reactivefeign.spring.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.codec.ErrorDecoder;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
-import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReactiveHttpRequestInterceptors;
 import reactivefeign.client.log.ReactiveLoggerListener;
@@ -28,10 +28,7 @@ import reactivefeign.client.statushandler.ReactiveStatusHandler;
 import reactivefeign.client.statushandler.ReactiveStatusHandlers;
 import reactivefeign.retry.ReactiveRetryPolicy;
 import reactivefeign.utils.Pair;
-import reactor.core.publisher.Mono;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -93,6 +90,11 @@ public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigu
 		}
 		if (statusHandler != null) {
 			resultBuilder = resultBuilder.statusHandler(statusHandler);
+		}
+
+		ObjectMapper objectMapper = namedContext.getOptional(ObjectMapper.class);
+		if(objectMapper != null){
+			resultBuilder = resultBuilder.objectMapper(objectMapper);
 		}
 
 		namedContext.getAll(ReactiveLoggerListener.class).values()

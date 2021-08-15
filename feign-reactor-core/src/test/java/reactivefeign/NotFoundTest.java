@@ -19,7 +19,6 @@ import org.apache.http.HttpStatus;
 import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
-import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;

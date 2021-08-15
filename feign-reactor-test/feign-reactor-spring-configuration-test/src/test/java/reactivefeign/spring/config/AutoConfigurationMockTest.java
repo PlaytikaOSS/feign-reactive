@@ -27,7 +27,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
-import static reactivefeign.spring.config.AutoConfigurationTest.MOCK_SERVER_PORT_PROPERTY;
+import static reactivefeign.spring.config.WebClientCustomizerTest.MOCK_SERVER_PORT_PROPERTY;
 
 /**
  * @author Sergii Karpenko

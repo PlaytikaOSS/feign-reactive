@@ -13,11 +13,14 @@
  */
 package reactivefeign.resttemplate.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 import reactivefeign.ReactiveFeign;
+import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
 
 import java.io.IOException;
@@ -35,10 +38,29 @@ import static java.util.Optional.ofNullable;
 public class RestTemplateFakeReactiveFeign {
 
   public static <T> ReactiveFeign.Builder<T> builder() {
+
     return new ReactiveFeign.Builder<T>(){
+      private RestTemplate restTemplate = new RestTemplate();
+      private boolean acceptGzip = false;
+
       {
+        ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(mapper);
+        restTemplate.getMessageConverters().add(0, converter);
+        updateClientFactory();
+      }
+
+      private void updateClientFactory(){
         clientFactory(methodMetadata -> new RestTemplateFakeReactiveHttpClient(
-                methodMetadata, new RestTemplate(), false));
+                methodMetadata, restTemplate, acceptGzip));
+      }
+
+      @Override
+      public ReactiveFeignBuilder<T> objectMapper(ObjectMapper objectMapper) {
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(objectMapper);
+        restTemplate.getMessageConverters().set(0, converter);
+        updateClientFactory();
+        return this;
       }
 
       @Override
@@ -73,12 +95,9 @@ public class RestTemplateFakeReactiveFeign {
             requestFactory.setReadTimeout(restTemplateOptions.getReadTimeoutMillis().intValue());
           }
 
-          this.clientFactory((methodMetadata) -> {
-            boolean acceptGzip = ofNullable(options.isTryUseCompression()).orElse(false);
-            return new RestTemplateFakeReactiveHttpClient(
-                    methodMetadata, new RestTemplate(requestFactory), acceptGzip);
-          });
-
+          this.restTemplate = new RestTemplate(requestFactory);
+          this.acceptGzip = ofNullable(options.isTryUseCompression()).orElse(false);
+          updateClientFactory();
           return this;
 
         }
@@ -97,12 +116,9 @@ public class RestTemplateFakeReactiveFeign {
             requestFactory.setReadTimeout(restTemplateOptions.getReadTimeoutMillis().intValue());
           }
 
-          this.clientFactory((methodMetadata) -> {
-            boolean acceptGzip = ofNullable(options.isTryUseCompression()).orElse(false);
-            return new RestTemplateFakeReactiveHttpClient(
-                    methodMetadata, new RestTemplate(requestFactory), acceptGzip);
-          });
-
+          this.restTemplate = new RestTemplate(requestFactory);
+          this.acceptGzip = ofNullable(options.isTryUseCompression()).orElse(false);
+          updateClientFactory();
           return this;
 
         }

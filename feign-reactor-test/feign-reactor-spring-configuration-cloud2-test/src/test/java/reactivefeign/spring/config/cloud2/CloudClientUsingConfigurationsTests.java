@@ -47,10 +47,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
 import static reactivefeign.retry.BasicReactiveRetryPolicy.retry;
-import static reactivefeign.spring.config.cloud2.AutoConfigurationTest.CIRCUIT_BREAKER_TIMEOUT_DISABLED_CONFIGURATION_CUSTOMIZER;
-import static reactivefeign.spring.config.cloud2.AutoConfigurationTest.MOCK_SERVER_PORT_PROPERTY;
-import static reactivefeign.spring.config.cloud2.CloudClientUsingConfigurationsTests.BAR;
-import static reactivefeign.spring.config.cloud2.CloudClientUsingConfigurationsTests.FOO;
+import static reactivefeign.spring.config.cloud2.CloudClientUsingConfigurationsTests.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = CloudClientUsingConfigurationsTests.Application.class, webEnvironment = WebEnvironment.NONE,
@@ -60,7 +57,7 @@ import static reactivefeign.spring.config.cloud2.CloudClientUsingConfigurationsT
 		})
 @TestPropertySource("classpath:common.properties")
 @DirtiesContext
-public class CloudClientUsingConfigurationsTests {
+public class CloudClientUsingConfigurationsTests extends BasicAutoconfigurationTest{
 
 	public static final String BAR = "bar";
 	public static final String FOO = "foo";

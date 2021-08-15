@@ -30,11 +30,10 @@ import java.util.List;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static org.assertj.core.api.Assertions.assertThat;
-import static reactivefeign.TestUtils.MAPPER;
-import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
-
 import static reactivefeign.ReactiveOptions.ProxySettings;
 import static reactivefeign.ReactiveOptions.ProxySettingsBuilder;
+import static reactivefeign.TestUtils.MAPPER;
+import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
 
 /**
  * @author Sergii Karpenko

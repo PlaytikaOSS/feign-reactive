@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-package reactivefeign.spring.config.cloud2;
+package reactivefeign.spring.config;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -25,23 +26,18 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
-import reactivefeign.spring.config.EnableReactiveFeignClients;
-import reactivefeign.spring.config.ReactiveFeignCircuitBreakerCustomizer;
-import reactivefeign.spring.config.ReactiveFeignClient;
+import reactivefeign.FallbackFactory;
+import reactivefeign.webclient.WebClientFeignCustomizer;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.assertj.core.api.Assertions.assertThat;
-import static reactivefeign.spring.config.cloud2.LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest.FEIGN_CLIENT_TEST_LB;
 
 /**
  * @author Sergii Karpenko
@@ -50,43 +46,44 @@ import static reactivefeign.spring.config.cloud2.LoadBalancerEnabledCircuitBreak
  */
 
 @RunWith(SpringRunner.class)
-@SpringBootTest(classes = LoadbalancerEnabledStaticUrlTest.TestStaticUrlConfiguration.class,
-		        webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@TestPropertySource(locations = {
-		"classpath:common.properties"
-})
+@SpringBootTest(classes = WebClientCustomizerTest.TestConfiguration.class,
+		webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @DirtiesContext
-public class LoadbalancerEnabledStaticUrlTest extends BasicAutoconfigurationTest{
+public class WebClientCustomizerTest {
 
-	static final int MOCK_SERVER_PORT = 9374;
-
+	static final String MOCK_SERVER_PORT_PROPERTY = "mock.server.port";
 	private static final String TEST_URL = "/testUrl";
 	private static final String BODY_TEXT = "test";
-
-	private static WireMockServer mockHttpServer = new WireMockServer(wireMockConfig().port(MOCK_SERVER_PORT));
+	public static final String CUSTOM = "custom";
+	public static final String HEADER = "header";
+	private static WireMockServer mockHttpServer = new WireMockServer(wireMockConfig().dynamicPort());
 
 	@Autowired
 	TestReactiveFeignClient feignClient;
 
 	@Test
-	public void shouldUseStaticUrl() {
-		mockHttpServer.stubFor(get(urlPathMatching(TEST_URL))
-				.willReturn(aResponse()
-						.withBody(BODY_TEXT)
-						.withStatus(200)));
-
+	public void shouldAutoconfigureCustomWebClientCustomizer() {
+		mockHttpServer.stubFor(WireMock.get(WireMock.urlPathMatching(TEST_URL))
+				.withHeader(CUSTOM, equalTo(HEADER))
+				.willReturn(WireMock.aResponse()
+						.withBody(BODY_TEXT)));
 		Mono<String> result = feignClient.testMethod();
 
 		StepVerifier.create(result)
 				.expectNext(BODY_TEXT)
 				.verifyComplete();
-
-		assertThat(mockHttpServer.getAllServeEvents().size()).isEqualTo(1);
 	}
 
 	@BeforeClass
 	public static void setup() {
 		mockHttpServer.start();
+
+		System.setProperty(MOCK_SERVER_PORT_PROPERTY, Integer.toString(mockHttpServer.port()));
+	}
+
+	@Before
+	public void before(){
+		mockHttpServer.resetAll();
 	}
 
 	@AfterClass
@@ -94,12 +91,7 @@ public class LoadbalancerEnabledStaticUrlTest extends BasicAutoconfigurationTest
 		mockHttpServer.stop();
 	}
 
-	@Before
-	public void reset(){
-		mockHttpServer.resetAll();
-	}
-
-	@ReactiveFeignClient(name = FEIGN_CLIENT_TEST_LB, url = "localhost:"+MOCK_SERVER_PORT)
+	@ReactiveFeignClient(name = "test-feign-client", url = "localhost:${"+MOCK_SERVER_PORT_PROPERTY+"}")
 	public interface TestReactiveFeignClient {
 
 		@GetMapping(path = TEST_URL)
@@ -107,13 +99,16 @@ public class LoadbalancerEnabledStaticUrlTest extends BasicAutoconfigurationTest
 
 	}
 
-	@EnableReactiveFeignClients(clients = LoadbalancerEnabledStaticUrlTest.TestReactiveFeignClient.class)
+	@EnableReactiveFeignClients(clients = {
+			WebClientCustomizerTest.TestReactiveFeignClient.class
+	})
 	@EnableAutoConfiguration
 	@Configuration
-	public static class TestStaticUrlConfiguration {
+	public static class TestConfiguration{
+
 		@Bean
-		public ReactiveFeignCircuitBreakerCustomizer<Resilience4JConfigBuilder, Resilience4JConfigBuilder.Resilience4JCircuitBreakerConfiguration> defaultCustomizer() {
-			return CIRCUIT_BREAKER_TIMEOUT_DISABLED_CONFIGURATION_CUSTOMIZER;
+		public WebClientFeignCustomizer webClientCustomizer(){
+			return webClientBuilder -> webClientBuilder.defaultHeader(CUSTOM, HEADER);
 		}
 	}
 }

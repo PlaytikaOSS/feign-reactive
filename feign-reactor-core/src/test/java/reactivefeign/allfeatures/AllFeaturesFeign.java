@@ -16,11 +16,7 @@
 
 package reactivefeign.allfeatures;
 
-import feign.HeaderMap;
-import feign.Headers;
-import feign.Param;
-import feign.QueryMap;
-import feign.RequestLine;
+import feign.*;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;

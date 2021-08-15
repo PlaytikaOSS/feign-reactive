@@ -1,5 +1,6 @@
 package reactivefeign;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Contract;
 import feign.FeignException;
 import feign.InvocationHandlerFactory;
@@ -66,6 +67,14 @@ public interface ReactiveFeignBuilder<T> {
      * @return
      */
     ReactiveFeignBuilder<T> statusHandler(ReactiveStatusHandler statusHandler);
+
+    /**
+     * The most common way to introduce custom json serialisation
+     *
+     * @param objectMapper
+     * @return
+     */
+    ReactiveFeignBuilder<T> objectMapper(ObjectMapper objectMapper);
 
     /**
      * The most common way to introduce custom logic on handling http response

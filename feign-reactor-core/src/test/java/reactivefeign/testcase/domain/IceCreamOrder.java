@@ -14,11 +14,7 @@
 package reactivefeign.testcase.domain;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 import static java.time.temporal.ChronoUnit.MICROS;
 

@@ -44,7 +44,6 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.sql.Time;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -52,7 +51,8 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_MINIMUM_NUMBER_OF_CALLS;
 import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType.TIME_BASED;
 import static org.assertj.core.api.Assertions.assertThat;
-import static reactivefeign.spring.config.cloud2.AutoConfigurationTest.TEST_FEIGN_CLIENT;
+import static reactivefeign.spring.config.cloud2.IstioConfigurationTest.TEST_FEIGN_CLIENT;
+import static reactivefeign.spring.config.cloud2.IstioConfigurationTest.MOCK_SERVER_PORT_PROPERTY;
 
 /**
  * @author Sergii Karpenko
@@ -63,7 +63,7 @@ import static reactivefeign.spring.config.cloud2.AutoConfigurationTest.TEST_FEIG
 @SpringBootTest(classes = IstioConfigurationTest.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.NONE,
 		properties = {
-				"spring.cloud.discovery.client.simple.instances."+ TEST_FEIGN_CLIENT+"[0].uri=http://localhost:${"+ AutoConfigurationTest.MOCK_SERVER_PORT_PROPERTY+"}",
+				"spring.cloud.discovery.client.simple.instances."+ TEST_FEIGN_CLIENT+"[0].uri=http://localhost:${"+ MOCK_SERVER_PORT_PROPERTY+"}",
 
 				//config properties that disables LoadBalancer and CircuitBreaker and make client Istio compatible
 				//see disableCircuitBreakerCustomizer
@@ -71,9 +71,7 @@ import static reactivefeign.spring.config.cloud2.AutoConfigurationTest.TEST_FEIG
 		})
 @TestPropertySource("classpath:common.properties")
 @DirtiesContext
-public class IstioConfigurationTest {
-
-	public static final String MOCK_SERVER_PORT_PROPERTY = "mock.server.port";
+public class IstioConfigurationTest extends BasicAutoconfigurationTest{
 
 	public static final String TEST_FEIGN_CLIENT = "test-feign-client";
 

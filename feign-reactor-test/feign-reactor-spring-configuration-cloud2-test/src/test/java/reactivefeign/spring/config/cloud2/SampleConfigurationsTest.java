@@ -63,7 +63,6 @@ import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.CLOSED;
 import static io.github.resilience4j.circuitbreaker.CircuitBreaker.State.OPEN;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static reactivefeign.spring.config.cloud2.AutoConfigurationTest.MOCK_SERVER_PORT_PROPERTY;
 import static reactivefeign.spring.config.cloud2.SampleConfigurationsTest.*;
 
 @RunWith(SpringJUnit4ClassRunner.class)
@@ -79,7 +78,7 @@ import static reactivefeign.spring.config.cloud2.SampleConfigurationsTest.*;
 		"classpath:error-decoder.properties",
 		"classpath:common.properties"
 })
-public class SampleConfigurationsTest {
+public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
 
 	public static final String RFGN_PROPER = "rfgn-proper";
 	public static final String RFGN_CONFIGS = "rfgn-configs";

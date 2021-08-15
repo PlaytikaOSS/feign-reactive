@@ -13,15 +13,12 @@
  */
 package reactivefeign.resttemplate.client;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import feign.MethodMetadata;
 import org.reactivestreams.Publisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
@@ -53,13 +50,6 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
                                      boolean acceptGzip) {
     this.restTemplate = restTemplate;
     this.acceptGzip = acceptGzip;
-
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.registerModule(new JavaTimeModule());
-
-    MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
-    converter.setObjectMapper(mapper);
-    restTemplate.getMessageConverters().add(0, converter);
 
     returnPublisherType = returnPublisherType(methodMetadata);
     returnActualType = forType(returnActualType(methodMetadata));

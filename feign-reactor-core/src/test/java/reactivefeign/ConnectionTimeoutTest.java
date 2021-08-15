@@ -14,14 +14,9 @@
 package reactivefeign;
 
 import org.hamcrest.Matchers;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.ExpectedException;
 import reactivefeign.testcase.IcecreamServiceApi;
-import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.net.ConnectException;

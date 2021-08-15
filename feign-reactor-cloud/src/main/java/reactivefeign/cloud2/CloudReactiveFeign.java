@@ -1,5 +1,6 @@
 package reactivefeign.cloud2;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Contract;
 import feign.MethodMetadata;
 import feign.Target;
@@ -129,6 +130,12 @@ public class CloudReactiveFeign {
         @Override
         public Builder<T> statusHandler(ReactiveStatusHandler statusHandler) {
             builder = builder.statusHandler(statusHandler);
+            return this;
+        }
+
+        @Override
+        public ReactiveFeignBuilder<T> objectMapper(ObjectMapper objectMapper) {
+            builder = builder.objectMapper(objectMapper);
             return this;
         }
 

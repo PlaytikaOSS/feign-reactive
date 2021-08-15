@@ -27,7 +27,6 @@ import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.Mixin;
 import reactivefeign.testcase.domain.OrderGenerator;
-import reactor.core.scheduler.Schedulers;
 import reactor.test.StepVerifier;
 
 import java.util.Arrays;

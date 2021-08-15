@@ -1,7 +1,5 @@
 package reactivefeign.spring.config;
 
-import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -9,11 +7,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.client.actuator.HasFeatures;
 import org.springframework.cloud.client.loadbalancer.LoadBalancerAutoConfiguration;
-import org.springframework.cloud.client.loadbalancer.reactive.DeferringLoadBalancerExchangeFilterFunction;
-import org.springframework.cloud.loadbalancer.support.SimpleObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.java11.Java11ReactiveFeign;
 import reactivefeign.java11.Java11ReactiveOptions;

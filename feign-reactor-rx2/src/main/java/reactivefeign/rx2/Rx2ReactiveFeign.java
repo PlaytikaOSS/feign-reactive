@@ -127,7 +127,7 @@ public final class Rx2ReactiveFeign {
             clientFactory(methodMetadata -> webClient(methodMetadata, webClientBuilder.build()));
         }
 
-        public static WebReactiveHttpClient webClient(MethodMetadata methodMetadata, WebClient webClient) {
+        public WebReactiveHttpClient webClient(MethodMetadata methodMetadata, WebClient webClient) {
 
             final Type returnType = methodMetadata.returnType();
             Type returnPublisherType = ((ParameterizedType) returnType).getRawType();

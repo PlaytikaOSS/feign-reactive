@@ -30,7 +30,6 @@ import reactivefeign.testcase.domain.Bill;
 import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.OrderGenerator;
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 
 import java.time.Clock;
 import java.util.EnumSet;
@@ -40,7 +39,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
-import static reactivefeign.client.metrics.MetricsTag.*;
+import static reactivefeign.client.metrics.MetricsTag.FEIGN_CLIENT_METHOD;
 import static reactivefeign.client.metrics.MicrometerReactiveLogger.DEFAULT_TIMER_NAME;
 
 /**

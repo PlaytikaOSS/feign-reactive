@@ -15,8 +15,8 @@ package reactivefeign.java11;
 
 import com.fasterxml.jackson.core.async_.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import reactivefeign.ReactiveFeign;
+import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.java11.client.Java11ReactiveHttpClientFactory;
 
@@ -45,21 +45,13 @@ public final class Java11ReactiveFeign {
     }
 
     public static <T> Builder<T> builder(HttpClient.Builder httpClientBuilder) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        return builder(httpClientBuilder, new JsonFactory(), objectMapper);
+        return new Builder<>(httpClientBuilder, new JsonFactory());
     }
 
     public static <T> Builder<T> builder(HttpClientFeignCustomizer clientFeignCustomizer) {
         HttpClient.Builder httpClientBuilder = HttpClient.newBuilder();
         clientFeignCustomizer.accept(httpClientBuilder);
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        return builder(httpClientBuilder, new JsonFactory(), objectMapper);
-    }
-
-    public static <T> Builder<T> builder(HttpClient.Builder httpClientBuilder, JsonFactory jsonFactory, ObjectMapper objectMapper) {
-        return new Builder<>(httpClientBuilder, jsonFactory, objectMapper);
+        return new Builder<>(httpClientBuilder, new JsonFactory());
     }
 
     public static class Builder<T> extends ReactiveFeign.Builder<T> {
@@ -69,11 +61,20 @@ public final class Java11ReactiveFeign {
         private ObjectMapper objectMapper;
         protected Java11ReactiveOptions options;
 
-        protected Builder(HttpClient.Builder httpClientBuilder, JsonFactory jsonFactory, ObjectMapper objectMapper) {
+        protected Builder(HttpClient.Builder httpClientBuilder, JsonFactory jsonFactory) {
             this.httpClientBuilder = httpClientBuilder;
-            setHttpClient(jsonFactory, objectMapper);
             this.jsonFactory = jsonFactory;
+            this.objectMapper = new ObjectMapper().findAndRegisterModules();
+            updateClientFactory();
+        }
+
+        @Override
+        public ReactiveFeignBuilder<T> objectMapper(ObjectMapper objectMapper) {
             this.objectMapper = objectMapper;
+
+            updateClientFactory();
+
+            return this;
         }
 
         @Override
@@ -97,12 +98,12 @@ public final class Java11ReactiveFeign {
                 );
             }
 
-            setHttpClient(jsonFactory, objectMapper);
+            updateClientFactory();
 
             return this;
         }
 
-        protected void setHttpClient(JsonFactory jsonFactory, ObjectMapper objectMapper){
+        protected void updateClientFactory(){
             this.httpClientBuilder = httpClientBuilder.version(
                     useHttp2(this.options) ? HttpClient.Version.HTTP_2 : HttpClient.Version.HTTP_1_1);
 

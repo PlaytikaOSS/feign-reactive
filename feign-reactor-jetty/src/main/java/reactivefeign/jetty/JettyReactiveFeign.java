@@ -15,12 +15,12 @@ package reactivefeign.jetty;
 
 import com.fasterxml.jackson.core.async_.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpProxy;
 import org.eclipse.jetty.http2.client.HTTP2Client;
 import org.eclipse.jetty.http2.client.http.HttpClientTransportOverHTTP2;
 import reactivefeign.ReactiveFeign;
+import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.jetty.client.JettyReactiveHttpClient;
 
@@ -61,14 +61,7 @@ public final class JettyReactiveFeign {
     }
 
     public static <T> Builder<T> builder(JettyHttpClientFactory httpClientFactory) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
-        return new Builder<>(httpClientFactory, new JsonFactory(), objectMapper);
-    }
-
-    public static <T> Builder<T> builder(JettyHttpClientFactory httpClientFactory,
-                                         JsonFactory jsonFactory, ObjectMapper objectMapper) {
-        return new Builder<>(httpClientFactory, jsonFactory, objectMapper);
+        return new Builder<>(httpClientFactory, new JsonFactory());
     }
 
     public static class Builder<T> extends ReactiveFeign.Builder<T> {
@@ -78,10 +71,16 @@ public final class JettyReactiveFeign {
         private ObjectMapper objectMapper;
         protected JettyReactiveOptions options;
 
-        protected Builder(JettyHttpClientFactory httpClientFactory, JsonFactory jsonFactory, ObjectMapper objectMapper) {
+        protected Builder(JettyHttpClientFactory httpClientFactory, JsonFactory jsonFactory) {
             this.jsonFactory = jsonFactory;
-            this.objectMapper = objectMapper;
+            this.objectMapper = new ObjectMapper().findAndRegisterModules();
             setHttpClient(httpClientFactory);
+        }
+
+        @Override
+        public ReactiveFeignBuilder<T> objectMapper(ObjectMapper objectMapper) {
+            this.objectMapper = objectMapper;
+            return this;
         }
 
         @Override
