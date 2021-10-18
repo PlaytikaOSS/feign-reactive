@@ -21,25 +21,25 @@ class NettyClientHttpConnectorBuilder {
                     webOptions.getConnectTimeoutMillis().intValue());
         }
         tcpClient = tcpClient.doOnConnected(connection -> {
-            if(webOptions.getReadTimeoutMillis() != null){
+            if (webOptions.getReadTimeoutMillis() != null) {
                 connection.addHandlerLast(new ReadTimeoutHandler(
                         webOptions.getReadTimeoutMillis(), TimeUnit.MILLISECONDS));
             }
-            if(webOptions.getWriteTimeoutMillis() != null){
+            if (webOptions.getWriteTimeoutMillis() != null) {
                 connection.addHandlerLast(new WriteTimeoutHandler(
                         webOptions.getWriteTimeoutMillis(), TimeUnit.MILLISECONDS));
             }
         });
 
         WebReactiveOptions.WebProxySettings proxySettings = (WebReactiveOptions.WebProxySettings)webOptions.getProxySettings();
-        if(proxySettings != null){
+        if (proxySettings != null) {
             tcpClient = tcpClient.proxy(typeSpec -> {
                 ProxyProvider.Builder proxyBuilder = typeSpec.type(ProxyProvider.Proxy.HTTP)
                         .host(proxySettings.getHost())
                         .port(proxySettings.getPort())
                         .username(proxySettings.getUsername())
                         .password(password -> proxySettings.getPassword());
-                if(proxySettings.getTimeout() != null){
+                if (proxySettings.getTimeout() != null) {
                     proxyBuilder.connectTimeoutMillis(proxySettings.getTimeout());
                 }
             });
@@ -47,16 +47,17 @@ class NettyClientHttpConnectorBuilder {
 
         HttpClient httpClient = HttpClient.from(tcpClient);
 
-        if(webOptions.getResponseTimeoutMillis() != null){
+        if (webOptions.getResponseTimeoutMillis() != null) {
             httpClient = httpClient.responseTimeout(Duration.ofMillis(webOptions.getResponseTimeoutMillis()));
         }
 
         if (webOptions.isTryUseCompression() != null) {
             httpClient = httpClient.compress(true);
         }
-        if(webOptions.isFollowRedirects() != null){
+        if (webOptions.isFollowRedirects() != null) {
             httpClient = httpClient.followRedirect(webOptions.isFollowRedirects());
         }
+        
         return new ReactorClientHttpConnector(httpClient);
     }
 }
