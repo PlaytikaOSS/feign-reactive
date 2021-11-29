@@ -53,6 +53,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static reactivefeign.utils.StringUtils.cutTail;
+
 /**
  * patterned after org.springframework.cloud.openfeign.FeignClientsRegistrar
  */
@@ -283,9 +285,7 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 			if (!path.startsWith("/")) {
 				path = "/" + path;
 			}
-			if (path.endsWith("/")) {
-				path = path.substring(0, path.length() - 1);
-			}
+			path = cutTail(path, "/");
 		}
 		return path;
 	}

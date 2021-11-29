@@ -83,7 +83,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
         if(pathExpander instanceof StaticPathExpander
                 && queriesAll.isEmpty()
                 && methodMetadata.queryMapIndex() == null){
-            staticUri = URI.create(target.url() + requestTemplate.url());
+            staticUri = URI.create(target.url() + cutTail(requestTemplate.url(), "/"));
         } else {
             staticUri = null;
         }
