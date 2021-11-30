@@ -144,16 +144,13 @@ public class PublisherClientMethodHandler implements MethodHandler {
         }
 
         StringBuilder queryBuilder = new StringBuilder();
+        CollectionFormat collectionFormat = methodMetadata.template().collectionFormat();
         for (Map.Entry<String, Collection<String>> query : queries.entrySet()) {
-            String field = query.getKey();
-            for (String value : query.getValue()) {
-                queryBuilder.append('&');
-                queryBuilder.append(field);
-                queryBuilder.append('=');
-                if (!value.isEmpty()) {
-                    queryBuilder.append(UriUtils.encode(value, UTF_8));
-                }
-            }
+            Collection<String> valuesEncoded = query.getValue().stream()
+                    .map(value -> UriUtils.encode(value, UTF_8))
+                    .collect(toList());
+            queryBuilder.append('&');
+            queryBuilder.append(collectionFormat.join(query.getKey(), valuesEncoded, UTF_8));
         }
         if(queryBuilder.length() > 0) {
             queryBuilder.deleteCharAt(0);
@@ -168,13 +165,12 @@ public class PublisherClientMethodHandler implements MethodHandler {
         Map<String, Collection<String>> queries = new LinkedHashMap<>();
 
         // queries from template
-        queriesAll.keySet()
-                .forEach(queryName -> addAll(queries, queryName,
-                        queryExpanders.getOrDefault(queryName, singletonList(EMPTY_VALUE_EXPANDER)).stream()
-                                .map(expander -> expander.apply(substitutions))
-                                .filter(Objects::nonNull)
-                                .flatMap(Collection::stream)
-                                .collect(toList())));
+        queriesAll.keySet().forEach(queryName -> addAll(queries, queryName,
+                queryExpanders.getOrDefault(queryName, singletonList(subs ->  singletonList(""))).stream()
+                        .map(expander -> expander.apply(substitutions))
+                        .filter(Objects::nonNull)
+                        .flatMap(Collection::stream)
+                        .collect(toList())));
 
         // queries from args
         if (methodMetadata.queryMapIndex() != null) {
@@ -184,12 +180,12 @@ public class PublisherClientMethodHandler implements MethodHandler {
                         ? (Map<String, ?>) queryMapObject
                         : queryMapEncoder.encode(queryMapObject);
                 queryMap.forEach((key, value) -> {
-                            if (value instanceof Iterable) {
-                                ((Iterable<?>) value).forEach(element -> add(queries, key, element.toString()));
-                            } else if (value != null) {
-                                add(queries, key, value.toString());
-                            }
-                        });
+                    if (value instanceof Iterable) {
+                        ((Iterable<?>) value).forEach(element -> add(queries, key, element.toString()));
+                    } else if (value != null) {
+                        add(queries, key, value.toString());
+                    }
+                });
             }
         }
 
@@ -426,8 +422,5 @@ public class PublisherClientMethodHandler implements MethodHandler {
         }
         return values;
     }
-
-    private static final Function<Substitutions, List<String>> EMPTY_VALUE_EXPANDER =
-            substitutions ->  singletonList("");
 
 }

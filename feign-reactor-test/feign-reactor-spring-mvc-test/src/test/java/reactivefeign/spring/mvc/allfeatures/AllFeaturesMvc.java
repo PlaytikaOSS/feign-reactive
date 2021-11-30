@@ -17,6 +17,7 @@
 package reactivefeign.spring.mvc.allfeatures;
 
 import org.reactivestreams.Publisher;
+import org.springframework.cloud.openfeign.CollectionFormat;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
@@ -54,6 +55,7 @@ public interface AllFeaturesMvc extends reactivefeign.allfeatures.AllFeaturesApi
 
 	@Override
 	@GetMapping(path = "/mirrorListParametersNew")
+	@CollectionFormat(feign.CollectionFormat.CSV)
 	Mono<List<Integer>> mirrorListParametersNew(
 			@RequestParam(value = "dynamicListParam", required = false) List<Integer> listParams);
 

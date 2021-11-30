@@ -54,7 +54,7 @@ public interface AllFeaturesFeign extends AllFeaturesApi{
 	Mono<Map<String, String>> passEmptyParameterInUrl();
 
 	@Override
-	@RequestLine("GET /mirrorListParametersNew")
+	@RequestLine(value = "GET /mirrorListParametersNew", collectionFormat = CollectionFormat.CSV)
 	Mono<List<Integer>> mirrorListParametersNew(
             @Param("dynamicListParam") List<Integer> dynamicListParam);
 
