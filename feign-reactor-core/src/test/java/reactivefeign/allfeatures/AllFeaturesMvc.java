@@ -42,6 +42,9 @@ public interface AllFeaturesMvc {
 			@RequestParam(value = "dynamicParam", required = false) Long dynamicParam,
 			@RequestParam Map<String, String> paramMap);
 
+	@GetMapping(path = "/mirrorParametersInUrl")
+	Mono<Map<String, String>> mirrorParametersInUrl(@RequestParam Map<String, String> paramMap);
+
 	@GetMapping(path = "/mirrorListParametersNew")
 	Mono<List<Integer>> mirrorListParametersNew(
 			@RequestParam(value = "dynamicListParam", required = false) List<Integer> listParams);

@@ -68,6 +68,9 @@ public interface AllFeaturesMvc extends reactivefeign.allfeatures.AllFeaturesApi
 	Mono<Map<String, List<String>>> mirrorMapParametersNew(
 			@RequestParam Map<String, List<String>> paramMap);
 
+	@Override
+	@GetMapping(path = "/mirrorParametersInUrl?manufacturingPlan=ZPH-V121-00123&workOrder=")
+	Mono<Map<String, String>> passEmptyParameterInUrl();
 
 	@Override
 	@GetMapping(path = "/mirrorHeaders")

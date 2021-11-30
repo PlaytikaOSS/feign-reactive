@@ -50,6 +50,10 @@ public interface AllFeaturesFeign extends AllFeaturesApi{
             @QueryMap Map<String, String> paramMap);
 
 	@Override
+	@RequestLine("GET /mirrorParametersInUrl?manufacturingPlan=ZPH-V121-00123&workOrder=")
+	Mono<Map<String, String>> passEmptyParameterInUrl();
+
+	@Override
 	@RequestLine("GET /mirrorListParametersNew")
 	Mono<List<Integer>> mirrorListParametersNew(
             @Param("dynamicListParam") List<Integer> dynamicListParam);

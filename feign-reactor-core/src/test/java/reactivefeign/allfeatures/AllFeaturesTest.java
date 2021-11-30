@@ -144,6 +144,17 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 	}
 
 	@Test
+	public void shouldPassEmptyParameterInUrl() {
+
+		Map<String, String> returned = client.passEmptyParameterInUrl()
+				.subscribeOn(testScheduler()).block();
+
+		assertThat(returned).hasSize(2);
+		assertThat(returned).containsEntry("manufacturingPlan", "ZPH-V121-00123");
+		assertThat(returned).containsEntry("workOrder", "");
+	}
+
+	@Test
 	public void shouldNotReturnNullPassedParametersNew() {
 		Map<String, String> paramMap = new HashMap<String, String>() {
 			{

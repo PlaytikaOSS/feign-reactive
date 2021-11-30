@@ -61,8 +61,12 @@ public class AllFeaturesController implements AllFeaturesMvc {
 	}
 
 	@Override
-	public Mono<List<Integer>> mirrorListParametersNew(
-			List<Integer> listParams) {
+	public Mono<Map<String, String>> mirrorParametersInUrl(Map<String, String> paramMap) {
+		return just(paramMap);
+	}
+
+	@Override
+	public Mono<List<Integer>> mirrorListParametersNew(List<Integer> listParams) {
 		return listParams != null ? just(listParams) : Mono.just(emptyList());
 	}
 

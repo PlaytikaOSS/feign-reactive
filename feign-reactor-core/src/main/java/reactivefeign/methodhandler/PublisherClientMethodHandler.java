@@ -35,6 +35,7 @@ import java.util.stream.Stream;
 import static feign.Util.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.*;
 import static reactivefeign.utils.MultiValueMapUtils.*;
@@ -169,7 +170,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
         // queries from template
         queriesAll.keySet()
                 .forEach(queryName -> addAll(queries, queryName,
-                        queryExpanders.get(queryName).stream()
+                        queryExpanders.getOrDefault(queryName, singletonList(EMPTY_VALUE_EXPANDER)).stream()
                                 .map(expander -> expander.apply(substitutions))
                                 .filter(Objects::nonNull)
                                 .flatMap(Collection::stream)
@@ -425,5 +426,8 @@ public class PublisherClientMethodHandler implements MethodHandler {
         }
         return values;
     }
+
+    private static final Function<Substitutions, List<String>> EMPTY_VALUE_EXPANDER =
+            substitutions ->  singletonList("");
 
 }

@@ -37,6 +37,8 @@ public interface AllFeaturesApi {
             Long dynamicParam,
             Map<String, String> paramMap);
 
+	Mono<Map<String, String>> passEmptyParameterInUrl();
+
 	Mono<List<Integer>> mirrorListParametersNew(
 			List<Integer> dynamicListParam);
 
