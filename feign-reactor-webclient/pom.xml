@@ -31,12 +31,7 @@
         <!-- Netty       -->
         <dependency>
             <groupId>io.projectreactor.netty</groupId>
-            <artifactId>reactor-netty</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
+            <artifactId>reactor-netty-http</artifactId>
         </dependency>
 
         <!-- Tests -->
