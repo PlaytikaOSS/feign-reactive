@@ -34,54 +34,56 @@ import java.util.function.Function;
  */
 abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
 
-  private static final Logger logger = LoggerFactory.getLogger(RetryPublisherHttpClient.class);
+    private static final Logger logger = LoggerFactory.getLogger(RetryPublisherHttpClient.class);
 
-  private final String feignMethodKey;
-  protected final PublisherHttpClient publisherClient;
-  protected final Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction;
+    private final String feignMethodKey;
+    protected final PublisherHttpClient publisherClient;
+    protected final Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction;
 
-  protected RetryPublisherHttpClient(PublisherHttpClient publisherClient,
-                                   MethodMetadata methodMetadata,
-                                   Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction) {
-    this.publisherClient = publisherClient;
-    this.feignMethodKey = methodMetadata.configKey();
-    this.retryFunction = wrapWithLog(retryFunction, feignMethodKey);
-  }
+    protected RetryPublisherHttpClient(
+            PublisherHttpClient publisherClient,
+            MethodMetadata methodMetadata,
+            Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction) {
 
-  protected Function<Flux<Retry.RetrySignal>, Flux<Throwable>> wrapWithOutOfRetries(
-          Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction,
-          ReactiveHttpRequest request){
-     return signalFlux -> retryFunction.apply(signalFlux)
-             .onErrorResume(throwable -> Mono.just(new OutOfRetriesWrapper(throwable, request)))
-             .zipWith(Flux.range(1, Integer.MAX_VALUE), (throwable, index) -> {
-               if(throwable instanceof OutOfRetriesWrapper){
-                 if(index == 1){
-                   throw Exceptions.propagate(throwable.getCause());
-                 } else {
-                   logger.error("[{}]---> USED ALL RETRIES", feignMethodKey, throwable);
-                   throw Exceptions.propagate(new OutOfRetriesException(throwable.getCause(), request));
-                 }
-               } else {
-                 return throwable;
-               }
-             });
-  }
+        this.publisherClient = publisherClient;
+        this.feignMethodKey = methodMetadata.configKey();
+        this.retryFunction = wrapWithLog(retryFunction, feignMethodKey);
+    }
 
-  protected static Function<Flux<Retry.RetrySignal>, Flux<Throwable>> wrapWithLog(
-          Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction,
-          String feignMethodTag) {
-    return throwableFlux -> retryFunction.apply(throwableFlux)
-            .doOnNext(throwable -> {
-              if (logger.isDebugEnabled()) {
-                logger.debug("[{}]---> RETRYING on error", feignMethodTag, throwable);
-              }
-            });
-  }
+    protected Function<Flux<Retry.RetrySignal>, Flux<Throwable>> wrapWithOutOfRetries(
+            Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction,
+            ReactiveHttpRequest request){
+        return signalFlux -> retryFunction.apply(signalFlux)
+                .onErrorResume(throwable -> Mono.just(new OutOfRetriesWrapper(throwable, request)))
+                .zipWith(Flux.range(1, Integer.MAX_VALUE), (throwable, index) -> {
+                    if(throwable instanceof OutOfRetriesWrapper){
+                        if(index == 1){
+                            throw Exceptions.propagate(throwable.getCause());
+                        } else {
+                            logger.debug("[{}]---> USED ALL RETRIES", feignMethodKey, throwable);
+                            throw Exceptions.propagate(new OutOfRetriesException(throwable.getCause(), request));
+                        }
+                    } else {
+                        return throwable;
+                    }
+                });
+    }
 
-  private static class OutOfRetriesWrapper extends ReactiveFeignException {
+    protected static Function<Flux<Retry.RetrySignal>, Flux<Throwable>> wrapWithLog(
+            Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction,
+            String feignMethodTag) {
+        return throwableFlux -> retryFunction.apply(throwableFlux)
+                .doOnNext(throwable -> {
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("[{}]---> RETRYING on error", feignMethodTag, throwable);
+                    }
+                });
+    }
 
-      public OutOfRetriesWrapper(Throwable cause, ReactiveHttpRequest request) {
-          super(cause, request);
-      }
-  }
+    private static class OutOfRetriesWrapper extends ReactiveFeignException {
+
+        public OutOfRetriesWrapper(Throwable cause, ReactiveHttpRequest request) {
+            super(cause, request);
+        }
+    }
 }
