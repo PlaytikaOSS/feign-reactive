@@ -20,6 +20,7 @@ import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.publisher.PublisherHttpClient;
+import reactivefeign.utils.LinkedCaseInsensitiveMap;
 import reactivefeign.utils.Pair;
 import reactor.core.publisher.Mono;
 
@@ -35,7 +36,6 @@ import java.util.stream.Stream;
 import static feign.Util.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.*;
 import static reactivefeign.utils.MultiValueMapUtils.*;
@@ -194,7 +194,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
 
     protected Map<String, List<String>> headers(Object[] argv, Substitutions substitutions) {
 
-        Map<String, List<String>> headers = new LinkedHashMap<>();
+        Map<String, List<String>> headers = new LinkedCaseInsensitiveMap<>();
 
         // headers from template
         methodMetadata.template().headers().keySet()

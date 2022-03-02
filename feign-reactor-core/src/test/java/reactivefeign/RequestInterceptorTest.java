@@ -28,8 +28,10 @@ import reactor.util.context.Context;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
 import static reactivefeign.client.ReactiveHttpRequestInterceptors.addHeaders;
+import static reactivefeign.testcase.IcecreamServiceApi.UPPER_HEADER_TO_REMOVE;
 import static reactivefeign.utils.MultiValueMapUtils.addOrdered;
 
 /**
@@ -93,11 +95,13 @@ abstract public class RequestInterceptorTest extends BaseReactorTest {
             .setPriority(1);
 
     String authHeader = "Authorization";
+
     IcecreamServiceApi clientWithAuth = target(builder()
             .addRequestInterceptor(request -> Mono
                     .subscriberContext()
                     .map(ctx -> {
                       addOrdered(request.headers(), authHeader, ctx.get(authHeader));
+                      request.headers().remove(UPPER_HEADER_TO_REMOVE.toLowerCase());
                       return request;
                     })));
 
@@ -108,6 +112,9 @@ abstract public class RequestInterceptorTest extends BaseReactorTest {
     StepVerifier.create(firstOrder)
             .expectNextMatches(equalsComparingFieldByFieldRecursively(orderGenerated))
             .verifyComplete();
+
+    assertThat(wireMockRule.getAllServeEvents().get(0).getRequest()
+            .containsHeader(UPPER_HEADER_TO_REMOVE)).isFalse();
 
   }
 }

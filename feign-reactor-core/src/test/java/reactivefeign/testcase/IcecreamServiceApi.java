@@ -35,6 +35,7 @@ import java.util.Map;
 public interface IcecreamServiceApi {
 
   RuntimeException RUNTIME_EXCEPTION = new RuntimeException("tests exception");
+  String UPPER_HEADER_TO_REMOVE = "Header-To-Remove";
 
   @RequestLine("GET /icecream/flavors")
   Flux<Flavor> getAvailableFlavors();
@@ -51,6 +52,7 @@ public interface IcecreamServiceApi {
   Flux<Bill> makeOrders(Flux<IceCreamOrder> orders);
 
   @RequestLine("GET /icecream/orders/{orderId}")
+  @Headers(UPPER_HEADER_TO_REMOVE + ": something-to-remove")
   Mono<IceCreamOrder> findOrder(@Param("orderId") int orderId);
 
   @RequestLine("GET /icecream/orders/redirect/{orderId}")
