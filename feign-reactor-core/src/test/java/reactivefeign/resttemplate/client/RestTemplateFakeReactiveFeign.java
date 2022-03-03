@@ -14,7 +14,6 @@
 package reactivefeign.resttemplate.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -105,8 +104,7 @@ public class RestTemplateFakeReactiveFeign {
         else {
 
           HttpComponentsClientHttpRequestFactory requestFactory =
-                  new HttpComponentsClientHttpRequestFactory(
-                          HttpClientBuilder.create().build());
+                  new HttpComponentsClientHttpRequestFactory();
           if (options.getConnectTimeoutMillis() != null) {
             requestFactory.setConnectTimeout(options.getConnectTimeoutMillis().intValue());
           }

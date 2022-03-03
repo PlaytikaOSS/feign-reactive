@@ -19,7 +19,7 @@ class JettyClientHttpConnectorBuilder {
             h2Client.setSelectors(1);
             HttpClientTransportOverHTTP2 transport = new HttpClientTransportOverHTTP2(h2Client);
 
-            httpClient = new HttpClient(transport, null);
+            httpClient = new HttpClient(transport);
         } else {
              httpClient = new HttpClient();
         }

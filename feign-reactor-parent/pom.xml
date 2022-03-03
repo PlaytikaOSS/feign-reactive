@@ -18,15 +18,22 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--BOMs-->
-        <spring-cloud-bom.version>2020.0.2</spring-cloud-bom.version>
-        <spring-boot-dependencies-bom.version>2.5.3</spring-boot-dependencies-bom.version>
+        <spring-cloud-bom.version>2021.0.1</spring-cloud-bom.version>
+        <spring-boot-dependencies-bom.version>2.6.4</spring-boot-dependencies-bom.version>
 
         <!--other-->
+        <!-- versions in spring-boot-dependency       -->
+        <!--        <jetty.version>9.4.45.v20220203</jetty.version>-->
+        <!--        <jetty-reactive-httpclient.version>1.1.11</jetty-reactive-httpclient.version>-->
+
+        <!--        <jetty.version>11.0.8</jetty.version>-->
+        <!--        <jetty-reactive-httpclient.version>3.0.5</jetty-reactive-httpclient.version>-->
+
         <json-reactor.version>0.0.4</json-reactor.version>
 
         <!-- Tests -->
         <junit.version>4.13.2</junit.version>
-        <wiremock.version>2.27.2</wiremock.version>
+        <wiremock.version>2.32.0</wiremock.version>
         <awaitility.version>4.2.0</awaitility.version>
         <blockhound.version>1.0.6.RELEASE</blockhound.version>
         <disruptor.version>3.4.4</disruptor.version>
@@ -48,6 +55,20 @@
         <dependencies>
 
             <!-- BOMs -->
+<!--            <dependency>-->
+<!--                <groupId>org.eclipse.jetty</groupId>-->
+<!--                <artifactId>jetty-bom</artifactId>-->
+<!--                <version>${jetty.version}</version>-->
+<!--                <type>pom</type>-->
+<!--                <scope>import</scope>-->
+<!--            </dependency>-->
+
+<!--            <dependency>-->
+<!--                <groupId>org.eclipse.jetty</groupId>-->
+<!--                <artifactId>jetty-reactive-httpclient</artifactId>-->
+<!--                <version>${jetty-reactive-httpclient.version}</version>-->
+<!--            </dependency>-->
+
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -145,8 +166,9 @@
 
             <dependency>
                 <groupId>com.github.tomakehurst</groupId>
-                <artifactId>wiremock</artifactId>
+                <artifactId>wiremock-jre8-standalone</artifactId>
                 <version>${wiremock.version}</version>
+                <scope>test</scope>
             </dependency>
 
             <!--Needed for tracking blocking calls in reactive application https://github.com/reactor/BlockHound -->

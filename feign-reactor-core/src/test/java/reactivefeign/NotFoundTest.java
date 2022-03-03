@@ -15,13 +15,13 @@ package reactivefeign;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import org.apache.http.HttpStatus;
 import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactor.test.StepVerifier;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static reactivefeign.utils.HttpStatus.SC_NOT_FOUND;
 
 /**
  * @author Sergii Karpenko
@@ -44,7 +44,7 @@ public abstract class NotFoundTest extends BaseReactorTest {
     String orderUrl = "/icecream/orders/2";
     wireMockRule.stubFor(get(urlEqualTo(orderUrl))
         .withHeader("Accept", equalTo("application/json"))
-        .willReturn(aResponse().withStatus(HttpStatus.SC_NOT_FOUND)));
+        .willReturn(aResponse().withStatus(SC_NOT_FOUND)));
 
     IcecreamServiceApi client = builder()
         .decode404()

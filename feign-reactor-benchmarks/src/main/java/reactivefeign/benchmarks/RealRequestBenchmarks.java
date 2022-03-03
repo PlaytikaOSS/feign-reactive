@@ -2,10 +2,6 @@ package reactivefeign.benchmarks;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.common.JettySettings;
-import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.jetty9.JettyHttpServer;
 import feign.Feign;
 import feign.Util;
 import io.netty.buffer.ByteBuf;
@@ -18,12 +14,7 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.http2.client.HTTP2Client;
 import org.eclipse.jetty.http2.client.http.HttpClientTransportOverHTTP2;
 import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
-import org.eclipse.jetty.io.NetworkTrafficListener;
-import org.eclipse.jetty.server.HttpConfiguration;
-import org.eclipse.jetty.server.HttpConnectionFactory;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -43,7 +34,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static reactivefeign.benchmarks.BenchmarkUtils.readJsonFromFile;
 import static reactivefeign.benchmarks.BenchmarkUtils.readJsonFromFileAsBytes;
 
@@ -109,7 +99,7 @@ abstract public class RealRequestBenchmarks {
         h2Client.setSelectors(1);
         HttpClientTransportOverHTTP2 transport = new HttpClientTransportOverHTTP2(h2Client);
 
-        jettyH2cClient = new HttpClient(transport, null);
+        jettyH2cClient = new HttpClient(transport);
         jettyH2cClient.start();
         jettyFeignH2c = JettyReactiveFeign.<FeignReactorTestInterface>builder()
                 .options(new JettyReactiveOptions.Builder().setUseHttp2(true).build())
@@ -196,43 +186,43 @@ abstract public class RealRequestBenchmarks {
         return serverJetty;
     }
 
-    private WireMockServer wireMockH2c(int port){
-        WireMockServer server = new WireMockServer(wireMockConfig()
-                .port(port)
-                .asynchronousResponseEnabled(true));
+//    private WireMockServer wireMockH2c(int port){
+//        WireMockServer server = new WireMockServer(wireMockConfig()
+//                .port(port)
+//                .asynchronousResponseEnabled(true));
+//
+//        server.stubFor(get(urlEqualTo("/"))
+//                .willReturn(aResponse().withStatus(200)));
+//
+//        server.stubFor(post(urlEqualTo(PATH_WITH_PAYLOAD))
+//                .willReturn(aResponse().withStatus(200)
+//                        .withHeader("Content-Type", "application/json")
+//                        .withBody(responseJson)));
+//        return server;
+//    }
 
-        server.stubFor(get(urlEqualTo("/"))
-                .willReturn(aResponse().withStatus(200)));
-
-        server.stubFor(post(urlEqualTo(PATH_WITH_PAYLOAD))
-                .willReturn(aResponse().withStatus(200)
-                        .withHeader("Content-Type", "application/json")
-                        .withBody(responseJson)));
-        return server;
-    }
-
-    private WireMockConfiguration wireMockConfig(){
-        return WireMockConfiguration.wireMockConfig()
-                .httpServerFactory((options, adminRequestHandler, stubRequestHandler) ->
-                        new JettyHttpServer(options, adminRequestHandler, stubRequestHandler) {
-                            @Override
-                            protected ServerConnector createHttpConnector(
-                                    String bindAddress,
-                                    int port,
-                                    JettySettings jettySettings,
-                                    NetworkTrafficListener listener) {
-
-                                HttpConfiguration httpConfig = createHttpConfig(jettySettings);
-
-                                return createServerConnector(
-                                        bindAddress,
-                                        jettySettings,
-                                        port,
-                                        listener,
-                                        new HttpConnectionFactory(httpConfig),
-                                        new HTTP2CServerConnectionFactory(httpConfig)
-                                );
-                            }
-                        });
-    }
+//    private WireMockConfiguration wireMockConfig(){
+//        return WireMockConfiguration.wireMockConfig()
+//                .httpServerFactory((options, adminRequestHandler, stubRequestHandler) ->
+//                        new JettyHttpServer(options, adminRequestHandler, stubRequestHandler) {
+//                            @Override
+//                            protected ServerConnector createHttpConnector(
+//                                    String bindAddress,
+//                                    int port,
+//                                    JettySettings jettySettings,
+//                                    NetworkTrafficListener listener) {
+//
+//                                HttpConfiguration httpConfig = createHttpConfig(jettySettings);
+//
+//                                return createServerConnector(
+//                                        bindAddress,
+//                                        jettySettings,
+//                                        port,
+//                                        listener,
+//                                        new HttpConnectionFactory(httpConfig),
+//                                        new HTTP2CServerConnectionFactory(httpConfig)
+//                                );
+//                            }
+//                        });
+//    }
 }

@@ -18,7 +18,6 @@ import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.FeignException;
 import feign.Request;
 import feign.RetryableException;
-import org.apache.http.HttpStatus;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,6 +32,8 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static reactivefeign.client.statushandler.CompositeStatusHandler.compose;
 import static reactivefeign.client.statushandler.ReactiveStatusHandlers.throwOnStatus;
 import static reactivefeign.utils.FeignUtils.httpMethod;
+import static reactivefeign.utils.HttpStatus.SC_SERVICE_UNAVAILABLE;
+import static reactivefeign.utils.HttpStatus.SC_UNAUTHORIZED;
 
 /**
  * @author Sergii Karpenko
@@ -59,14 +60,14 @@ public abstract class StatusHandlerTest extends BaseReactorTest {
 
     IcecreamServiceApi client = builder()
             .statusHandler(throwOnStatus(
-                    status -> status == HttpStatus.SC_SERVICE_UNAVAILABLE,
+                    status -> status == SC_SERVICE_UNAVAILABLE,
                     (methodTag, response) -> new UnsupportedOperationException("Custom error")))
             .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
 
     wireMockRule.stubFor(get(urlEqualTo("/icecream/orders/1"))
         .withHeader("Accept", equalTo("application/json"))
-        .willReturn(aResponse().withStatus(HttpStatus.SC_SERVICE_UNAVAILABLE)));
+        .willReturn(aResponse().withStatus(SC_SERVICE_UNAVAILABLE)));
 
     StepVerifier.create(client.findFirstOrder().subscribeOn(testScheduler()))
         .expectErrorMatches(customException())
@@ -87,13 +88,13 @@ public abstract class StatusHandlerTest extends BaseReactorTest {
 
     IcecreamServiceApi client = builder()
             .statusHandler(throwOnStatus(
-                    status -> status == HttpStatus.SC_SERVICE_UNAVAILABLE,
+                    status -> status == SC_SERVICE_UNAVAILABLE,
                     (methodTag, response) -> new UnsupportedOperationException("Custom error")))
             .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
 
     wireMockRule.stubFor(get(urlEqualTo("/icecream/mixins"))
-            .willReturn(aResponse().withStatus(HttpStatus.SC_SERVICE_UNAVAILABLE)));
+            .willReturn(aResponse().withStatus(SC_SERVICE_UNAVAILABLE)));
 
     StepVerifier.create(client.getAvailableMixins().subscribeOn(testScheduler()))
             .expectErrorMatches(customException())
@@ -120,17 +121,17 @@ public abstract class StatusHandlerTest extends BaseReactorTest {
   public void shouldThrowOnStatusCode() {
     wireMockRule.stubFor(get(urlEqualTo("/icecream/orders/1"))
         .withHeader("Accept", equalTo("application/json"))
-        .willReturn(aResponse().withStatus(HttpStatus.SC_SERVICE_UNAVAILABLE)));
+        .willReturn(aResponse().withStatus(SC_SERVICE_UNAVAILABLE)));
 
     wireMockRule.stubFor(get(urlEqualTo("/icecream/orders/2"))
         .withHeader("Accept", equalTo("application/json"))
-        .willReturn(aResponse().withStatus(HttpStatus.SC_UNAUTHORIZED)));
+        .willReturn(aResponse().withStatus(SC_UNAUTHORIZED)));
 
 
     IcecreamServiceApi client = builder()
         .statusHandler(compose(
             throwOnStatus(
-                status -> status == HttpStatus.SC_SERVICE_UNAVAILABLE,
+                status -> status == SC_SERVICE_UNAVAILABLE,
                 (methodTag, response) -> {
                   Request.HttpMethod httpMethod = httpMethod(response.request().method());
                   Request request = Request.create(httpMethod, response.request().uri().toString(),
@@ -141,7 +142,7 @@ public abstract class StatusHandlerTest extends BaseReactorTest {
                           httpMethod, null, request);
                 }),
             throwOnStatus(
-                status -> status == HttpStatus.SC_UNAUTHORIZED,
+                status -> status == SC_UNAUTHORIZED,
                 (methodTag, response) -> new RuntimeException("Should login", null))))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 

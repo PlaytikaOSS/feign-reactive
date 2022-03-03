@@ -15,7 +15,6 @@ package reactivefeign;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import org.apache.http.HttpStatus;
 import org.junit.Rule;
 import org.junit.Test;
 import org.reactivestreams.Publisher;
@@ -27,6 +26,7 @@ import reactor.test.StepVerifier;
 import java.util.function.Predicate;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static reactivefeign.utils.HttpStatus.SC_NOT_IMPLEMENTED;
 
 /**
  * @author Sergii Karpenko
@@ -48,7 +48,7 @@ abstract public class ResponseMapperTest extends BaseReactorTest {
 
     wireMockRule.stubFor(get(urlEqualTo("/icecream/orders/1"))
         .withHeader("Accept", equalTo("application/json"))
-        .willReturn(aResponse().withStatus(HttpStatus.SC_NOT_IMPLEMENTED)
+        .willReturn(aResponse().withStatus(SC_NOT_IMPLEMENTED)
                 .withHeader("Content-Type", "application/json")
                 .withBody("Error code: XTRW")));
 
@@ -56,7 +56,7 @@ abstract public class ResponseMapperTest extends BaseReactorTest {
     IcecreamServiceApi clientWithoutAuth = builder()
         .statusHandler(null)
         .responseMapper(response -> {
-          if(response.status() == HttpStatus.SC_NOT_IMPLEMENTED){
+          if(response.status() == SC_NOT_IMPLEMENTED){
             return Mono.just(new DelegatingReactiveHttpResponse<Publisher<?>>(response){
               @Override
               public Publisher<?> body() {

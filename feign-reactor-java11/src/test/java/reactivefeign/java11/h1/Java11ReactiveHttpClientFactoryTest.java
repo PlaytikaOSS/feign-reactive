@@ -12,7 +12,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
-import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
 public class Java11ReactiveHttpClientFactoryTest {

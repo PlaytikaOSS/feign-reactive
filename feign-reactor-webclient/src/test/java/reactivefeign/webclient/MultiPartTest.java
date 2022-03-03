@@ -138,10 +138,10 @@ public class MultiPartTest extends BaseReactorTest {
 
         @PostMapping(path = "/multipartBody")
         public Mono<Map<String, List<ByteBuffer>>> multipartBody(@RequestBody Flux<Part> parts) {
-            return parts.collectMap(Part::name, part -> part.content().map(DataBuffer::asByteBuffer).collectList().block());
+            return parts.collectMap(Part::name, part -> part.content().map(DataBuffer::asByteBuffer).collectList()
+                    .share().block());
         }
     }
-
 
     @Configuration
     @Profile("netty")

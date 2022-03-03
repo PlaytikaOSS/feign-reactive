@@ -16,7 +16,6 @@ package reactivefeign.rx2;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.FeignException;
-import org.apache.http.HttpStatus;
 import org.junit.ClassRule;
 import org.junit.Test;
 import reactivefeign.ReactiveFeign;
@@ -30,6 +29,7 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 import static java.util.Collections.singletonList;
 import static reactivefeign.client.ReactiveHttpRequestInterceptors.addHeaders;
 import static reactivefeign.rx2.TestUtils.equalsComparingFieldByFieldRecursivelyRx;
+import static reactivefeign.utils.HttpStatus.SC_UNAUTHORIZED;
 
 /**
  * @author Sergii Karpenko
@@ -54,7 +54,7 @@ public class RequestInterceptorTest {
 
     wireMockRule.stubFor(get(urlEqualTo(orderUrl))
         .withHeader("Accept", equalTo("application/json"))
-        .willReturn(aResponse().withStatus(HttpStatus.SC_UNAUTHORIZED)))
+        .willReturn(aResponse().withStatus(SC_UNAUTHORIZED)))
         .setPriority(100);
 
     wireMockRule.stubFor(get(urlEqualTo(orderUrl))

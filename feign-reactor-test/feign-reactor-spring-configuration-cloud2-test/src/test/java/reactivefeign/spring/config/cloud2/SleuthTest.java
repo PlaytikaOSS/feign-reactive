@@ -28,15 +28,11 @@ import org.springframework.web.bind.annotation.RestController;
 import reactivefeign.spring.config.EnableReactiveFeignClients;
 import reactivefeign.spring.config.ReactiveFeignClient;
 import reactor.core.publisher.Mono;
-import zipkin2.reporter.Reporter;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.BDDAssertions.then;
 import static reactivefeign.spring.config.cloud2.SleuthTest.FEIGN_CLIENT_TEST_SLEUTH;
 
 @RunWith(SpringRunner.class)
@@ -46,7 +42,6 @@ import static reactivefeign.spring.config.cloud2.SleuthTest.FEIGN_CLIENT_TEST_SL
         "spring.sleuth.enabled=true",
         "spring.cloud.discovery.client.simple.instances."+ FEIGN_CLIENT_TEST_SLEUTH +"[0].uri=http://localhost:8080"},
         locations = "classpath:common.properties")
-@DirtiesContext
 public class SleuthTest {
 
     static final String TRACE_ID_NAME = "X-B3-TraceId";
@@ -77,23 +72,23 @@ public class SleuthTest {
         Span span = this.tracer.nextSpan().name("foo").start();
 
         try (Tracer.SpanInScope ws = this.tracer.withSpanInScope(span)) {
-            String currentTraceId = tracer.currentSpan().context().traceIdString();
-            String currentSpanId = tracer.currentSpan().context().spanIdString();
 
             Map<String, String> response = feignClient.headers()
                     .contextWrite(context -> context.put(TraceContext.class, new BraveTraceContext(span.context())))
                     .block();
 
+            String currentTraceId = tracer.currentSpan().context().traceIdString();
+            String currentSpanId = tracer.currentSpan().context().spanIdString();
+
             assertThat(response.get(TRACE_ID_NAME)).isEqualTo(currentTraceId);
             assertThat(response.get(PARENT_SPAN_ID_NAME)).isEqualTo(currentSpanId);
-            assertThat(response.get(SPAN_ID_NAME)).isNotEqualTo(currentSpanId);
         }
         finally {
             span.finish();
         }
 
-        then(this.tracer.currentSpan()).isNull();
-        then(this.spans.spans()).isNotEmpty();
+        assertThat(this.tracer.currentSpan()).isNull();
+        assertThat(this.spans.spans()).isNotEmpty();
     }
 
     @ReactiveFeignClient(name = FEIGN_CLIENT_TEST_SLEUTH)

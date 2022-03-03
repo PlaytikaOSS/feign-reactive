@@ -35,14 +35,14 @@ import java.util.List;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
 import static java.util.stream.Collectors.toList;
-import static org.apache.http.HttpHeaders.RETRY_AFTER;
-import static org.apache.http.HttpStatus.SC_OK;
-import static org.apache.http.HttpStatus.SC_SERVICE_UNAVAILABLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
 import static reactivefeign.client.statushandler.ReactiveStatusHandlers.errorDecoder;
 import static reactivefeign.retry.BasicReactiveRetryPolicy.retry;
 import static reactivefeign.retry.FilteredReactiveRetryPolicy.notRetryOn;
+import static reactivefeign.utils.HttpStatus.SC_OK;
+import static reactivefeign.utils.HttpStatus.SC_SERVICE_UNAVAILABLE;
+import static wiremock.com.google.common.net.HttpHeaders.RETRY_AFTER;
 
 /**
  * @author Sergii Karpenko

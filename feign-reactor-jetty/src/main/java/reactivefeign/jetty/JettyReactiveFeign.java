@@ -42,7 +42,7 @@ public final class JettyReactiveFeign {
                     h2Client.setSelectors(1);
                     HttpClientTransportOverHTTP2 transport = new HttpClientTransportOverHTTP2(h2Client);
 
-                    HttpClient httpClient = new HttpClient(transport, null);
+                    HttpClient httpClient = new HttpClient(transport);
                     httpClient.start();
                     return httpClient;
                 } else {

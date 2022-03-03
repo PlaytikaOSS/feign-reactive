@@ -74,17 +74,6 @@
             <artifactId>rxnetty</artifactId>
             <version>0.5.1</version>
         </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-codec-http</artifactId>
-            <version>5.0.0.Alpha2</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock</artifactId>
-        </dependency>
-
 
         <!--Test-->
         <dependency>

@@ -105,14 +105,12 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 	@Override
 	public Mono<ReactiveHttpResponse> executeRequest(ReactiveHttpRequest request) {
 		Request jettyRequest = httpClient.newRequest(request.uri()).method(request.method());
+
+//		jettyRequest.headers(httpFields -> setUpHeaders(request, httpFields));
 		setUpHeaders(request, jettyRequest.getHeaders());
+
 		if(requestTimeout > 0){
 			jettyRequest.timeout(requestTimeout, TimeUnit.MILLISECONDS);
-		}
-		if(tryUseCompression){
-			jettyRequest.getHeaders().put(ACCEPT_ENCODING.asString(), singletonList(GZIP));
-		} else {
-			jettyRequest.getHeaders().remove(ACCEPT_ENCODING.asString());
 		}
 
 		ReactiveRequest.Builder requestBuilder = ReactiveRequest.newBuilder(jettyRequest);
@@ -158,6 +156,12 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 			acceptHeader = APPLICATION_STREAM_JSON;
 		}
 		httpHeaders.put(ACCEPT.asString(), singletonList(acceptHeader));
+
+		if(tryUseCompression){
+			httpHeaders.put(ACCEPT_ENCODING.asString(), singletonList(GZIP));
+		} else {
+			httpHeaders.remove(ACCEPT_ENCODING.asString());
+		}
 	}
 
 	protected ReactiveRequest.Content provideBody(ReactiveHttpRequest request) {
