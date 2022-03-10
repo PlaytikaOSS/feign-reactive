@@ -10,7 +10,7 @@ import java.util.function.Function;
  */
 public interface ReactiveRetryPolicy {
 
-    Function<Flux<Retry.RetrySignal>, Flux<Throwable>> toRetryFunction();
+    Retry retry();
 
     interface Builder {
         ReactiveRetryPolicy build();

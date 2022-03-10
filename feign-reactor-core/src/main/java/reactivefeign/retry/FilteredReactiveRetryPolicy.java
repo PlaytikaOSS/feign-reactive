@@ -1,7 +1,9 @@
 package reactivefeign.retry;
 
+import org.reactivestreams.Publisher;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
 import java.util.function.Function;
@@ -16,7 +18,7 @@ public class FilteredReactiveRetryPolicy implements ReactiveRetryPolicy {
     public static FilteredReactiveRetryPolicy notRetryOn(ReactiveRetryPolicy retryPolicy, Class<? extends Throwable>... errorClasses) {
         return new FilteredReactiveRetryPolicy(retryPolicy,
                 throwable -> Stream.of(errorClasses)
-                .noneMatch(errorClass -> errorClass.isAssignableFrom(throwable.getClass())));
+                        .noneMatch(errorClass -> errorClass.isAssignableFrom(throwable.getClass())));
     }
 
     public FilteredReactiveRetryPolicy(ReactiveRetryPolicy retryPolicy, Predicate<Throwable> toRetryOn) {
@@ -25,21 +27,24 @@ public class FilteredReactiveRetryPolicy implements ReactiveRetryPolicy {
     }
 
     @Override
-    public Function<Flux<Retry.RetrySignal>, Flux<Throwable>> toRetryFunction() {
-        return filter(retryPolicy.toRetryFunction(), toRetryOn);
+    public Retry retry() {
+        return filter(retryPolicy.retry(), toRetryOn);
     }
 
-    static Function<Flux<Retry.RetrySignal>, Flux<Throwable>> filter(
-            Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction,
+    static Retry filter(
+            Retry retry,
             Predicate<Throwable> toRetryOn){
-        return errors -> retryFunction.apply(
-                errors.map(throwable -> {
-                    if(toRetryOn.test(throwable.failure())){
-                        return throwable;
+        return new Retry(){
+            @Override
+            public Publisher<?> generateCompanion(Flux<RetrySignal> retrySignals) {
+                return retry.generateCompanion(retrySignals.map(retrySignal -> {
+                    if (toRetryOn.test(retrySignal.failure())) {
+                        return retrySignal;
                     } else {
-                        throw Exceptions.propagate(throwable.failure());
+                        throw Exceptions.propagate(retrySignal.failure());
                     }
-                })
-        );
+                }));
+            }
+        };
     }
 }

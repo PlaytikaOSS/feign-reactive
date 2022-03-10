@@ -20,8 +20,6 @@ import reactivefeign.publisher.PublisherHttpClient;
 import reactor.core.publisher.Flux;
 import reactor.util.retry.Retry;
 
-import java.util.function.Function;
-
 /**
  * Wraps {@link PublisherHttpClient} with retry logic provided by retryFunction
  *
@@ -30,14 +28,15 @@ import java.util.function.Function;
 public class FluxRetryPublisherHttpClient extends RetryPublisherHttpClient {
 
   public FluxRetryPublisherHttpClient(
-          PublisherHttpClient publisherClient, MethodMetadata methodMetadata,
-          Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction) {
-    super(publisherClient, methodMetadata, retryFunction);
+          PublisherHttpClient publisherClient,
+          MethodMetadata methodMetadata,
+          Retry retry) {
+    super(publisherClient, methodMetadata, retry);
   }
 
   @Override
   public Publisher<Object> executeRequest(ReactiveHttpRequest request) {
-    Flux<Object> response = Flux.from(publisherClient.executeRequest(request));
-    return response.retryWhen(Retry.from(wrapWithOutOfRetries(retryFunction, request)));
+    return Flux.from(publisherClient.executeRequest(request))
+            .retryWhen(getRetry(request));
   }
 }

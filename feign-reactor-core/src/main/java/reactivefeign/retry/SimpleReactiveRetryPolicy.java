@@ -21,7 +21,6 @@ import reactor.util.function.Tuples;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
-import java.util.function.Function;
 
 /**
  * @author Sergii Karpenko
@@ -42,8 +41,8 @@ public abstract class SimpleReactiveRetryPolicy implements ReactiveRetryPolicy {
   abstract public long retryDelay(Throwable error, int attemptNo);
 
   @Override
-  public Function<Flux<Retry.RetrySignal>, Flux<Throwable>> toRetryFunction() {
-    return errors -> errors
+  public Retry retry() {
+    return Retry.from(errors -> errors
         .zipWith(Flux.range(1, Integer.MAX_VALUE), (signal, index) -> {
           long delay = retryDelay(signal.failure(), index);
           if (delay >= 0) {
@@ -55,6 +54,6 @@ public abstract class SimpleReactiveRetryPolicy implements ReactiveRetryPolicy {
             tuple2 -> tuple2.getT1() > 0
                 ? Mono.delay(Duration.ofMillis(tuple2.getT1()), scheduler)
                     .map(time -> tuple2.getT2().failure())
-                : Mono.just(tuple2.getT2().failure()));
+                : Mono.just(tuple2.getT2().failure())));
   }
 }

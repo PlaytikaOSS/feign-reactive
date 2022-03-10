@@ -17,11 +17,8 @@ import feign.MethodMetadata;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.publisher.PublisherHttpClient;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
-
-import java.util.function.Function;
 
 /**
  * Wraps {@link PublisherHttpClient} with retry logic provided by retryFunction
@@ -31,14 +28,15 @@ import java.util.function.Function;
 public class MonoRetryPublisherHttpClient extends RetryPublisherHttpClient {
 
   public MonoRetryPublisherHttpClient(
-          PublisherHttpClient publisherClient, MethodMetadata methodMetadata,
-          Function<Flux<Retry.RetrySignal>, Flux<Throwable>> retryFunction) {
-    super(publisherClient, methodMetadata, retryFunction);
+          PublisherHttpClient publisherClient,
+          MethodMetadata methodMetadata,
+          Retry retry) {
+    super(publisherClient, methodMetadata, retry);
   }
 
   @Override
   public Publisher<Object> executeRequest(ReactiveHttpRequest request) {
-    Mono<Object> response = Mono.from(publisherClient.executeRequest(request));
-    return response.retryWhen(Retry.from(wrapWithOutOfRetries(retryFunction, request)));
+    return Mono.from(publisherClient.executeRequest(request))
+            .retryWhen(getRetry(request));
   }
 }
