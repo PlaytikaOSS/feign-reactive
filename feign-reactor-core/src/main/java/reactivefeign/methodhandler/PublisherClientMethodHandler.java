@@ -17,6 +17,7 @@ import feign.*;
 import feign.querymap.FieldQueryMapEncoder;
 import feign.template.UriUtils;
 import org.reactivestreams.Publisher;
+import org.reactivestreams.Subscriber;
 import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.publisher.PublisherHttpClient;
@@ -38,6 +39,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.*;
+import static reactivefeign.utils.HttpUtils.CONTENT_TYPE_HEADER;
+import static reactivefeign.utils.HttpUtils.MULTIPART_MIME_TYPES;
 import static reactivefeign.utils.MultiValueMapUtils.*;
 import static reactivefeign.utils.StringUtils.cutPrefix;
 import static reactivefeign.utils.StringUtils.cutTail;
@@ -63,6 +66,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
     private final URI staticUri;
 
     private final QueryMapEncoder queryMapEncoder = new FieldQueryMapEncoder();
+    private final boolean isMultipart;
 
     public PublisherClientMethodHandler(Target<?> target,
                                         MethodMetadata methodMetadata,
@@ -76,8 +80,14 @@ public class PublisherClientMethodHandler implements MethodHandler {
         this.headerExpanders = buildExpanders(requestTemplate.headers());
 
         this.queriesAll = new HashMap<>(requestTemplate.queries());
-        methodMetadata.formParams()
-                .forEach(param -> add(queriesAll, param, "{" + param + "}"));
+        this.isMultipart = isMultipartForm(requestTemplate.headers());
+        if(isMultipart && methodMetadata.template().bodyTemplate() != null){
+            throw new IllegalArgumentException("isMultipart && methodMetadata.template().bodyTemplate() != null");
+        }
+        if(!isMultipart) {
+            methodMetadata.formParams()
+                    .forEach(param -> add(queriesAll, param, "{" + param + "}"));
+        }
         this.queryExpanders = buildExpanders(queriesAll);
 
         //static template (POST & PUT)
@@ -109,7 +119,9 @@ public class PublisherClientMethodHandler implements MethodHandler {
 
         Map<String, List<String>> headers = headers(argsExpanded, substitutions);
 
-        return new ReactiveHttpRequest(methodMetadata, target, uri, headers, body(argsExpanded));
+        Publisher<Object> body = body(argsExpanded, substitutions);
+
+        return new ReactiveHttpRequest(methodMetadata, target, uri, headers, body);
     }
 
     private URI buildUri(Object[] argv, Substitutions substitutions) {
@@ -221,9 +233,19 @@ public class PublisherClientMethodHandler implements MethodHandler {
         return headers;
     }
 
-    protected Publisher<Object> body(Object[] argv) {
+    protected Publisher<Object> body(
+            Object[] argv,
+            Substitutions substitutions) {
         if (methodMetadata.bodyIndex() != null) {
             return body(argv[methodMetadata.bodyIndex()]);
+        } else if(isMultipart) {
+            Map<String, List<Object>> formVariables = new LinkedHashMap<>();
+            for (Map.Entry<String, Object> entry : substitutions.placeholderToSubstitution.entrySet()) {
+                if (methodMetadata.formParams().contains(entry.getKey())) {
+                    formVariables.put(entry.getKey(), singletonList(entry.getValue()));
+                }
+            }
+            return new MultipartMap(formVariables);
         } else {
             return Mono.empty();
         }
@@ -423,4 +445,27 @@ public class PublisherClientMethodHandler implements MethodHandler {
         return values;
     }
 
+    public static class MultipartMap implements Publisher<Object> {
+
+        private final Map<String, List<Object>> map;
+
+        public MultipartMap(Map<String, List<Object>> map) {
+            this.map = map;
+        }
+
+        public Map<String, List<Object>> getMap() {
+            return map;
+        }
+
+        @Override
+        public void subscribe(Subscriber<? super Object> s) {
+            throw new UnsupportedOperationException();
+        }
+    }
+
+    public boolean isMultipartForm(Map<String, Collection<String>> headers){
+        return headers.entrySet().stream()
+                .anyMatch(entry -> entry.getKey().equalsIgnoreCase(CONTENT_TYPE_HEADER)
+                && MULTIPART_MIME_TYPES.contains(entry.getValue().iterator().next().toLowerCase()));
+    }
 }

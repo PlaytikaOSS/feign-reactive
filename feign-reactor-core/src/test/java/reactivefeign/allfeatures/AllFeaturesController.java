@@ -102,7 +102,7 @@ public class AllFeaturesController implements AllFeaturesMvc {
 	}
 
 	@Override
-	public Mono<MultiValueMap<String, String>> mirrorMultiMapHeaders(
+	public Mono<Map<String, List<String>>> mirrorMultiMapHeaders(
 			//Spring can't treat Map<String, List<String>> correctly
 			MultiValueMap<String, String> param) {
 		return just(param);

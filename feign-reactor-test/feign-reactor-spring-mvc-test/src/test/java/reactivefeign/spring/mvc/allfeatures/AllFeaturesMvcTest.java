@@ -24,9 +24,9 @@ import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDeta
 import org.springframework.cloud.openfeign.support.SpringMvcContract;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.test.context.ActiveProfiles;
+import reactivefeign.ReactiveFeign;
 import reactivefeign.allfeatures.AllFeaturesApi;
 import reactivefeign.allfeatures.AllFeaturesTest;
-import reactivefeign.jetty.JettyReactiveFeign;
 import reactor.test.StepVerifier;
 
 import java.util.HashMap;
@@ -42,11 +42,13 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 @EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
 @ActiveProfiles("netty")
-public class AllFeaturesMvcTest extends AllFeaturesTest{
+abstract public class AllFeaturesMvcTest extends AllFeaturesTest{
+
+	abstract protected ReactiveFeign.Builder<AllFeaturesMvc> builder();
 
 	@Override
 	protected AllFeaturesApi buildClient(String url){
-		return JettyReactiveFeign.<AllFeaturesMvc>builder()
+		return builder()
 				.decode404()
 				.contract(new SpringMvcContract(emptyList(), new DefaultFormattingConversionService()))
 				.target(AllFeaturesMvc.class, url);

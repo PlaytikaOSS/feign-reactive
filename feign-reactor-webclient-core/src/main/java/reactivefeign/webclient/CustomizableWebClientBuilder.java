@@ -57,7 +57,7 @@ public class CustomizableWebClientBuilder implements WebClient.Builder {
     }
 
     public WebClient.Builder addMultipartCodec(WebClient.Builder builder) {
-        builder = builder.codecs(clientCodecConfigurer -> clientCodecConfigurer.customCodecs().register(
+        return builder.codecs(clientCodecConfigurer -> clientCodecConfigurer.customCodecs().register(
                 //fix PartHttpMessageWriter
                 new PartHttpMessageWriter(){
                     @Override
@@ -78,7 +78,6 @@ public class CustomizableWebClientBuilder implements WebClient.Builder {
                         return false;
                     }
                 }));
-        return builder;
     }
 
     @Override

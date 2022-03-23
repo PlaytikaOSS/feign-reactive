@@ -163,6 +163,4 @@ public interface AllFeaturesMvc extends reactivefeign.allfeatures.AllFeaturesApi
 			@DateTimeFormat(pattern = DATE_TIME_FORMAT)
 			@RequestParam("dateTime") LocalDateTime dateTime);
 
-
-
 }

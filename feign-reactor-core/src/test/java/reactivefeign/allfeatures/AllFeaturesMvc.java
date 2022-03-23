@@ -68,7 +68,7 @@ public interface AllFeaturesMvc {
 			@RequestHeader("Method-Header") List<Long> param);
 
 	@GetMapping(path = "/mirrorMultiMapHeaders")
-	Mono<MultiValueMap<String, String>> mirrorMultiMapHeaders(
+	Mono<Map<String, List<String>>> mirrorMultiMapHeaders(
 			//Spring can't treat Map<String, List<String>> correctly
 			@RequestHeader MultiValueMap<String, String> param);
 

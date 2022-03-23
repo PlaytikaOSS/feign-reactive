@@ -13,6 +13,11 @@
  */
 package reactivefeign.utils;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 import static reactivefeign.utils.HttpUtils.StatusCodeFamily.*;
 
 public final class HttpUtils {
@@ -28,6 +33,11 @@ public final class HttpUtils {
   public static final String APPLICATION_STREAM_JSON = "application/stream+json";
   public static final String APPLICATION_STREAM_JSON_UTF_8 = APPLICATION_STREAM_JSON+";charset=utf-8";
 
+  public static final String MULTIPART_FORM_DATA = "multipart/form-data";
+  public static final String MULTIPART_MIXED = "multipart/mixed";
+  public static final String MULTIPART_RELATED = "multipart/related";
+  public static final Set<String> MULTIPART_MIME_TYPES = Collections.unmodifiableSet(new HashSet<>(
+          Arrays.asList(MULTIPART_FORM_DATA, MULTIPART_MIXED, MULTIPART_RELATED)));
 
   public static final byte[] NEWLINE_SEPARATOR = {'\n'};
   public static final String CONTENT_TYPE_HEADER = "Content-Type";

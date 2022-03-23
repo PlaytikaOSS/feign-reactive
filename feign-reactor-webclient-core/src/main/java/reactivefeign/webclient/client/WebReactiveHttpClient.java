@@ -23,6 +23,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ClientHttpRequest;
+import org.springframework.util.MultiValueMapAdapter;
 import org.springframework.web.reactive.function.BodyInserter;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -31,6 +32,7 @@ import reactivefeign.client.ReactiveFeignException;
 import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
+import reactivefeign.methodhandler.PublisherClientMethodHandler;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.ParameterizedType;
@@ -39,6 +41,7 @@ import java.util.function.BiFunction;
 
 import static feign.Util.resolveLastTypeParameter;
 import static java.util.Optional.ofNullable;
+import static org.springframework.core.ParameterizedTypeReference.forType;
 import static reactivefeign.utils.FeignUtils.*;
 
 /**
@@ -57,8 +60,7 @@ public class WebReactiveHttpClient<P extends Publisher<?>> implements ReactiveHt
 			BiFunction<ReactiveHttpRequest, Throwable, Throwable> errorMapper) {
 
 		Type returnPublisherType = returnPublisherType(methodMetadata);
-		ParameterizedTypeReference<?> returnActualType =
-				ParameterizedTypeReference.forType(returnActualType(methodMetadata));
+		ParameterizedTypeReference<?> returnActualType = forType(returnActualType(methodMetadata));
 
 		ParameterizedTypeReference<Object> bodyActualType = ofNullable(
 				getBodyActualType(methodMetadata.bodyType()))
@@ -70,8 +72,7 @@ public class WebReactiveHttpClient<P extends Publisher<?>> implements ReactiveHt
 			Type entityType = resolveLastTypeParameter(returnActualType.getType(), ResponseEntity.class);
 
 			Type entityPublisherType = returnPublisherType(entityType);
-			ParameterizedTypeReference<?> entityActualType =
-					ParameterizedTypeReference.forType(returnActualType(entityType));
+			ParameterizedTypeReference<?> entityActualType = forType(returnActualType(entityType));
 
 			return new WebReactiveHttpClient<>(webClient, bodyActualType,
 					(request, response) -> new WebReactiveHttpEntityResponse<>(request, response, entityPublisherType, entityActualType),
@@ -120,9 +121,14 @@ public class WebReactiveHttpClient<P extends Publisher<?>> implements ReactiveHt
 	}
 
 	protected BodyInserter<?, ? super ClientHttpRequest> provideBody(ReactiveHttpRequest request) {
-		return bodyActualType != null
-                ? BodyInserters.fromPublisher(request.body(), bodyActualType)
-                : BodyInserters.empty();
+		if(bodyActualType != null){
+			return BodyInserters.fromPublisher(request.body(), bodyActualType);
+		} else if(request.body() instanceof PublisherClientMethodHandler.MultipartMap){
+			return BodyInserters.fromMultipartData(new MultiValueMapAdapter<>(
+					((PublisherClientMethodHandler.MultipartMap) request.body()).getMap()));
+		} else {
+			return BodyInserters.empty();
+		}
 	}
 
 	protected void setUpHeaders(ReactiveHttpRequest request, HttpHeaders httpHeaders) {
