@@ -1,11 +1,13 @@
 package reactivefeign.client;
 
-public class ReactiveFeignException extends RuntimeException{
+public class ReactiveFeignException extends RuntimeException {
+
+    public static final String MESSAGE_PATTERN = "Problem with the request: %s";
 
     private final ReactiveHttpRequest request;
 
     public ReactiveFeignException(Throwable cause, ReactiveHttpRequest request) {
-        super(cause);
+        super(String.format(MESSAGE_PATTERN, request), cause);
         this.request = request;
     }
 

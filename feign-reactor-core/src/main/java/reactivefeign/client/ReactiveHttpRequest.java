@@ -85,4 +85,18 @@ public final class ReactiveHttpRequest {
     return methodMetadata.configKey();
   }
 
+  public Target<?> target() {
+    return target;
+  }
+
+  @Override
+  public String toString() {
+    return "ReactiveHttpRequest{" +
+            "methodMetadata=" + methodMetadata +
+            ", target=" + target +
+            ", uri=" + uri +
+            ", headers=" + headers +
+            ", body=" + body +
+            '}';
+  }
 }
