@@ -29,16 +29,18 @@ public class WebReactiveOptions extends ReactiveOptions {
   private final Long readTimeoutMillis;
   private final Long writeTimeoutMillis;
   private final Long responseTimeoutMillis;
+  private final Boolean disableSslValidation;
 
   private WebReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis,
                              Long readTimeoutMillis, Long writeTimeoutMillis, Long responseTimeoutMillis,
                              Boolean tryUseCompression, Boolean followRedirects,
-                             ProxySettings proxySettings) {
+                             ProxySettings proxySettings, Boolean disableSslValidation) {
     super(useHttp2, connectTimeoutMillis, tryUseCompression, followRedirects, proxySettings);
 
     this.readTimeoutMillis = readTimeoutMillis;
     this.writeTimeoutMillis = writeTimeoutMillis;
     this.responseTimeoutMillis = responseTimeoutMillis;
+    this.disableSslValidation = disableSslValidation;
   }
 
   public Long getReadTimeoutMillis() {
@@ -57,10 +59,15 @@ public class WebReactiveOptions extends ReactiveOptions {
     return super.isEmpty() && readTimeoutMillis == null && writeTimeoutMillis == null;
   }
 
+  public Boolean isDisableSslValidation() {
+    return disableSslValidation;
+  }
+
   public static class Builder extends ReactiveOptions.Builder{
     private Long readTimeoutMillis;
     private Long writeTimeoutMillis;
     private Long responseTimeoutMillis;
+    private Boolean disableSslValidation;
 
     public Builder() {}
 
@@ -79,10 +86,16 @@ public class WebReactiveOptions extends ReactiveOptions {
       return this;
     }
 
+    public Builder setDisableSslValidation(boolean disableSslValidation) {
+      this.disableSslValidation = disableSslValidation;
+      return this;
+    }
+
     public WebReactiveOptions build() {
       return new WebReactiveOptions(useHttp2, connectTimeoutMillis,
-              readTimeoutMillis, writeTimeoutMillis, responseTimeoutMillis,
-              acceptCompressed, followRedirects, proxySettings);
+                                    readTimeoutMillis, writeTimeoutMillis, responseTimeoutMillis,
+                                    acceptCompressed, followRedirects, proxySettings, disableSslValidation
+      );
     }
   }
 

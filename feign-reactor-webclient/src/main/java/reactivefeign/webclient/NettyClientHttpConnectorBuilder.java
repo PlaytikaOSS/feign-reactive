@@ -1,18 +1,27 @@
 package reactivefeign.webclient;
 
 import io.netty.channel.ChannelOption;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.TcpClient;
 import reactor.netty.transport.ProxyProvider;
 
+import javax.net.ssl.SSLException;
 import java.time.Duration;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 class NettyClientHttpConnectorBuilder {
+
+    private static final Log LOG = LogFactory.getLog(NettyClientHttpConnectorBuilder.class);
 
     public static ClientHttpConnector buildNettyClientHttpConnector(WebReactiveOptions webOptions) {
         TcpClient tcpClient = TcpClient.create();
@@ -54,10 +63,22 @@ class NettyClientHttpConnectorBuilder {
         if (webOptions.isTryUseCompression() != null) {
             httpClient = httpClient.compress(true);
         }
+
         if (webOptions.isFollowRedirects() != null) {
             httpClient = httpClient.followRedirect(webOptions.isFollowRedirects());
         }
-        
+
+        if (Objects.equals(Boolean.TRUE, webOptions.isDisableSslValidation())) {
+            try {
+                SslContext sslContext = SslContextBuilder.forClient()
+                        .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                        .build();
+                httpClient = httpClient.secure(t -> t.sslContext(sslContext));
+            } catch (SSLException e) {
+                LOG.warn("Error creating SSLContext. The WebClient will verify all new HTTPS calls", e);
+            }
+        }
+
         return new ReactorClientHttpConnector(httpClient);
     }
 }
