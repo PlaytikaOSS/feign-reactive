@@ -73,7 +73,7 @@ class NettyClientHttpConnectorBuilder {
                 SslContext sslContext = SslContextBuilder.forClient()
                         .trustManager(InsecureTrustManagerFactory.INSTANCE)
                         .build();
-                httpClient = httpClient.secure(t -> t.sslContext(sslContext));
+                httpClient = httpClient.secure(sslProviderBuilder -> sslProviderBuilder.sslContext(sslContext));
             } catch (SSLException e) {
                 LOG.warn("Error creating SSLContext. The WebClient will verify all new HTTPS calls", e);
             }

@@ -35,7 +35,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
 
 /**
- * @author Sergii Karpenko
+ * @author Panagiotis Rikarnto Siavelis
  */
 public class SslVerificationTest extends reactivefeign.BaseReactorTest {
 
