@@ -38,7 +38,7 @@
         <blockhound.version>1.0.6.RELEASE</blockhound.version>
         <disruptor.version>3.4.4</disruptor.version>
         <spring-cloud-starter-sleuth.version>3.1.1</spring-cloud-starter-sleuth.version>
-        <brave-tests.version>5.13.7</brave-tests.version>
+        <brave-tests.version>5.13.10</brave-tests.version>
 
         <!-- Plugins -->
         <jacoco-plugin.version>0.8.7</jacoco-plugin.version>
