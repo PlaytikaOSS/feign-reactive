@@ -27,6 +27,7 @@ import org.springframework.web.client.RestTemplate;
 import reactivefeign.client.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -79,7 +80,7 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
                 request.uri(), HttpMethod.valueOf(request.method()),
                 new HttpEntity<>(body, headers), responseType());
         return new FakeReactiveHttpResponse(request, response, returnPublisherType);
-      });
+      }).subscribeOn(Schedulers.boundedElastic());
     })
             .onErrorResume(HttpStatusCodeException.class,
                     ex -> Mono.just(new ErrorReactiveHttpResponse(request, ex)))
