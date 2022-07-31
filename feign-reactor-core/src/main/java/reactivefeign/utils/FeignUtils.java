@@ -64,6 +64,10 @@ public class FeignUtils {
   }
 
   public static Type returnActualType(Type returnType) {
+    if (!(returnType instanceof ParameterizedType)) {
+      return returnType;
+    }
+
     Class<?> publisher = (Class)((ParameterizedType) returnType).getRawType();
     Type typeInPublisher = resolveLastTypeParameter(returnType, publisher);
     if(isResponsePublisher(publisher, typeInPublisher)){

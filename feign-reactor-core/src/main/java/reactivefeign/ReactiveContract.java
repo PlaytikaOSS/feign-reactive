@@ -48,7 +48,13 @@ public class ReactiveContract implements Contract {
 
     for (final MethodMetadata metadata : methodsMetadata) {
       final Type type = metadata.returnType();
-      if (!isReactorType(type)) {
+
+      boolean isSuspend = MethodKt.isSuspend(metadata.method());
+      if (isSuspend) {
+        modifySuspendMethodMetadata(metadata);
+      }
+
+      if (!isReactorType(type) && !isSuspend) {
         throw new IllegalArgumentException(String.format(
             "Method %s of contract %s doesn't returns reactor.core.publisher.Mono or reactor.core.publisher.Flux",
             metadata.configKey(), targetType.getSimpleName()));
@@ -62,6 +68,23 @@ public class ReactiveContract implements Contract {
     }
 
     return methodsMetadata;
+  }
+
+  private static void modifySuspendMethodMetadata(MethodMetadata metadata) {
+    Type kotlinMethodReturnType = MethodKt.getKotlinMethodReturnType(metadata.method());
+    if (kotlinMethodReturnType == null) {
+      throw new IllegalArgumentException(String.format(
+          "Method %s can't have continuation argument, only kotlin method is allowed",
+          metadata.configKey()));
+    }
+    metadata.returnType(kotlinMethodReturnType);
+
+    int continuationIndex = metadata.method().getParameterCount() - 1;
+    metadata.ignoreParamater(continuationIndex);
+
+    if(metadata.bodyIndex() != null && metadata.bodyIndex().equals(continuationIndex)) {
+      metadata.bodyIndex(null);
+    }
   }
 
   private static final Set<Class> REACTOR_PUBLISHERS = new HashSet<>(asList(Mono.class, Flux.class));
