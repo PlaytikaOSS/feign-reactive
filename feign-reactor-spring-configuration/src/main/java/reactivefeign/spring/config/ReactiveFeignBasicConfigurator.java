@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.codec.ErrorDecoder;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
+import reactivefeign.client.ReactiveErrorMapper;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReactiveHttpRequestInterceptors;
 import reactivefeign.client.log.ReactiveLoggerListener;
@@ -92,6 +93,11 @@ public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigu
 			resultBuilder = resultBuilder.statusHandler(statusHandler);
 		}
 
+		ReactiveErrorMapper errorMapper = namedContext.getOptional(ReactiveErrorMapper.class);
+		if(errorMapper != null){
+			resultBuilder = resultBuilder.errorMapper(errorMapper);
+		}
+
 		ObjectMapper objectMapper = namedContext.getOptional(ObjectMapper.class);
 		if(objectMapper != null){
 			resultBuilder = resultBuilder.objectMapper(objectMapper);
@@ -158,6 +164,11 @@ public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigu
 		} else if(config.getErrorDecoder() != null){
 			ErrorDecoder errorDecoder = namedContext.getOrInstantiate(config.getErrorDecoder());
 			resultBuilder = resultBuilder.statusHandler(ReactiveStatusHandlers.errorDecoder(errorDecoder));
+		}
+
+		if (config.getErrorMapper() != null) {
+			ReactiveErrorMapper errorMapper = namedContext.getOrInstantiate(config.getErrorMapper());
+			resultBuilder = resultBuilder.errorMapper(errorMapper);
 		}
 
 		if(config.getLogger() != null){

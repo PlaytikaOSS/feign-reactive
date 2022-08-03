@@ -16,7 +16,7 @@ package reactivefeign.client;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
 import reactivefeign.client.statushandler.ReactiveStatusHandlers;
-import reactor.core.publisher.Flux;
+import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
 
 /**
@@ -42,32 +42,13 @@ public class StatusHandlerPostProcessor<P extends Publisher<?>> implements React
   @Override
   public Mono<ReactiveHttpResponse<P>> apply(ReactiveHttpResponse<P> response) {
     String methodKey = response.request().methodKey();
-    ReactiveHttpResponse<P> errorResponse = response;
     if (statusHandler.shouldHandle(response.status())) {
-      errorResponse = new ErrorReactiveHttpResponse<>(response, statusHandler.decode(methodKey, response));
+      return statusHandler.decode(methodKey, response)
+              .map(throwable -> {throw Exceptions.propagate(throwable);});
     } else if(defaultStatusHandler.shouldHandle(response.status())){
-      errorResponse = new ErrorReactiveHttpResponse<>(response, defaultStatusHandler.decode(methodKey, response));
+      return defaultStatusHandler.decode(methodKey, response)
+              .map(throwable -> {throw Exceptions.propagate(throwable);});
     }
-    return Mono.just(errorResponse);
+    return Mono.just(response);
   }
-
-  private static class ErrorReactiveHttpResponse<P extends Publisher<?>> extends DelegatingReactiveHttpResponse<P> {
-
-    private final Mono<? extends Throwable> error;
-
-    ErrorReactiveHttpResponse(ReactiveHttpResponse<P> response, Mono<? extends Throwable> error) {
-      super(response);
-      this.error = error;
-    }
-
-    @Override
-    public P body() {
-      if (getResponse().body() instanceof Mono) {
-        return (P)error.flatMap(Mono::error);
-      } else {
-        return (P)error.flatMapMany(Flux::error);
-      }
-    }
-  }
-
 }

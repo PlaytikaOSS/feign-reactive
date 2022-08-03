@@ -5,6 +5,7 @@ import feign.Contract;
 import feign.FeignException;
 import feign.InvocationHandlerFactory;
 import feign.Target;
+import reactivefeign.client.ReactiveErrorMapper;
 import reactivefeign.client.ReactiveHttpExchangeFilterFunction;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReactiveHttpResponseMapper;
@@ -67,6 +68,13 @@ public interface ReactiveFeignBuilder<T> {
      * @return
      */
     ReactiveFeignBuilder<T> statusHandler(ReactiveStatusHandler statusHandler);
+
+    /**
+     * Allows to add error mapper
+     * @param errorMapper
+     * @return
+     */
+    ReactiveFeignBuilder<T> errorMapper(ReactiveErrorMapper errorMapper);
 
     /**
      * The most common way to introduce custom json serialisation

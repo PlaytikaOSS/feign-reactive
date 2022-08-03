@@ -46,6 +46,7 @@ Here is the list of available properties:
 - `options` : reactive http client specific options. Check implementation of `ReactiveOptions.Builder` for each client.
 - `retry` : retry configuration (check `ReactiveFeignClientProperties.RetryConfiguration` for details)      
 - `statusHandler` : class that implements `ReactiveStatusHandler`. Is a replacement of regular feign `ErrorDecoder`.  
+- `errorMapper` : class that implements `ReactiveErrorMapper`. 
 - `requestInterceptors` : classes of `ReactiveHttpRequestInterceptor`. May be used to setup specific headers to request
 - `logger` : class of `ReactiveLoggerListener`
 - `metricsLogger` : class of `MicrometerReactiveLogger`
@@ -58,7 +59,7 @@ Here is the list of available properties:
 
 Here is the list of bean classes that will be used by reactive feign client if they declared in configuration class:
 `ReactiveOptions.Builder`, `ReactiveRetryPolicies`, `List<Class<ReactiveHttpRequestInterceptor>>`, `ReactiveStatusHandler`,
-`feign.codec.ErrorDecoder`, `ReactiveLoggerListener`, `MicrometerReactiveLogger`
+`feign.codec.ErrorDecoder`, `ReactiveErrorMapper`, `ReactiveLoggerListener`, `MicrometerReactiveLogger`
 
 ## Cloud specific configuration
 

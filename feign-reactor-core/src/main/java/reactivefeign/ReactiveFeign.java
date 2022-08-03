@@ -45,8 +45,7 @@ import java.util.stream.Stream;
 
 import static feign.Util.checkNotNull;
 import static feign.Util.isDefault;
-import static reactivefeign.client.ReactiveHttpExchangeFilterFunction.ofRequestProcessor;
-import static reactivefeign.client.ReactiveHttpExchangeFilterFunction.ofResponseProcessor;
+import static reactivefeign.client.ReactiveHttpExchangeFilterFunction.*;
 import static reactivefeign.client.StatusHandlerPostProcessor.handleStatus;
 import static reactivefeign.client.log.LoggerExchangeFilterFunction.log;
 import static reactivefeign.utils.FeignUtils.isResponsePublisher;
@@ -138,6 +137,7 @@ public class ReactiveFeign {
     protected ReactiveHttpClientFactory clientFactory;
     protected List<ReactiveHttpExchangeFilterFunction> exchangeFilterFunctions = new ArrayList<>();
     protected ReactiveStatusHandler statusHandler = ReactiveStatusHandlers.defaultFeignErrorDecoder();
+    protected ReactiveErrorMapper errorMapper;
     protected List<ReactiveLoggerListener<Object>> loggerListeners = new ArrayList<>();
     protected InvocationHandlerFactory invocationHandlerFactory =
             new ReactiveInvocationHandler.Factory();
@@ -183,6 +183,12 @@ public class ReactiveFeign {
     @Override
     public ReactiveFeignBuilder<T> addExchangeFilterFunction(ReactiveHttpExchangeFilterFunction exchangeFilterFunction){
       this.exchangeFilterFunctions.add(exchangeFilterFunction);
+      return this;
+    }
+
+    @Override
+    public Builder<T> errorMapper(ReactiveErrorMapper errorMapper){
+      this.errorMapper = errorMapper;
       return this;
     }
 
@@ -246,12 +252,16 @@ public class ReactiveFeign {
 
           List<ReactiveHttpExchangeFilterFunction> exchangeFilterFunctionsAll = new ArrayList(exchangeFilterFunctions);
 
-          if(decode404){
-            exchangeFilterFunctionsAll.add(ofResponseProcessor(ResponseMappers.ignore404()));
+          if(errorMapper != null){
+            exchangeFilterFunctionsAll.add(ofErrorMapper(errorMapper));
           }
 
           if(statusHandler != null) {
             exchangeFilterFunctionsAll.add(ofResponseProcessor(handleStatus(statusHandler)));
+          }
+
+          if(decode404){
+            exchangeFilterFunctionsAll.add(ofResponseProcessor(ResponseMappers.ignore404()));
           }
 
           for(ReactiveLoggerListener<Object> loggerListener : loggerListeners){

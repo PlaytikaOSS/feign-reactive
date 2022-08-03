@@ -11,6 +11,7 @@ import org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalanc
 import reactivefeign.FallbackFactory;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
+import reactivefeign.client.ReactiveErrorMapper;
 import reactivefeign.client.ReactiveHttpExchangeFilterFunction;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReactiveHttpResponseMapper;
@@ -130,6 +131,12 @@ public class CloudReactiveFeign {
         @Override
         public Builder<T> statusHandler(ReactiveStatusHandler statusHandler) {
             builder = builder.statusHandler(statusHandler);
+            return this;
+        }
+
+        @Override
+        public Builder<T> errorMapper(ReactiveErrorMapper errorMapper) {
+            builder = builder.errorMapper(errorMapper);
             return this;
         }
 

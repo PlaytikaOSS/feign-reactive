@@ -3,6 +3,7 @@ package reactivefeign.spring.config;
 import feign.Contract;
 import feign.codec.ErrorDecoder;
 import reactivefeign.ReactiveOptions;
+import reactivefeign.client.ReactiveErrorMapper;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.log.ReactiveLoggerListener;
 import reactivefeign.client.metrics.MicrometerReactiveLogger;
@@ -73,6 +74,8 @@ public class ReactiveFeignClientsProperties<O extends ReactiveOptions.Builder> {
 
         private Class<ReactiveStatusHandler> statusHandler;
 
+        private Class<ReactiveErrorMapper> errorMapper;
+
         private Class<ErrorDecoder> errorDecoder;
 
         private List<Class<ReactiveHttpRequestInterceptor>> requestInterceptors;
@@ -127,6 +130,14 @@ public class ReactiveFeignClientsProperties<O extends ReactiveOptions.Builder> {
 
         public void setStatusHandler(Class<ReactiveStatusHandler> statusHandler) {
             this.statusHandler = statusHandler;
+        }
+
+        public Class<ReactiveErrorMapper> getErrorMapper() {
+            return errorMapper;
+        }
+
+        public void setErrorMapper(Class<ReactiveErrorMapper> errorMapper) {
+            this.errorMapper = errorMapper;
         }
 
         public Class<ErrorDecoder> getErrorDecoder() {

@@ -3,6 +3,7 @@ package reactivefeign.client;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Mono;
 
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 
@@ -29,6 +30,12 @@ public interface ReactiveHttpExchangeFilterFunction<P extends Publisher<?>> {
     static <P extends Publisher<?>> ReactiveHttpExchangeFilterFunction<P> ofResponseProcessor(
             Function<ReactiveHttpResponse<P>, Mono<ReactiveHttpResponse<P>>> processor) {
         return (request, next) -> next.executeRequest(request).flatMap(processor);
+    }
+
+    static <P extends Publisher<?>> ReactiveHttpExchangeFilterFunction<P> ofErrorMapper(
+            ReactiveErrorMapper errorMapper) {
+        return (request, next) -> next.executeRequest(request)
+                .onErrorMap(throwable -> errorMapper.apply(request, throwable));
     }
 
 }
