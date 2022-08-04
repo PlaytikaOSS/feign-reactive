@@ -33,7 +33,7 @@ import static org.springframework.http.MediaType.*;
 @Headers({ "Accept: application/json" })
 public interface AllFeaturesFeign extends AllFeaturesApi{
 
-	public static final String DATE_TIME_FORMAT = "dd-MM-yyyy'T'HH:mm:ss";
+	String DATE_TIME_FORMAT = "dd-MM-yyyy'T'HH:mm:ss";
 
 	@Override
 	@RequestLine("GET /mirrorParameters/{parameterInPathPlaceholder}?paramInUrl={paramInQueryPlaceholder}")

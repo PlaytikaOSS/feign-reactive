@@ -48,7 +48,7 @@ public final class ReactiveHttpRequestInterceptors {
         URI uri = reactiveHttpRequest.uri();
         String query = uri.getQuery();
         for(Pair<String, String> queryPair : queries) {
-            String keyValuePair = queryPair.left + QUERY_KEY_VALUE_SEPARATOR + UriUtils.encode(queryPair.right, UTF_8);
+            String keyValuePair = queryPair.left + QUERY_KEY_VALUE_SEPARATOR + queryPair.right;
 
             if (query == null) {
                 query = keyValuePair;

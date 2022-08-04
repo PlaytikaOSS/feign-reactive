@@ -15,6 +15,7 @@ package reactivefeign.testcase;
 
 import feign.Headers;
 import feign.Param;
+import feign.QueryMap;
 import feign.RequestLine;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.testcase.domain.Bill;
@@ -71,6 +72,12 @@ public interface IcecreamServiceApi {
 
   @RequestLine("GET /icecream/flavors")
   Mono<ReactiveHttpResponse<Flux<Flavor>>> response();
+
+  @RequestLine("GET /mirrorParameters/{parameterInPathPlaceholder}?paramInUrl={paramInQueryPlaceholder}")
+  Mono<Void> passParameters(
+          @Param("parameterInPathPlaceholder") String paramInPath,
+          @Param("paramInQueryPlaceholder") String paramInQuery,
+          @QueryMap Map<String, String> paramMap);
 
   default Mono<IceCreamOrder> findFirstOrder() {
     return findOrder(1);

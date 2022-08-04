@@ -18,6 +18,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import reactivefeign.client.ReactiveHttpRequestInterceptors;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.OrderGenerator;
@@ -26,7 +27,10 @@ import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import reactor.util.context.Context;
 
+import java.util.HashMap;
+
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
@@ -63,11 +67,11 @@ abstract public class RequestInterceptorTest extends BaseReactorTest {
     String orderStr = TestUtils.MAPPER.writeValueAsString(orderGenerated);
 
     wireMockRule.stubFor(get(urlEqualTo(orderUrl))
-            .withHeader("Accept", equalTo("application/json"))
-            .withHeader("Authorization", equalTo("Bearer mytoken123"))
-            .willReturn(aResponse().withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(orderStr)))
+                    .withHeader("Accept", equalTo("application/json"))
+                    .withHeader("Authorization", equalTo("Bearer mytoken123"))
+                    .willReturn(aResponse().withStatus(200)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody(orderStr)))
             .setPriority(1);
 
     IcecreamServiceApi clientWithAuth = target(builder()
@@ -87,11 +91,11 @@ abstract public class RequestInterceptorTest extends BaseReactorTest {
     String orderStr = TestUtils.MAPPER.writeValueAsString(orderGenerated);
 
     wireMockRule.stubFor(get(urlEqualTo(orderUrl))
-            .withHeader("Accept", equalTo("application/json"))
-            .withHeader("Authorization", equalTo("Bearer mytoken123"))
-            .willReturn(aResponse().withStatus(200)
-                    .withHeader("Content-Type", "application/json")
-                    .withBody(orderStr)))
+                    .withHeader("Accept", equalTo("application/json"))
+                    .withHeader("Authorization", equalTo("Bearer mytoken123"))
+                    .willReturn(aResponse().withStatus(200)
+                            .withHeader("Content-Type", "application/json")
+                            .withBody(orderStr)))
             .setPriority(1);
 
     String authHeader = "Authorization";
@@ -116,5 +120,28 @@ abstract public class RequestInterceptorTest extends BaseReactorTest {
     assertThat(wireMockRule.getAllServeEvents().get(0).getRequest()
             .containsHeader(UPPER_HEADER_TO_REMOVE)).isFalse();
 
+  }
+
+  @Test
+  public void shouldInterceptRequestAndAddQueryParameters()  {
+
+    wireMockRule.stubFor(get(anyUrl())
+                    .willReturn(aResponse().withStatus(200)))
+            .setPriority(1);
+
+    IcecreamServiceApi client = target(builder()
+            .addRequestInterceptor(ReactiveHttpRequestInterceptors.addQueries(asList(new Pair<>("1,2", "3,4")))));
+
+    Mono<Void> result = client.passParameters("5,6", "7,8",
+                    new HashMap<String, String>() {{
+                      put("9,10", "11?12");
+                    }})
+            .subscribeOn(testScheduler());
+
+    StepVerifier.create(result)
+            .verifyComplete();
+
+    assertThat(wireMockRule.getAllServeEvents().get(0).getRequest()
+            .getUrl()).isEqualTo("/mirrorParameters/5,6?paramInUrl=7,8&9,10=11?12&1,2=3,4");
   }
 }
