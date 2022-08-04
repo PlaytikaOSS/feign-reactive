@@ -21,6 +21,7 @@ import org.springframework.web.client.RestTemplate;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
+import reactivefeign.client.ReactiveHttpClientFactory;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -39,6 +40,7 @@ public class RestTemplateFakeReactiveFeign {
   public static <T> ReactiveFeign.Builder<T> builder() {
 
     return new ReactiveFeign.Builder<T>(){
+
       private RestTemplate restTemplate = new RestTemplate();
       private boolean acceptGzip = false;
 
@@ -46,19 +48,18 @@ public class RestTemplateFakeReactiveFeign {
         ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(mapper);
         restTemplate.getMessageConverters().add(0, converter);
-        updateClientFactory();
       }
 
-      private void updateClientFactory(){
-        clientFactory(methodMetadata -> new RestTemplateFakeReactiveHttpClient(
-                methodMetadata, restTemplate, acceptGzip));
+      @Override
+      protected ReactiveHttpClientFactory clientFactory() {
+        return methodMetadata -> new RestTemplateFakeReactiveHttpClient(
+                methodMetadata, restTemplate, acceptGzip);
       }
 
       @Override
       public ReactiveFeignBuilder<T> objectMapper(ObjectMapper objectMapper) {
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(objectMapper);
         restTemplate.getMessageConverters().set(0, converter);
-        updateClientFactory();
         return this;
       }
 
@@ -96,7 +97,6 @@ public class RestTemplateFakeReactiveFeign {
 
           this.restTemplate = new RestTemplate(requestFactory);
           this.acceptGzip = ofNullable(options.isTryUseCompression()).orElse(false);
-          updateClientFactory();
           return this;
 
         }
@@ -116,7 +116,6 @@ public class RestTemplateFakeReactiveFeign {
 
           this.restTemplate = new RestTemplate(requestFactory);
           this.acceptGzip = ofNullable(options.isTryUseCompression()).orElse(false);
-          updateClientFactory();
           return this;
 
         }

@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
+import reactivefeign.client.ReactiveHttpClientFactory;
 import reactivefeign.java11.client.Java11ReactiveHttpClientFactory;
 
 import java.net.InetSocketAddress;
@@ -65,14 +66,11 @@ public final class Java11ReactiveFeign {
             this.httpClientBuilder = httpClientBuilder;
             this.jsonFactory = jsonFactory;
             this.objectMapper = new ObjectMapper().findAndRegisterModules();
-            updateClientFactory();
         }
 
         @Override
         public ReactiveFeignBuilder<T> objectMapper(ObjectMapper objectMapper) {
             this.objectMapper = objectMapper;
-
-            updateClientFactory();
 
             return this;
         }
@@ -98,18 +96,17 @@ public final class Java11ReactiveFeign {
                 );
             }
 
-            updateClientFactory();
-
             return this;
         }
 
-        protected void updateClientFactory(){
+        @Override
+        protected ReactiveHttpClientFactory clientFactory() {
             this.httpClientBuilder = httpClientBuilder.version(
                     useHttp2(this.options) ? HttpClient.Version.HTTP_2 : HttpClient.Version.HTTP_1_1);
 
             HttpClient httpClient = httpClientBuilder.build();
 
-            clientFactory(new Java11ReactiveHttpClientFactory(httpClient, jsonFactory, objectMapper, options));
+            return new Java11ReactiveHttpClientFactory(httpClient, jsonFactory, objectMapper, options);
         }
     }
 }

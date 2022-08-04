@@ -22,6 +22,7 @@ import org.eclipse.jetty.http2.client.http.HttpClientTransportOverHTTP2;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
+import reactivefeign.client.ReactiveHttpClientFactory;
 import reactivefeign.jetty.client.JettyReactiveHttpClient;
 
 /**
@@ -86,15 +87,15 @@ public final class JettyReactiveFeign {
         @Override
         public Builder<T> options(ReactiveOptions options) {
             this.options = (JettyReactiveOptions)options;
-
-            setHttpClient(httpClientFactory);
-
             return this;
         }
 
         protected void setHttpClient(JettyHttpClientFactory httpClientFactory){
             this.httpClientFactory = httpClientFactory;
+        }
 
+        @Override
+        protected ReactiveHttpClientFactory clientFactory() {
             boolean useHttp2 = ReactiveOptions.useHttp2(options);
             HttpClient httpClient = httpClientFactory.build(useHttp2);
 
@@ -116,7 +117,7 @@ public final class JettyReactiveFeign {
                         .add(new HttpProxy(proxySettings.getHost(), proxySettings.getPort()));
             }
 
-            clientFactory(methodMetadata -> {
+            return methodMetadata -> {
                 JettyReactiveHttpClient jettyClient = JettyReactiveHttpClient.jettyClient(methodMetadata, httpClient, jsonFactory, objectMapper);
                 if (options != null && options.getRequestTimeoutMillis() != null) {
                     jettyClient = jettyClient.setRequestTimeout(options.getRequestTimeoutMillis());
@@ -125,7 +126,7 @@ public final class JettyReactiveFeign {
                     jettyClient = jettyClient.setTryUseCompression(options.isTryUseCompression());
                 }
                 return jettyClient;
-            });
+            };
         }
     }
 }

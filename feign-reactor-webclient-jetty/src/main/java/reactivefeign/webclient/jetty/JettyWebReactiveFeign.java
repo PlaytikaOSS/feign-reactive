@@ -22,13 +22,11 @@ import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReadTimeoutException;
 import reactivefeign.webclient.CoreWebBuilder;
-import reactivefeign.webclient.CustomizableWebClientBuilder;
 import reactivefeign.webclient.WebClientFeignCustomizer;
 
 import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 
-import static reactivefeign.webclient.client.WebReactiveHttpClient.webClient;
 import static reactivefeign.webclient.jetty.JettyClientHttpConnectorBuilder.buildJettyClientHttpConnector;
 
 
@@ -73,13 +71,7 @@ public class JettyWebReactiveFeign {
                                 clientHttpRequest -> clientHttpRequest.<Request>getNativeRequest()
                                         .timeout(requestTimeoutMillis, TimeUnit.MILLISECONDS)).build()));
             }
-            updateClientFactory();
             return this;
-        }
-
-        protected void updateClientFactory(){
-            clientFactory(methodMetadata -> webClient(
-                    methodMetadata, webClientBuilder.build(), errorMapper()));
         }
 
         @Override

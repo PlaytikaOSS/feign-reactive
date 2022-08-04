@@ -7,6 +7,7 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReactiveHttpClient;
+import reactivefeign.client.ReactiveHttpClientFactory;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.methodhandler.MethodHandlerFactory;
 import reactivefeign.publisher.FluxPublisherHttpClient;
@@ -123,8 +124,8 @@ public final class Rx2ReactiveFeign {
         }
 
         @Override
-        protected void updateClientFactory(){
-            clientFactory(methodMetadata -> webClient(methodMetadata, webClientBuilder.build()));
+        protected ReactiveHttpClientFactory clientFactory(){
+            return methodMetadata -> webClient(methodMetadata, webClientBuilder.build());
         }
 
         public WebReactiveHttpClient webClient(MethodMetadata methodMetadata, WebClient webClient) {

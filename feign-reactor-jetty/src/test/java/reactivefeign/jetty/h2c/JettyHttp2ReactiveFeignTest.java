@@ -10,7 +10,8 @@ public class JettyHttp2ReactiveFeignTest {
     @Test(expected = IllegalArgumentException.class)
     public void shouldFailIfNotHttp2Transport(){
         JettyReactiveFeign.builder(new HttpClient())
-                .options(new JettyReactiveOptions.Builder().setUseHttp2(true).build());
+                .options(new JettyReactiveOptions.Builder().setUseHttp2(true).build())
+                .build();
     }
 
 }

@@ -134,7 +134,6 @@ public class ReactiveFeign {
    */
   public abstract static class Builder<T> implements ReactiveFeignBuilder<T>{
     protected Contract contract;
-    protected ReactiveHttpClientFactory clientFactory;
     protected List<ReactiveHttpExchangeFilterFunction> exchangeFilterFunctions = new ArrayList<>();
     protected ReactiveStatusHandler statusHandler = ReactiveStatusHandlers.defaultFeignErrorDecoder();
     protected ReactiveErrorMapper errorMapper;
@@ -151,10 +150,7 @@ public class ReactiveFeign {
       addLoggerListener(new DefaultReactiveLogger(Clock.systemUTC()));
     }
 
-    protected Builder<T> clientFactory(ReactiveHttpClientFactory clientFactory) {
-      this.clientFactory = clientFactory;
-      return this;
-    }
+    abstract protected ReactiveHttpClientFactory clientFactory();
 
     @Override
     public Builder<T> contract(final Contract contract) {
@@ -233,6 +229,9 @@ public class ReactiveFeign {
 
     @Override
     public PublisherClientFactory buildReactiveClientFactory() {
+
+      ReactiveHttpClientFactory clientFactory = clientFactory();
+
       return new PublisherClientFactory(){
 
         Target target;

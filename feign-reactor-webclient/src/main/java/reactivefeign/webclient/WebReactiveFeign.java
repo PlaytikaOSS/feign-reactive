@@ -59,7 +59,6 @@ public class WebReactiveFeign {
         public Builder<T> options(ReactiveOptions options) {
             webClientBuilder.clientConnector(
                     buildNettyClientHttpConnector((WebReactiveOptions)options));
-            updateClientFactory();
             return this;
         }
 
