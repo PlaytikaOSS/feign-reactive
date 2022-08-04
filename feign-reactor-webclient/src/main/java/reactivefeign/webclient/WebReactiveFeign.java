@@ -16,9 +16,11 @@ package reactivefeign.webclient;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientRequestException;
+import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReadTimeoutException;
+import reactor.netty.http.client.HttpClient;
 
 import java.util.function.BiFunction;
 
@@ -47,6 +49,9 @@ public class WebReactiveFeign {
 
     public static class Builder<T> extends CoreWebBuilder<T> {
 
+        private HttpClient httpClient;
+        private WebReactiveOptions options = WebReactiveOptions.DEFAULT_OPTIONS;
+
         protected Builder(WebClient.Builder webClientBuilder) {
             super(webClientBuilder);
         }
@@ -55,16 +60,20 @@ public class WebReactiveFeign {
             super(webClientBuilder, webClientCustomizer);
         }
 
-        @Override
-        public Builder<T> options(ReactiveOptions options) {
-            webClientBuilder.clientConnector(
-                    buildNettyClientHttpConnector((WebReactiveOptions)options));
+        public ReactiveFeignBuilder<T> httpClient(HttpClient httpClient){
+            this.httpClient = httpClient;
             return this;
         }
 
         @Override
-        protected ClientHttpConnector buildClientConnector() {
-            return buildNettyClientHttpConnector(WebReactiveOptions.DEFAULT_OPTIONS);
+        public Builder<T> options(ReactiveOptions options) {
+            this.options = (WebReactiveOptions) options;
+            return this;
+        }
+
+        @Override
+        protected ClientHttpConnector clientConnector() {
+            return buildNettyClientHttpConnector(httpClient, options);
         }
 
         @Override

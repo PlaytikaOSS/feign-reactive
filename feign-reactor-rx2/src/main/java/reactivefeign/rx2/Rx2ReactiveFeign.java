@@ -125,6 +125,12 @@ public final class Rx2ReactiveFeign {
 
         @Override
         protected ReactiveHttpClientFactory clientFactory(){
+            this.webClientBuilder.clientConnector(clientConnector());
+
+            if(webClientCustomizer != null){
+                webClientCustomizer.accept(webClientBuilder);
+            }
+
             return methodMetadata -> webClient(methodMetadata, webClientBuilder.build());
         }
 

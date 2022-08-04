@@ -34,7 +34,6 @@ abstract public class CoreWebBuilder<T> extends ReactiveFeign.Builder<T>{
     protected CoreWebBuilder(WebClient.Builder webClientBuilder) {
         this.webClientBuilder = webClientBuilder;
 
-        this.webClientBuilder.clientConnector(buildClientConnector());
         this.webClientBuilder.codecs(multipartCodec());
     }
 
@@ -45,6 +44,8 @@ abstract public class CoreWebBuilder<T> extends ReactiveFeign.Builder<T>{
 
     @Override
     protected ReactiveHttpClientFactory clientFactory(){
+        this.webClientBuilder.clientConnector(clientConnector());
+
         if(webClientCustomizer != null){
             webClientCustomizer.accept(webClientBuilder);
         }
@@ -64,7 +65,7 @@ abstract public class CoreWebBuilder<T> extends ReactiveFeign.Builder<T>{
 
     protected abstract BiFunction<ReactiveHttpRequest, Throwable, Throwable> errorMapper();
 
-    protected abstract ClientHttpConnector buildClientConnector();
+    protected abstract ClientHttpConnector clientConnector();
 
     private Consumer<ClientCodecConfigurer> multipartCodec() {
         return clientCodecConfigurer -> clientCodecConfigurer.customCodecs().register(

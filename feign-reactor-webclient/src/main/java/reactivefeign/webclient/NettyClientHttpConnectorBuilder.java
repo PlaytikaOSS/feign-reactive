@@ -10,8 +10,10 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import reactor.netty.http.HttpResources;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.TcpClient;
+import reactor.netty.tcp.TcpResources;
 import reactor.netty.transport.ProxyProvider;
 
 import javax.net.ssl.SSLException;
@@ -19,17 +21,25 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import static reactor.netty.resources.LoopResources.DEFAULT_NATIVE;
+
 class NettyClientHttpConnectorBuilder {
 
     private static final Log LOG = LogFactory.getLog(NettyClientHttpConnectorBuilder.class);
 
-    public static ClientHttpConnector buildNettyClientHttpConnector(WebReactiveOptions webOptions) {
-        TcpClient tcpClient = TcpClient.create();
+    public static ClientHttpConnector buildNettyClientHttpConnector(HttpClient httpClient, WebReactiveOptions webOptions) {
+
+        if(httpClient == null){
+            httpClient = HttpClient.create(TcpResources.get())
+                    .runOn(HttpResources.get(), DEFAULT_NATIVE);
+        }
+
         if (webOptions.getConnectTimeoutMillis() != null) {
-            tcpClient = tcpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
+            httpClient = httpClient.option(ChannelOption.CONNECT_TIMEOUT_MILLIS,
                     webOptions.getConnectTimeoutMillis().intValue());
         }
-        tcpClient = tcpClient.doOnConnected(connection -> {
+
+        httpClient = httpClient.doOnConnected(connection -> {
             if (webOptions.getReadTimeoutMillis() != null) {
                 connection.addHandlerLast(new ReadTimeoutHandler(
                         webOptions.getReadTimeoutMillis(), TimeUnit.MILLISECONDS));
@@ -42,7 +52,7 @@ class NettyClientHttpConnectorBuilder {
 
         WebReactiveOptions.WebProxySettings proxySettings = (WebReactiveOptions.WebProxySettings)webOptions.getProxySettings();
         if (proxySettings != null) {
-            tcpClient = tcpClient.proxy(typeSpec -> {
+            httpClient = httpClient.proxy(typeSpec -> {
                 ProxyProvider.Builder proxyBuilder = typeSpec.type(ProxyProvider.Proxy.HTTP)
                         .host(proxySettings.getHost())
                         .port(proxySettings.getPort())
@@ -53,8 +63,6 @@ class NettyClientHttpConnectorBuilder {
                 }
             });
         }
-
-        HttpClient httpClient = HttpClient.from(tcpClient);
 
         if (webOptions.getResponseTimeoutMillis() != null) {
             httpClient = httpClient.responseTimeout(Duration.ofMillis(webOptions.getResponseTimeoutMillis()));

@@ -52,6 +52,8 @@ public class JettyWebReactiveFeign {
 
     public static class Builder<T> extends CoreWebBuilder<T> {
 
+        private JettyReactiveOptions reactiveOptions = JettyReactiveOptions.DEFAULT_OPTIONS;
+
         protected Builder(WebClient.Builder webClientBuilder) {
             super(webClientBuilder);
         }
@@ -62,15 +64,7 @@ public class JettyWebReactiveFeign {
 
         @Override
         public Builder<T> options(ReactiveOptions options) {
-            webClientBuilder.clientConnector(
-                    buildJettyClientHttpConnector((JettyReactiveOptions)options));
-            Long requestTimeoutMillis = ((JettyReactiveOptions) options).getRequestTimeoutMillis();
-            if(requestTimeoutMillis != null){
-                webClientBuilder.filter((request, next) -> next.exchange(
-                        ClientRequest.from(request).httpRequest(
-                                clientHttpRequest -> clientHttpRequest.<Request>getNativeRequest()
-                                        .timeout(requestTimeoutMillis, TimeUnit.MILLISECONDS)).build()));
-            }
+            this.reactiveOptions = (JettyReactiveOptions)options;
             return this;
         }
 
@@ -86,8 +80,17 @@ public class JettyWebReactiveFeign {
         }
 
         @Override
-        protected ClientHttpConnector buildClientConnector() {
-            return buildJettyClientHttpConnector(JettyReactiveOptions.DEFAULT_OPTIONS);
+        protected ClientHttpConnector clientConnector() {
+
+            Long requestTimeoutMillis = reactiveOptions.getRequestTimeoutMillis();
+            if(requestTimeoutMillis != null){
+                webClientBuilder.filter((request, next) -> next.exchange(
+                        ClientRequest.from(request).httpRequest(
+                                clientHttpRequest -> clientHttpRequest.<Request>getNativeRequest()
+                                        .timeout(requestTimeoutMillis, TimeUnit.MILLISECONDS)).build()));
+            }
+
+            return buildJettyClientHttpConnector(reactiveOptions);
         }
 
     }
