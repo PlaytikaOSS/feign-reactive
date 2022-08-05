@@ -92,11 +92,9 @@ public final class ReactiveHttpRequest {
   @Override
   public String toString() {
     return "ReactiveHttpRequest{" +
-            "methodMetadata=" + methodMetadata +
-            ", target=" + target +
             ", uri=" + uri +
             ", headers=" + headers +
-            ", body=" + body +
-            '}';
+            ", target=" + target +
+            "}";
   }
 }
