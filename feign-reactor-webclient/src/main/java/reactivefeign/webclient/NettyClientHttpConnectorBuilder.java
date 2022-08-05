@@ -12,7 +12,7 @@ import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import reactor.netty.http.HttpResources;
 import reactor.netty.http.client.HttpClient;
-import reactor.netty.tcp.TcpClient;
+import reactor.netty.resources.ConnectionProvider;
 import reactor.netty.tcp.TcpResources;
 import reactor.netty.transport.ProxyProvider;
 
@@ -30,7 +30,20 @@ class NettyClientHttpConnectorBuilder {
     public static ClientHttpConnector buildNettyClientHttpConnector(HttpClient httpClient, WebReactiveOptions webOptions) {
 
         if(httpClient == null){
-            httpClient = HttpClient.create(TcpResources.get())
+            ConnectionProvider connectionProvider = TcpResources.get();
+
+            if(webOptions.getMaxConnections() != null || webOptions.getPendingAcquireMaxCount() != null){
+                ConnectionProvider.Builder connectionProviderBuilder = connectionProvider.mutate();
+                if(webOptions.getMaxConnections() != null){
+                    connectionProviderBuilder = connectionProviderBuilder.maxConnections(webOptions.getMaxConnections());
+                }
+                if(webOptions.getPendingAcquireMaxCount() != null){
+                    connectionProviderBuilder = connectionProviderBuilder.pendingAcquireMaxCount(webOptions.getMaxConnections());
+                }
+                connectionProvider = connectionProviderBuilder.build();
+            }
+
+            httpClient = HttpClient.create(connectionProvider)
                     .runOn(HttpResources.get(), DEFAULT_NATIVE);
         }
 

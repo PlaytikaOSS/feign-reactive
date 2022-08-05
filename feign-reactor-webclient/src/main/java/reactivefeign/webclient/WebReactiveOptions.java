@@ -30,17 +30,22 @@ public class WebReactiveOptions extends ReactiveOptions {
   private final Long writeTimeoutMillis;
   private final Long responseTimeoutMillis;
   private final Boolean disableSslValidation;
+  private final Integer maxConnections;
+  private final Integer pendingAcquireMaxCount;
 
   private WebReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis,
                              Long readTimeoutMillis, Long writeTimeoutMillis, Long responseTimeoutMillis,
                              Boolean tryUseCompression, Boolean followRedirects,
-                             ProxySettings proxySettings, Boolean disableSslValidation) {
+                             ProxySettings proxySettings, Boolean disableSslValidation,
+                             Integer maxConnections, Integer pendingAcquireMaxCount) {
     super(useHttp2, connectTimeoutMillis, tryUseCompression, followRedirects, proxySettings);
 
     this.readTimeoutMillis = readTimeoutMillis;
     this.writeTimeoutMillis = writeTimeoutMillis;
     this.responseTimeoutMillis = responseTimeoutMillis;
     this.disableSslValidation = disableSslValidation;
+    this.maxConnections = maxConnections;
+    this.pendingAcquireMaxCount = pendingAcquireMaxCount;
   }
 
   public Long getReadTimeoutMillis() {
@@ -63,11 +68,21 @@ public class WebReactiveOptions extends ReactiveOptions {
     return disableSslValidation;
   }
 
+  public Integer getMaxConnections() {
+    return maxConnections;
+  }
+
+  public Integer getPendingAcquireMaxCount() {
+    return pendingAcquireMaxCount;
+  }
+
   public static class Builder extends ReactiveOptions.Builder{
     private Long readTimeoutMillis;
     private Long writeTimeoutMillis;
     private Long responseTimeoutMillis;
     private Boolean disableSslValidation;
+    private Integer maxConnections;
+    private Integer pendingAcquireMaxCount;
 
     public Builder() {}
 
@@ -91,11 +106,21 @@ public class WebReactiveOptions extends ReactiveOptions {
       return this;
     }
 
+    public Builder setMaxConnections(Integer maxConnections) {
+      this.maxConnections = maxConnections;
+      return this;
+    }
+
+    public Builder setPendingAcquireMaxCount(Integer pendingAcquireMaxCount) {
+      this.pendingAcquireMaxCount = pendingAcquireMaxCount;
+      return this;
+    }
+
     public WebReactiveOptions build() {
       return new WebReactiveOptions(useHttp2, connectTimeoutMillis,
-                                    readTimeoutMillis, writeTimeoutMillis, responseTimeoutMillis,
-                                    acceptCompressed, followRedirects, proxySettings, disableSslValidation
-      );
+              readTimeoutMillis, writeTimeoutMillis, responseTimeoutMillis,
+              acceptCompressed, followRedirects, proxySettings, disableSslValidation,
+              maxConnections, pendingAcquireMaxCount);
     }
   }
 
