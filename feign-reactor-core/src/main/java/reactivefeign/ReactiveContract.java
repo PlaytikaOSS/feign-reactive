@@ -66,7 +66,7 @@ public class ReactiveContract implements Contract {
 
   private static final Set<Class> REACTOR_PUBLISHERS = new HashSet<>(asList(Mono.class, Flux.class));
 
-  private boolean isReactorType(final Type type) {
+  public static boolean isReactorType(final Type type) {
     return (type instanceof ParameterizedType)
         && REACTOR_PUBLISHERS.contains(returnPublisherType(type));
   }

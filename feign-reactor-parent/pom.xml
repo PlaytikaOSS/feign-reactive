@@ -136,6 +136,13 @@
             </dependency>
             <dependency>
                 <groupId>com.playtika.reactivefeign</groupId>
+                <artifactId>feign-reactor-webclient-core</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.playtika.reactivefeign</groupId>
                 <artifactId>feign-reactor-server-configurations</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>

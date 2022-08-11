@@ -42,6 +42,7 @@ import java.util.function.BiFunction;
 import static feign.Util.resolveLastTypeParameter;
 import static java.util.Optional.ofNullable;
 import static org.springframework.core.ParameterizedTypeReference.forType;
+import static reactivefeign.ReactiveContract.isReactorType;
 import static reactivefeign.utils.FeignUtils.*;
 
 /**
@@ -70,6 +71,11 @@ public class WebReactiveHttpClient<P extends Publisher<?>> implements ReactiveHt
 		if (returnActualType.getType() instanceof ParameterizedType
 				&& ((ParameterizedType) returnActualType.getType()).getRawType().equals(ResponseEntity.class)) {
 			Type entityType = resolveLastTypeParameter(returnActualType.getType(), ResponseEntity.class);
+
+			if(!isReactorType(entityType)){
+				throw new IllegalArgumentException("Wrong ResponseEntity parameter [" + entityType + "] in method ["+methodMetadata.method()+"]" +
+						"It should be parametrized with Mono or Flux");
+			}
 
 			Type entityPublisherType = returnPublisherType(entityType);
 			ParameterizedTypeReference<?> entityActualType = forType(returnActualType(entityType));
