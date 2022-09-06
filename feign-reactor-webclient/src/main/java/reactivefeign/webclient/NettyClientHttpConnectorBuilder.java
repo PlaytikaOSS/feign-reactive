@@ -27,18 +27,28 @@ class NettyClientHttpConnectorBuilder {
 
     private static final Log LOG = LogFactory.getLog(NettyClientHttpConnectorBuilder.class);
 
+    private NettyClientHttpConnectorBuilder() {
+    }
+
     public static ClientHttpConnector buildNettyClientHttpConnector(HttpClient httpClient, WebReactiveOptions webOptions) {
 
-        if(httpClient == null){
+        if (httpClient == null) {
             ConnectionProvider connectionProvider = TcpResources.get();
 
-            if(webOptions.getMaxConnections() != null || webOptions.getPendingAcquireMaxCount() != null){
+            Integer maxConnections = webOptions.getMaxConnections();
+            Integer pendingAcquireMaxCount = webOptions.getPendingAcquireMaxCount();
+            Long pendingAcquireTimeoutMillis = webOptions.getPendingAcquireTimeoutMillis();
+            if (maxConnections != null || pendingAcquireMaxCount != null || pendingAcquireTimeoutMillis != null) {
                 ConnectionProvider.Builder connectionProviderBuilder = connectionProvider.mutate();
-                if(webOptions.getMaxConnections() != null){
-                    connectionProviderBuilder = connectionProviderBuilder.maxConnections(webOptions.getMaxConnections());
+                if (maxConnections != null) {
+                    connectionProviderBuilder = connectionProviderBuilder.maxConnections(maxConnections);
                 }
-                if(webOptions.getPendingAcquireMaxCount() != null){
-                    connectionProviderBuilder = connectionProviderBuilder.pendingAcquireMaxCount(webOptions.getMaxConnections());
+                if (pendingAcquireMaxCount != null) {
+                    connectionProviderBuilder = connectionProviderBuilder.pendingAcquireMaxCount(pendingAcquireMaxCount);
+                }
+                if (pendingAcquireTimeoutMillis != null) {
+                    Duration pendingAcquireTimeout = Duration.ofMillis(pendingAcquireTimeoutMillis);
+                    connectionProviderBuilder = connectionProviderBuilder.pendingAcquireTimeout(pendingAcquireTimeout);
                 }
                 connectionProvider = connectionProviderBuilder.build();
             }
