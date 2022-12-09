@@ -93,7 +93,6 @@ public final class ReactiveHttpRequest {
   public String toString() {
     return "ReactiveHttpRequest{" +
             ", uri=" + uri +
-            ", headers=" + headers +
             ", target=" + target +
             "}";
   }
