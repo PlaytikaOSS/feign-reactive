@@ -107,7 +107,7 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 		Request jettyRequest = httpClient.newRequest(request.uri()).method(request.method());
 
 //		jettyRequest.headers(httpFields -> setUpHeaders(request, httpFields));
-		setUpHeaders(request, jettyRequest.getHeaders());
+		setUpHeaders(jettyRequest, request, jettyRequest.getHeaders());
 
 		if(requestTimeout > 0){
 			jettyRequest.timeout(requestTimeout, TimeUnit.MILLISECONDS);
@@ -139,8 +139,10 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 				});
 	}
 
-	protected void setUpHeaders(ReactiveHttpRequest request, HttpFields httpHeaders) {
-		request.headers().forEach(httpHeaders::put);
+	protected void setUpHeaders(Request jettyRequest, ReactiveHttpRequest request, HttpFields httpHeaders) {
+
+		request.headers().entrySet().forEach(header -> jettyRequest.header(header.getKey(), header.getValue().get(0)));
+		httpHeaders.forEach(header -> jettyRequest.header(header.getName(), header.getValue()));
 
 		String acceptHeader;
 		if(CharSequence.class.isAssignableFrom(returnActualClass) && returnPublisherClass == Mono.class){
@@ -155,12 +157,12 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 		else {
 			acceptHeader = APPLICATION_STREAM_JSON;
 		}
-		httpHeaders.put(ACCEPT.asString(), singletonList(acceptHeader));
+		jettyRequest.header(ACCEPT.asString(), acceptHeader);
 
 		if(tryUseCompression){
-			httpHeaders.put(ACCEPT_ENCODING.asString(), singletonList(GZIP));
+			jettyRequest.header(ACCEPT_ENCODING.asString(), GZIP);
 		} else {
-			httpHeaders.remove(ACCEPT_ENCODING.asString());
+			jettyRequest.header(ACCEPT_ENCODING, null);
 		}
 	}
 

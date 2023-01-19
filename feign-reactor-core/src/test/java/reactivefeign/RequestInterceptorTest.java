@@ -102,7 +102,7 @@ abstract public class RequestInterceptorTest extends BaseReactorTest {
 
     IcecreamServiceApi clientWithAuth = target(builder()
             .addRequestInterceptor(request -> Mono
-                    .subscriberContext()
+                    .deferContextual(Mono::just)
                     .map(ctx -> {
                       addOrdered(request.headers(), authHeader, ctx.get(authHeader));
                       request.headers().remove(UPPER_HEADER_TO_REMOVE.toLowerCase());
@@ -110,7 +110,10 @@ abstract public class RequestInterceptorTest extends BaseReactorTest {
                     })));
 
     Mono<IceCreamOrder> firstOrder = clientWithAuth.findFirstOrder()
-            .subscriberContext(Context.of(authHeader, "Bearer mytoken123"))
+            .contextWrite(ctx -> {
+                ctx.put(authHeader, "Bearer mytoken123");
+                return ctx;
+            })
             .subscribeOn(testScheduler());
 
     StepVerifier.create(firstOrder)

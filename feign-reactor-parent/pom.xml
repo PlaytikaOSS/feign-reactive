@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.playtika.reactivefeign</groupId>
         <artifactId>feign-reactor</artifactId>
-        <version>3.2.7-SNAPSHOT</version>
+        <version>4.0.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>feign-reactor-parent</artifactId>
@@ -13,13 +13,13 @@
 
 
     <properties>
-        <java.version>1.8</java.version>
+        <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--BOMs-->
-        <spring-cloud-bom.version>2021.0.1</spring-cloud-bom.version>
-        <spring-boot-dependencies-bom.version>2.6.5</spring-boot-dependencies-bom.version>
+        <spring-cloud-bom.version>2022.0.0</spring-cloud-bom.version>
+        <spring-boot-dependencies-bom.version>3.0.1</spring-boot-dependencies-bom.version>
 
         <!--other-->
         <!-- versions in spring-boot-dependency       -->
@@ -30,6 +30,8 @@
         <!--        <jetty-reactive-httpclient.version>3.0.5</jetty-reactive-httpclient.version>-->
 
         <json-reactor.version>0.0.4</json-reactor.version>
+        <rxjava.version>1.3.8</rxjava.version>
+        <rxjava2.version>2.2.21</rxjava2.version>
 
         <!-- Tests -->
         <junit.version>4.13.2</junit.version>
@@ -86,6 +88,16 @@
             </dependency>
 
             <!-- project dependencies -->
+            <dependency>
+                <groupId>io.reactivex</groupId>
+                <artifactId>rxjava</artifactId>
+                <version>${rxjava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.reactivex.rxjava2</groupId>
+                <artifactId>rxjava</artifactId>
+                <version>${rxjava2.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.playtika.reactivefeign</groupId>
                 <artifactId>feign-reactor-core</artifactId>

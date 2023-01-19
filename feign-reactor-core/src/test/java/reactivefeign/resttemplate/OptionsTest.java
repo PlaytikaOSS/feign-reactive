@@ -47,7 +47,7 @@ public class OptionsTest extends reactivefeign.OptionsTest {
   //to not detect blocking calls
   @Override
   protected Scheduler testScheduler(){
-    return Schedulers.elastic();
+    return Schedulers.boundedElastic();
   }
 
 }

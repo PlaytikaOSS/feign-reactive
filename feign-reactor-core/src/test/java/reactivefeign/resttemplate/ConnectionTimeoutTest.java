@@ -34,6 +34,6 @@ public class ConnectionTimeoutTest extends reactivefeign.ConnectionTimeoutTest {
   //to not detect blocking calls
   @Override
   protected Scheduler testScheduler(){
-    return Schedulers.elastic();
+    return Schedulers.boundedElastic();
   }
 }

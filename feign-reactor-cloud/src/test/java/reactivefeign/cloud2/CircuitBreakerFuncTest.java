@@ -5,7 +5,9 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockRule;
 import feign.RequestLine;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -49,7 +51,10 @@ public class CircuitBreakerFuncTest extends BaseReactorTest {
 
     @BeforeClass
     public static void setupCircuitBreakerFactory() {
-        circuitBreakerFactory = new ReactiveResilience4JCircuitBreakerFactory();
+        circuitBreakerFactory = new ReactiveResilience4JCircuitBreakerFactory(
+            CircuitBreakerRegistry.ofDefaults(),
+            TimeLimiterRegistry.ofDefaults()
+        );
     }
 
     @Test
