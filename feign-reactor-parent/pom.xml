@@ -227,6 +227,8 @@
                 </executions>
                 <configuration>
                 <!--Stam-->
+                <!--Stam-->
+                <!--Stam-->
                     <executable>bash</executable>
                     <arguments>
                         <argument>
