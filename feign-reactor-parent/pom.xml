@@ -18,8 +18,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--BOMs-->
-        <spring-cloud-bom.version>2022.0.0</spring-cloud-bom.version>
-        <spring-boot-dependencies-bom.version>3.0.1</spring-boot-dependencies-bom.version>
+        <spring-cloud-bom.version>2022.0.1</spring-cloud-bom.version>
+        <spring-boot-dependencies-bom.version>3.0.5</spring-boot-dependencies-bom.version>
 
         <!--other-->
         <!-- versions in spring-boot-dependency       -->
