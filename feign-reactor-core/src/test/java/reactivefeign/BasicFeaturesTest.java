@@ -32,13 +32,20 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static java.util.Arrays.asList;
-import static reactivefeign.TestUtils.*;
+import static reactivefeign.TestUtils.MAPPER;
+import static reactivefeign.TestUtils.readJsonFromFile;
+import static reactivefeign.TestUtils.toLowerCaseKeys;
 
 /**
  * @author Sergii Karpenko
@@ -142,12 +149,19 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
     wireMockRule.stubFor(get(urlEqualTo("/reactiveHttpResponse"))
             .willReturn(aResponse().withStatus(200)
                     .withHeader("Content-Type", "application/json")
+                    .withHeader("header1", "value1")
+                    .withHeader("header1", "value2")
                     .withBody(MAPPER.writeValueAsString(testObjects))));
 
     Mono<ReactiveHttpResponse<Flux<TestObject>>> result = client.reactiveHttpResponse();
     StepVerifier.create(result)
-            .expectNextMatches(response -> toLowerCaseKeys(response.headers())
-                    .containsKey("content-type"))
+            .expectNextMatches(response -> {
+              Map<String, List<String>> headers = toLowerCaseKeys(response.headers());
+              return headers.containsKey("content-type")
+                      && headers.get("header1").containsAll(
+                              new HashSet<>((asList("value1", "value2"))));
+            })
+
             .verifyComplete();
 
     Flux<TestObject> flux = result.flatMapMany(ReactiveHttpResponse::body);

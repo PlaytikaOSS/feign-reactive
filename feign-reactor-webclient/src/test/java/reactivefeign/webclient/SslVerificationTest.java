@@ -56,11 +56,10 @@ public class SslVerificationTest extends reactivefeign.BaseReactorTest {
 
     private ReactiveFeign.Builder<IcecreamServiceApi> builder(boolean disableSslValidation) {
 
-        return (ReactiveFeign.Builder) WebReactiveFeign.builder()
+        return WebReactiveFeign.<IcecreamServiceApi>builder()
                 .options(new WebReactiveOptions.Builder()
                         .setDisableSslValidation(disableSslValidation)
-                        .build()
-                );
+                        .build());
     }
 
 
