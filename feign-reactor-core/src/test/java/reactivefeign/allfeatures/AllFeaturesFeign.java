@@ -164,6 +164,10 @@ public interface AllFeaturesFeign extends AllFeaturesApi{
 	Mono<TestObject> expandPathParameter(@Param(value = "timestamp", expander = TimestampToDateExpander.class) long timestamp);
 
 	@Override
+	@RequestLine("GET /Invoices?filter=Company:{companyName}")
+	Mono<TestObject> expandPathParameterInRequestParameter(@Param("companyName") String companyName);
+
+	@Override
 	@RequestLine("GET /expand")
 	Mono<TestObject> expandDataTimeParameterWithCustomFormat(
 			@Param(value = "dateTime", expander = LocalDateTimeExpander.class) LocalDateTime dateTime);

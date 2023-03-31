@@ -91,7 +91,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
         this.queryExpanders = buildExpanders(queriesAll);
 
         //static template (POST & PUT)
-        if(pathExpander instanceof StaticPathExpander
+        if(pathExpander instanceof StaticExpander
                 && queriesAll.isEmpty()
                 && methodMetadata.queryMapIndex() == null){
             staticUri = URI.create(target.url() + cutTail(requestTemplate.url(), "/"));
@@ -266,7 +266,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
                         .map(v -> new Pair<>(e.getKey(), v)));
         return templatesFlattened.collect(groupingBy(
                 entry -> entry.left,
-                mapping(entry -> buildExpandFunction(entry.right), toList())));
+                mapping(entry -> buildMultiValueExpandFunction(entry.right), toList())));
     }
 
     /**
@@ -274,7 +274,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
      * @param template
      * @return function that able to map substitutions map to actual value for specified template
      */
-    private static Function<Substitutions, List<String>> buildExpandFunction(String template) {
+    private static Function<Substitutions, List<String>> buildMultiValueExpandFunction(String template) {
         Matcher matcher = SUBSTITUTION_PATTERN.matcher(template);
         if(matcher.matches()){
             String placeholder = matcher.group(1);
@@ -299,7 +299,8 @@ public class PublisherClientMethodHandler implements MethodHandler {
                 }
             };
         } else {
-            return substitutions -> singletonList(template);
+            Function<Substitutions, String> expandFunction = buildExpandFunction(template);
+            return substitutions -> singletonList(expandFunction.apply(substitutions));
         }
     }
 
@@ -308,10 +309,10 @@ public class PublisherClientMethodHandler implements MethodHandler {
         String requestUrl = getRequestUrl(requestTemplate);
 
         if(target instanceof Target.EmptyTarget){
-            return expandUrlForEmptyTarget(buildUrlExpandFunction(requestUrl));
+            return expandUrlForEmptyTarget(buildExpandFunction(requestUrl));
         } else {
             String targetUrl = cutTail(target.url(), "/");
-            return buildUrlExpandFunction(targetUrl+requestUrl);
+            return buildExpandFunction(targetUrl+requestUrl);
         }
     }
 
@@ -335,7 +336,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
      * @param template
      * @return function that able to map substitutions map to actual value for specified template
      */
-    private static Function<Substitutions, String> buildUrlExpandFunction(String template) {
+    private static Function<Substitutions, String> buildExpandFunction(String template) {
         List<Function<Substitutions, String>> chunks = new ArrayList<>();
         Matcher matcher = SUBSTITUTION_PATTERN.matcher(template);
         int previousMatchEnd = 0;
@@ -357,9 +358,9 @@ public class PublisherClientMethodHandler implements MethodHandler {
             previousMatchEnd = matcher.end();
         }
 
-        //no substitutions in path
+        //no substitutions in template
         if(previousMatchEnd == 0){
-            return new StaticPathExpander(template);
+            return new StaticExpander(template);
         }
 
         String textChunk = template.substring(previousMatchEnd);
@@ -371,11 +372,11 @@ public class PublisherClientMethodHandler implements MethodHandler {
                 .collect(Collectors.joining());
     }
 
-    private static class StaticPathExpander implements Function<Substitutions, String>{
+    private static class StaticExpander implements Function<Substitutions, String>{
 
         private final String staticPath;
 
-        private StaticPathExpander(String staticPath) {
+        private StaticExpander(String staticPath) {
             this.staticPath = staticPath;
         }
 

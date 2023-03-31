@@ -91,6 +91,8 @@ public interface AllFeaturesApi {
 
 	Mono<TestObject> expandPathParameter(long timestamp);
 
+	Mono<TestObject> expandPathParameterInRequestParameter(String companyName);
+
 	Mono<TestObject> expandDataTimeParameterWithCustomFormat(LocalDateTime dateTime);
 
 	class TestObject {

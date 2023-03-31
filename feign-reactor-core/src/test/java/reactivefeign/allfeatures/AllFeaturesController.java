@@ -179,6 +179,11 @@ public class AllFeaturesController implements AllFeaturesMvc {
 	}
 
 	@Override
+	public Mono<TestObject> expandPathParameterInRequestParameter(String companyName) {
+		return Mono.just(new TestObject(companyName));
+	}
+
+	@Override
 	public Flux<ByteBuffer> mirrorStreamingBinaryBodyReactive(Publisher<ByteBuffer> body) {
 		return Flux.from(body);
 	}
