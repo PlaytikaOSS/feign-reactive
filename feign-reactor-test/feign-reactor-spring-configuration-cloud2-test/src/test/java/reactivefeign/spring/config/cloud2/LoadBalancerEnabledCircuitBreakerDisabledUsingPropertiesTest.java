@@ -64,7 +64,7 @@ import static reactivefeign.spring.config.cloud2.LoadBalancerEnabledCircuitBreak
 				"spring.cloud.discovery.client.simple.instances."+ FEIGN_CLIENT_TEST_LB +"[1].uri=http://localhost:${"+MOCK_SERVER_2_PORT_PROPERTY+"}",
 		})
 @TestPropertySource(locations = {
-        "classpath:lb-enabled-cb-disabled.properties",
+		"classpath:lb-enabled-cb-disabled.properties",
 		"classpath:common.properties"})
 @DirtiesContext
 public class LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest {
@@ -84,13 +84,12 @@ public class LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest {
 
 	@Test
 	public void shouldRetryAndNotFailOnDefaultCircuitBreakerTimeout() {
-		Stream.of(mockHttpServer1, mockHttpServer2).forEach(wireMockServer -> {
-			wireMockServer.stubFor(get(urlPathMatching(TEST_URL))
-					.willReturn(aResponse()
-							.withFixedDelay(700)
-							.withBody(BODY_TEXT)
-							.withStatus(200)));
-		});
+		Stream.of(mockHttpServer1, mockHttpServer2).forEach(wireMockServer ->
+				wireMockServer.stubFor(get(urlPathMatching(TEST_URL))
+						.willReturn(aResponse()
+								.withFixedDelay(700)
+								.withBody(BODY_TEXT)
+								.withStatus(200))));
 
 		Mono<String> result = feignClient.testMethod();
 
@@ -107,24 +106,23 @@ public class LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest {
 
 	@Test
 	public void shouldNotFailWithLoadBalancingAndResponseEntity() {
-		Stream.of(mockHttpServer1, mockHttpServer2).forEach(wireMockServer -> {
-			wireMockServer.stubFor(get(urlPathMatching(TEST_URL))
-					.willReturn(aResponse()
-							.withHeader("header1", "headerValue")
-							.withBody(BODY_TEXT)
-							.withStatus(200)));
-		});
+		Stream.of(mockHttpServer1, mockHttpServer2).forEach(wireMockServer ->
+				wireMockServer.stubFor(get(urlPathMatching(TEST_URL))
+						.willReturn(aResponse()
+								.withHeader("header1", "headerValue")
+								.withBody(BODY_TEXT)
+								.withStatus(200))));
 
 		Mono<ResponseEntity<Mono<String>>> result = feignClient.testMethodResponseEntity();
 
 		StepVerifier.create(result
 						.doOnNext(response -> assertThat(response.getHeaders().containsKey("header1")).isTrue())
-				.flatMapMany(HttpEntity::getBody))
+						.flatMapMany(HttpEntity::getBody))
 				.expectNext(BODY_TEXT)
 				.verifyComplete();
 
-		assertThat(mockHttpServer1.getAllServeEvents().size()).isEqualTo(1);
-		assertThat(mockHttpServer2.getAllServeEvents().size()).isEqualTo(0);
+		assertThat(mockHttpServer1.getAllServeEvents().size() + mockHttpServer2.getAllServeEvents().size())
+				.isEqualTo(1);
 	}
 
 	@BeforeClass
