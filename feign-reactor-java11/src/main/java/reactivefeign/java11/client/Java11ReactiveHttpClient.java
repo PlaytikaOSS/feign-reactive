@@ -23,7 +23,11 @@ import com.fasterxml.jackson.databind.ObjectReader;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import feign.MethodMetadata;
 import org.reactivestreams.Publisher;
-import reactivefeign.client.*;
+import reactivefeign.client.ReactiveFeignException;
+import reactivefeign.client.ReactiveHttpClient;
+import reactivefeign.client.ReactiveHttpRequest;
+import reactivefeign.client.ReactiveHttpResponse;
+import reactivefeign.client.ReadTimeoutException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -40,8 +44,22 @@ import java.util.concurrent.CompletableFuture;
 
 import static java.net.http.HttpResponse.BodyHandlers.fromSubscriber;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static reactivefeign.utils.FeignUtils.*;
-import static reactivefeign.utils.HttpUtils.*;
+import static reactivefeign.utils.CollectionUtils.isEmpty;
+import static reactivefeign.utils.FeignUtils.getBodyActualType;
+import static reactivefeign.utils.FeignUtils.returnActualType;
+import static reactivefeign.utils.FeignUtils.returnPublisherType;
+import static reactivefeign.utils.HttpUtils.ACCEPT_ENCODING_HEADER;
+import static reactivefeign.utils.HttpUtils.ACCEPT_HEADER;
+import static reactivefeign.utils.HttpUtils.APPLICATION_JSON;
+import static reactivefeign.utils.HttpUtils.APPLICATION_JSON_UTF_8;
+import static reactivefeign.utils.HttpUtils.APPLICATION_OCTET_STREAM;
+import static reactivefeign.utils.HttpUtils.APPLICATION_STREAM_JSON;
+import static reactivefeign.utils.HttpUtils.APPLICATION_STREAM_JSON_UTF_8;
+import static reactivefeign.utils.HttpUtils.CONTENT_TYPE_HEADER;
+import static reactivefeign.utils.HttpUtils.GZIP;
+import static reactivefeign.utils.HttpUtils.NEWLINE_SEPARATOR;
+import static reactivefeign.utils.HttpUtils.TEXT;
+import static reactivefeign.utils.HttpUtils.TEXT_UTF_8;
 import static reactor.adapter.JdkFlowAdapter.publisherToFlowPublisher;
 
 /**
@@ -138,11 +156,17 @@ public class Java11ReactiveHttpClient implements ReactiveHttpClient {
 	protected void setUpHeaders(ReactiveHttpRequest request, HttpRequest.Builder requestBuilder) {
 		request.headers().forEach((key, values) -> values.forEach(value -> requestBuilder.header(key, value)));
 
-		String contentTypeHeader = getContentTypeHeader(request);
-		if(contentTypeHeader != null) {
-			requestBuilder.header(CONTENT_TYPE_HEADER, contentTypeHeader);
+		if(isEmpty(request.headers().get(CONTENT_TYPE_HEADER))){
+			String contentTypeHeader = getContentTypeHeader(request);
+			if(contentTypeHeader != null) {
+				requestBuilder.header(CONTENT_TYPE_HEADER, contentTypeHeader);
+			}
 		}
-        requestBuilder.header(ACCEPT_HEADER, getAcceptHeader());
+
+		if(isEmpty(request.headers().get(ACCEPT_HEADER))){
+			requestBuilder.header(ACCEPT_HEADER, getAcceptHeader());
+		}
+
 	}
 
     private String getAcceptHeader() {
