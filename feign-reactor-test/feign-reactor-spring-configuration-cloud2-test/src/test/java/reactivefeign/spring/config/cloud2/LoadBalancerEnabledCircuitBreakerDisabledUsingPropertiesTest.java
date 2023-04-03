@@ -26,6 +26,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -38,10 +40,15 @@ import reactor.test.StepVerifier;
 
 import java.util.stream.Stream;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
-import static reactivefeign.spring.config.cloud2.LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest.*;
+import static reactivefeign.spring.config.cloud2.LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest.FEIGN_CLIENT_TEST_LB;
+import static reactivefeign.spring.config.cloud2.LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest.MOCK_SERVER_1_PORT_PROPERTY;
+import static reactivefeign.spring.config.cloud2.LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest.MOCK_SERVER_2_PORT_PROPERTY;
+import static reactivefeign.spring.config.cloud2.LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest.TestConfiguration;
 
 /**
  * @author Sergii Karpenko
@@ -69,8 +76,8 @@ public class LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest {
 	private static final String TEST_URL = "/testUrl";
 	private static final String BODY_TEXT = "test";
 
-	private static WireMockServer mockHttpServer1 = new WireMockServer(wireMockConfig().dynamicPort());
-	private static WireMockServer mockHttpServer2 = new WireMockServer(wireMockConfig().dynamicPort());
+	private static final WireMockServer mockHttpServer1 = new WireMockServer(wireMockConfig().dynamicPort());
+	private static final WireMockServer mockHttpServer2 = new WireMockServer(wireMockConfig().dynamicPort());
 
 	@Autowired
 	TestReactiveFeignClient feignClient;
@@ -96,6 +103,28 @@ public class LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest {
 
 		assertThat(mockHttpServer1.getAllServeEvents().size()).isEqualTo(1);
 		assertThat(mockHttpServer2.getAllServeEvents().size()).isEqualTo(1);
+	}
+
+	@Test
+	public void shouldNotFailWithLoadBalancingAndResponseEntity() {
+		Stream.of(mockHttpServer1, mockHttpServer2).forEach(wireMockServer -> {
+			wireMockServer.stubFor(get(urlPathMatching(TEST_URL))
+					.willReturn(aResponse()
+							.withHeader("header1", "headerValue")
+							.withBody(BODY_TEXT)
+							.withStatus(200)));
+		});
+
+		Mono<ResponseEntity<Mono<String>>> result = feignClient.testMethodResponseEntity();
+
+		StepVerifier.create(result
+						.doOnNext(response -> assertThat(response.getHeaders().containsKey("header1")).isTrue())
+				.flatMapMany(HttpEntity::getBody))
+				.expectNext(BODY_TEXT)
+				.verifyComplete();
+
+		assertThat(mockHttpServer1.getAllServeEvents().size()).isEqualTo(1);
+		assertThat(mockHttpServer2.getAllServeEvents().size()).isEqualTo(0);
 	}
 
 	@BeforeClass
@@ -124,6 +153,9 @@ public class LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest {
 
 		@GetMapping(path = TEST_URL)
 		Mono<String> testMethod();
+
+		@GetMapping(path = TEST_URL)
+		Mono<ResponseEntity<Mono<String>>> testMethodResponseEntity();
 
 	}
 
