@@ -171,17 +171,17 @@ public class WebReactiveOptions extends ReactiveOptions {
     private Long timeout;
 
 
-    public ReactiveOptions.ProxySettingsBuilder username(String username) {
+    public WebProxySettingsBuilder username(String username) {
       this.username = username;
       return this;
     }
 
-    public ReactiveOptions.ProxySettingsBuilder password(String password) {
+    public WebProxySettingsBuilder password(String password) {
       this.password = password;
       return this;
     }
 
-    public ReactiveOptions.ProxySettingsBuilder timeout(Long timeout) {
+    public WebProxySettingsBuilder timeout(Long timeout) {
       this.timeout = timeout;
       return this;
     }
