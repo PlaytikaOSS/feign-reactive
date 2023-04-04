@@ -24,7 +24,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.springframework.web.client.RestClientException;
-import reactivefeign.allfeatures.AllFeaturesApi;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -45,6 +44,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static reactivefeign.TestUtils.MAPPER;
 import static reactivefeign.TestUtils.readJsonFromFile;
 import static reactivefeign.TestUtils.toLowerCaseKeys;
@@ -235,14 +235,32 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
   public void shouldPassExplicitContentTypeHeader() {
 
     String body = "123";
+    String contentTypeHeader = "Content-Type";
     wireMockRule.stubFor(post(urlEqualTo("/passExplicitContentType"))
             .withRequestBody(equalTo(body))
-            .withHeader("Content-Type", equalTo("application/x-www-form-urlencoded"))
+            .withHeader(contentTypeHeader, equalTo("application/x-www-form-urlencoded"))
             .willReturn(aResponse().withStatus(200)));
 
     StepVerifier.create(client.passExplicitContentTypeHeader(body)
                     .subscribeOn(testScheduler()))
             .verifyComplete();
+
+    assertThat(wireMockRule.getAllServeEvents().get(0).getRequest().header(contentTypeHeader).values())
+            .containsExactly("application/x-www-form-urlencoded");
+  }
+
+  @Test
+  public void shouldNotCutTrailingSlash() {
+
+    wireMockRule.stubFor(get(urlEqualTo("/users/1/dogs/"))
+            .willReturn(aResponse().withStatus(200)));
+
+    StepVerifier.create(client.keepTrailingSlash(1)
+                    .subscribeOn(testScheduler()))
+            .verifyComplete();
+
+    assertThat(wireMockRule.getAllServeEvents().get(0).getRequest().getUrl())
+            .endsWith("/users/1/dogs/");
   }
 
   public interface TestClient {
@@ -272,7 +290,10 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
 
     @Headers("Content-Type: application/x-www-form-urlencoded")
     @RequestLine("POST /passExplicitContentType")
-    Mono<AllFeaturesApi.TestObject> passExplicitContentTypeHeader(String body);
+    Mono<Void> passExplicitContentTypeHeader(String body);
+
+    @RequestLine("GET /users/{userId}/dogs/")
+    Mono<Void> keepTrailingSlash(@Param("userId") int userId);
   }
 
   public interface EmptyTargetClient {

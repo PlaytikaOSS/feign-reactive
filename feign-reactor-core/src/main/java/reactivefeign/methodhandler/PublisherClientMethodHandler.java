@@ -319,9 +319,8 @@ public class PublisherClientMethodHandler implements MethodHandler {
     private static String getRequestUrl(RequestTemplate requestTemplate) {
         String requestUrl = cutTail(requestTemplate.url(), requestTemplate.queryLine());
         requestUrl = cutPrefix(requestUrl, "/");
-        requestUrl = cutTail(requestUrl, "/");
         if(!requestUrl.isEmpty()){
-            requestUrl = "/"+requestUrl;
+            requestUrl = "/" + requestUrl;
         }
         return requestUrl;
     }
