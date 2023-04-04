@@ -16,10 +16,13 @@ package reactivefeign;
 import feign.InvocationHandlerFactory;
 import feign.InvocationHandlerFactory.MethodHandler;
 import feign.Target;
+import kotlin.coroutines.Continuation;
+import reactor.core.publisher.Mono;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.Arrays;
 import java.util.Map;
 
 import static feign.Util.checkNotNull;
@@ -61,6 +64,13 @@ public final class ReactiveInvocationHandler implements InvocationHandler {
 
   @Override
   public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable {
+    if (MethodKt.isSuspend(method)) {
+      Object[] newArgs = Arrays.copyOfRange(args, 0, args.length - 1);
+      Mono<?> result = (Mono<?>) dispatch.get(method).invoke(newArgs);
+      Continuation<Object> continuation = (Continuation<Object>) args[args.length - 1];
+      return MonoKt.awaitReactiveHttpResponse(result, continuation);
+    }
+
     return dispatch.get(method).invoke(args);
   }
 

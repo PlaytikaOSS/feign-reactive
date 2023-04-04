@@ -296,7 +296,9 @@ public class ReactiveFeign {
             MethodMetadata methodMetadata,
             Retry retry) {
       Type returnPublisherType = returnPublisherType(methodMetadata);
-      if(returnPublisherType == Mono.class){
+      if (MethodKt.isSuspend(methodMetadata.method())) {
+        return new MonoRetryPublisherHttpClient(publisherClient, methodMetadata, retry);
+      } else if (returnPublisherType == Mono.class) {
         return new MonoRetryPublisherHttpClient(publisherClient, methodMetadata, retry);
       } else if(returnPublisherType == Flux.class) {
         return new FluxRetryPublisherHttpClient(publisherClient, methodMetadata, retry);
@@ -306,7 +308,9 @@ public class ReactiveFeign {
     }
 
     protected PublisherHttpClient toPublisher(ReactiveHttpClient reactiveHttpClient, MethodMetadata methodMetadata){
-      if(isResponsePublisher(methodMetadata.returnType())){
+      if (MethodKt.isSuspend(methodMetadata.method())) {
+        return new ResponsePublisherHttpClient(reactiveHttpClient);
+      } else if (isResponsePublisher(methodMetadata.returnType())) {
         return new ResponsePublisherHttpClient(reactiveHttpClient);
       }
 
