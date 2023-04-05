@@ -519,6 +519,27 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 				.verifyComplete();
 	}
 
+	@Test
+	public void shouldPassUrlEncodedFormMap() {
+		Map<String, String> form = new HashMap<>();
+		form.put("key1", "value1");
+		form.put("key2", "value2");
+
+		StepVerifier.create(client.formDataMap(form)
+						.subscribeOn(testScheduler()))
+				.expectNextMatches(result -> result.payload.equals("{key1=[value1], key2=[value2]}"))
+				.verifyComplete();
+	}
+
+	@Test
+	public void shouldPassUrlEncodedFormParameters() {
+
+		StepVerifier.create(client.formDataParameters("value1", "value2")
+						.subscribeOn(testScheduler()))
+				.expectNextMatches(result -> result.payload.equals("{key1=[value1], key2=[value2]}"))
+				.verifyComplete();
+	}
+
 	private static ByteBuffer fromByteArray(byte[] data){
 		return ByteBuffer.wrap(data);
 	}

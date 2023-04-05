@@ -238,7 +238,7 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
     String contentTypeHeader = "Content-Type";
     wireMockRule.stubFor(post(urlEqualTo("/passExplicitContentType"))
             .withRequestBody(equalTo(body))
-            .withHeader(contentTypeHeader, equalTo("application/x-www-form-urlencoded"))
+            .withHeader(contentTypeHeader, equalTo("application/customContentType"))
             .willReturn(aResponse().withStatus(200)));
 
     StepVerifier.create(client.passExplicitContentTypeHeader(body)
@@ -246,7 +246,7 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
             .verifyComplete();
 
     assertThat(wireMockRule.getAllServeEvents().get(0).getRequest().header(contentTypeHeader).values())
-            .containsExactly("application/x-www-form-urlencoded");
+            .containsExactly("application/customContentType");
   }
 
   @Test
@@ -288,7 +288,7 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
     @RequestLine("POST /queryPojo")
     Mono<Void> queryPojo(@QueryMap TestObject queryPojo);
 
-    @Headers("Content-Type: application/x-www-form-urlencoded")
+    @Headers("Content-Type: application/customContentType")
     @RequestLine("POST /passExplicitContentType")
     Mono<Void> passExplicitContentTypeHeader(String body);
 

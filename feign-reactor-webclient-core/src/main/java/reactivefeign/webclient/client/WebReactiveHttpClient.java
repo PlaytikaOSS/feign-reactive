@@ -33,6 +33,7 @@ import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.methodhandler.PublisherClientMethodHandler;
+import reactivefeign.utils.SerializedFormData;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.ParameterizedType;
@@ -43,7 +44,11 @@ import static feign.Util.resolveLastTypeParameter;
 import static java.util.Optional.ofNullable;
 import static org.springframework.core.ParameterizedTypeReference.forType;
 import static reactivefeign.ReactiveContract.isReactorType;
-import static reactivefeign.utils.FeignUtils.*;
+import static reactivefeign.methodhandler.PublisherClientMethodHandler.MultipartMap;
+import static reactivefeign.utils.FeignUtils.getBodyActualType;
+import static reactivefeign.utils.FeignUtils.returnActualType;
+import static reactivefeign.utils.FeignUtils.returnPublisherType;
+
 
 /**
  * Uses {@link WebClient} to execute http requests
@@ -127,11 +132,14 @@ public class WebReactiveHttpClient<P extends Publisher<?>> implements ReactiveHt
 	}
 
 	protected BodyInserter<?, ? super ClientHttpRequest> provideBody(ReactiveHttpRequest request) {
-		if(bodyActualType != null){
-			return BodyInserters.fromPublisher(request.body(), bodyActualType);
-		} else if(request.body() instanceof PublisherClientMethodHandler.MultipartMap){
+		if(request.body() instanceof SerializedFormData){
+			return BodyInserters.fromValue(((SerializedFormData)request.body()).getFormData());
+		} else if(request.body() instanceof MultipartMap){
 			return BodyInserters.fromMultipartData(new MultiValueMapAdapter<>(
 					((PublisherClientMethodHandler.MultipartMap) request.body()).getMap()));
+		}
+		else if(bodyActualType != null){
+			return BodyInserters.fromPublisher(request.body(), bodyActualType);
 		} else {
 			return BodyInserters.empty();
 		}

@@ -15,11 +15,17 @@ import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.core.io.buffer.DefaultDataBufferFactory;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.MultiValueMapAdapter;
 import reactivefeign.webclient.WebReactiveFeign;
 import reactor.core.publisher.Flux;
 import reactor.test.StepVerifier;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import static java.nio.ByteBuffer.wrap;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @RunWith(SpringRunner.class)
@@ -34,9 +40,6 @@ public class WebClientFeaturesTest {
 
     @LocalServerPort
     private int port;
-
-    @Rule
-    public ExpectedException expectedException = ExpectedException.none();
 
     @Before
     public void setUp() {
@@ -69,6 +72,17 @@ public class WebClientFeaturesTest {
         ByteArrayResource resource = new ByteArrayResource(data);
         Flux<DataBuffer> returned = client.mirrorResourceReactiveWithZeroCopying(resource);
         assertThat(DataBufferUtils.join(returned).block().asByteBuffer()).isEqualTo(wrap(data));
+    }
+
+    @Test
+    public void shouldPassUrlEncodedForm() {
+        Map<String, List<String>> form = new HashMap<>();
+        form.put("key1", singletonList("value1"));
+        form.put("key2", singletonList("value2"));
+
+        StepVerifier.create(client.passUrlEncodedForm(new MultiValueMapAdapter<>(form)))
+                .expectNextMatches(result -> result.payload.equals("{key1=[value1], key2=[value2]}"))
+                .verifyComplete();
     }
 
 

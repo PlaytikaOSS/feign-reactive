@@ -28,6 +28,7 @@ import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.client.ReadTimeoutException;
+import reactivefeign.utils.SerializedFormData;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -68,7 +69,7 @@ import static reactor.adapter.JdkFlowAdapter.publisherToFlowPublisher;
  */
 public class Java11ReactiveHttpClient implements ReactiveHttpClient {
 
-    private final HttpClient httpClient;
+	private final HttpClient httpClient;
 	private final Class bodyActualClass;
 	private final Class returnPublisherClass;
 	private final Class returnActualClass;
@@ -130,25 +131,25 @@ public class Java11ReactiveHttpClient implements ReactiveHttpClient {
 			requestBuilder = requestBuilder.setHeader(ACCEPT_ENCODING_HEADER, GZIP);
 		}
 
-        Java11ReactiveHttpResponse.ReactiveBodySubscriber bodySubscriber = new Java11ReactiveHttpResponse.ReactiveBodySubscriber();
+		Java11ReactiveHttpResponse.ReactiveBodySubscriber bodySubscriber = new Java11ReactiveHttpResponse.ReactiveBodySubscriber();
 
-        CompletableFuture<HttpResponse<Void>> response = httpClient.sendAsync(
-                requestBuilder.build(), fromSubscriber(bodySubscriber));
+		CompletableFuture<HttpResponse<Void>> response = httpClient.sendAsync(
+				requestBuilder.build(), fromSubscriber(bodySubscriber));
 
-        return Mono.fromFuture(response)
-                .<ReactiveHttpResponse>map(resp -> {
-                	if(!resp.version().equals(httpClient.version())){
-                		throw new IllegalArgumentException("Incorrect response version:"+resp.version());
+		return Mono.fromFuture(response)
+				.<ReactiveHttpResponse>map(resp -> {
+					if(!resp.version().equals(httpClient.version())){
+						throw new IllegalArgumentException("Incorrect response version:"+resp.version());
 					}
-                	return new Java11ReactiveHttpResponse(request, resp, bodySubscriber.content(),
+					return new Java11ReactiveHttpResponse(request, resp, bodySubscriber.content(),
 							returnPublisherClass, returnActualClass,
 							jsonFactory, responseReader);
 				})
-                .onErrorMap(ex -> {
-                	if(ex instanceof java.net.http.HttpTimeoutException){
-                		return new ReadTimeoutException(ex.getCause(), request);
+				.onErrorMap(ex -> {
+					if(ex instanceof java.net.http.HttpTimeoutException){
+						return new ReadTimeoutException(ex, request);
 					} else {
-                		return new ReactiveFeignException(ex, request);
+						return new ReactiveFeignException(ex, request);
 					}
 				});
 	}
@@ -169,77 +170,76 @@ public class Java11ReactiveHttpClient implements ReactiveHttpClient {
 
 	}
 
-    private String getAcceptHeader() {
-        String acceptHeader;
-        if(CharSequence.class.isAssignableFrom(returnActualClass) && returnPublisherClass == Mono.class){
-            acceptHeader = TEXT;
-        }
-        else if(returnActualClass == ByteBuffer.class || returnActualClass == byte[].class){
-            acceptHeader = APPLICATION_OCTET_STREAM;
-        }
-        else if(returnPublisherClass == Mono.class){
-            acceptHeader = APPLICATION_JSON;
-        }
-        else {
-            acceptHeader = APPLICATION_STREAM_JSON;
-        }
-        return acceptHeader;
-    }
+	private String getAcceptHeader() {
+		String acceptHeader;
+		if(CharSequence.class.isAssignableFrom(returnActualClass) && returnPublisherClass == Mono.class){
+			acceptHeader = TEXT;
+		}
+		else if(returnActualClass == ByteBuffer.class || returnActualClass == byte[].class){
+			acceptHeader = APPLICATION_OCTET_STREAM;
+		}
+		else if(returnPublisherClass == Mono.class){
+			acceptHeader = APPLICATION_JSON;
+		}
+		else {
+			acceptHeader = APPLICATION_STREAM_JSON;
+		}
+		return acceptHeader;
+	}
 
-    private String getContentTypeHeader(ReactiveHttpRequest request) {
-        String contentType;
+	private String getContentTypeHeader(ReactiveHttpRequest request) {
+		String contentType;
 		if(bodyActualClass == null){
 			return null;
 		}
 
-        if(request.body() instanceof Mono){
-            if(bodyActualClass == ByteBuffer.class){
-                contentType = APPLICATION_OCTET_STREAM;
-            }
-            else if (CharSequence.class.isAssignableFrom(bodyActualClass)){
-                contentType = TEXT_UTF_8;
-            }
-            else {
-                contentType = APPLICATION_JSON_UTF_8;
-            }
-        } else {
-            if(bodyActualClass == ByteBuffer.class){
-                contentType = APPLICATION_OCTET_STREAM;
-            }
-            else {
-                contentType = APPLICATION_STREAM_JSON_UTF_8;
-            }
-        }
-        return contentType;
-    }
-
-    protected HttpRequest.BodyPublisher provideBody(ReactiveHttpRequest request) {
-		if(bodyActualClass == null){
-			return HttpRequest.BodyPublishers.noBody();
-		}
-
-		Publisher<ByteBuffer> bodyPublisher;
 		if(request.body() instanceof Mono){
 			if(bodyActualClass == ByteBuffer.class){
-				bodyPublisher = (Mono)request.body();
+				contentType = APPLICATION_OCTET_STREAM;
 			}
 			else if (CharSequence.class.isAssignableFrom(bodyActualClass)){
-				bodyPublisher = Flux.from(request.body()).map(this::toCharSequenceChunk);
+				contentType = TEXT_UTF_8;
 			}
 			else {
-				bodyPublisher = Flux.from(request.body()).map(data -> toJsonChunk(data, false));
+				contentType = APPLICATION_JSON_UTF_8;
 			}
-
 		} else {
 			if(bodyActualClass == ByteBuffer.class){
-				bodyPublisher = (Publisher)request.body();
+				contentType = APPLICATION_OCTET_STREAM;
 			}
 			else {
-				bodyPublisher = Flux.from(request.body()).map(data -> toJsonChunk(data, true));
+				contentType = APPLICATION_STREAM_JSON_UTF_8;
 			}
 		}
+		return contentType;
+	}
 
-		return HttpRequest.BodyPublishers.fromPublisher(publisherToFlowPublisher(bodyPublisher));
+	protected HttpRequest.BodyPublisher provideBody(ReactiveHttpRequest request) {
+		if(bodyActualClass != null || request.body() instanceof SerializedFormData) {
+			Publisher<ByteBuffer> bodyPublisher;
+			if (request.body() instanceof SerializedFormData) {
+				bodyPublisher = Mono.just(((SerializedFormData) request.body()).getFormData());
+			} else if (request.body() instanceof Mono) {
+				if (bodyActualClass == ByteBuffer.class) {
+					bodyPublisher = (Mono) request.body();
+				} else if (CharSequence.class.isAssignableFrom(bodyActualClass)) {
+					bodyPublisher = Flux.from(request.body()).map(this::toCharSequenceChunk);
+				} else {
+					bodyPublisher = Flux.from(request.body()).map(data -> toJsonChunk(data, false));
+				}
+
+			} else {
+				if (bodyActualClass == ByteBuffer.class) {
+					bodyPublisher = (Publisher) request.body();
+				} else {
+					bodyPublisher = Flux.from(request.body()).map(data -> toJsonChunk(data, true));
+				}
+			}
+
+			return HttpRequest.BodyPublishers.fromPublisher(publisherToFlowPublisher(bodyPublisher));
+		} else {
+			return HttpRequest.BodyPublishers.noBody();
+		}
 	}
 
 	protected ByteBuffer toCharSequenceChunk(Object data){

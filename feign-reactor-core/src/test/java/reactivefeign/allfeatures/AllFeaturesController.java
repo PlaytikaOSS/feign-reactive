@@ -19,6 +19,7 @@ package reactivefeign.allfeatures;
 import org.reactivestreams.Publisher;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -181,6 +182,18 @@ public class AllFeaturesController implements AllFeaturesMvc {
 	@Override
 	public Mono<TestObject> expandPathParameterInRequestParameter(String companyName) {
 		return Mono.just(new TestObject(companyName));
+	}
+
+	@Override
+	public Mono<AllFeaturesApi.TestObject> formDataMap(ServerWebExchange serverWebExchange){
+		return serverWebExchange.getFormData()
+				.map(formData -> new AllFeaturesApi.TestObject(formData.toString()));
+	}
+
+	@Override
+	public Mono<AllFeaturesApi.TestObject> formDataParameters(ServerWebExchange serverWebExchange){
+		return serverWebExchange.getFormData()
+				.map(formData -> new AllFeaturesApi.TestObject(formData.toString()));
 	}
 
 	@Override

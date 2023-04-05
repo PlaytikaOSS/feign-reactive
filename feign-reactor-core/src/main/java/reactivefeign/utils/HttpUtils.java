@@ -18,7 +18,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import static reactivefeign.utils.HttpUtils.StatusCodeFamily.*;
+import static reactivefeign.utils.HttpUtils.StatusCodeFamily.CLIENT_ERROR;
+import static reactivefeign.utils.HttpUtils.StatusCodeFamily.INFORMATIONAL;
+import static reactivefeign.utils.HttpUtils.StatusCodeFamily.OTHER;
+import static reactivefeign.utils.HttpUtils.StatusCodeFamily.REDIRECTION;
+import static reactivefeign.utils.HttpUtils.StatusCodeFamily.SERVER_ERROR;
+import static reactivefeign.utils.HttpUtils.StatusCodeFamily.SUCCESSFUL;
 
 public final class HttpUtils {
 
@@ -38,6 +43,8 @@ public final class HttpUtils {
   public static final String MULTIPART_RELATED = "multipart/related";
   public static final Set<String> MULTIPART_MIME_TYPES = Collections.unmodifiableSet(new HashSet<>(
           Arrays.asList(MULTIPART_FORM_DATA, MULTIPART_MIXED, MULTIPART_RELATED)));
+
+  public static final String FORM_URL_ENCODED = "application/x-www-form-urlencoded";
 
   public static final byte[] NEWLINE_SEPARATOR = {'\n'};
   public static final String CONTENT_TYPE_HEADER = "Content-Type";

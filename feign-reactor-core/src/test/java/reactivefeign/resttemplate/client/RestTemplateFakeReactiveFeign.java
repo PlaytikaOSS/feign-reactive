@@ -48,6 +48,7 @@ public class RestTemplateFakeReactiveFeign {
         ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(mapper);
         restTemplate.getMessageConverters().add(0, converter);
+        restTemplate.getMessageConverters().add(new SerializedFormMessageConverter());
       }
 
       @Override
@@ -60,6 +61,7 @@ public class RestTemplateFakeReactiveFeign {
       public ReactiveFeignBuilder<T> objectMapper(ObjectMapper objectMapper) {
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(objectMapper);
         restTemplate.getMessageConverters().set(0, converter);
+        restTemplate.getMessageConverters().add(new SerializedFormMessageConverter());
         return this;
       }
 

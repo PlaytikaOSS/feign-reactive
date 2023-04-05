@@ -24,7 +24,12 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
-import reactivefeign.client.*;
+import reactivefeign.client.ReactiveFeignException;
+import reactivefeign.client.ReactiveHttpClient;
+import reactivefeign.client.ReactiveHttpRequest;
+import reactivefeign.client.ReactiveHttpResponse;
+import reactivefeign.client.ReadTimeoutException;
+import reactivefeign.utils.SerializedFormData;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -59,7 +64,10 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
   public Mono<ReactiveHttpResponse> executeRequest(ReactiveHttpRequest request) {
 
     Mono<Object> bodyMono;
-    if (request.body() instanceof Mono) {
+    if(request.body() instanceof SerializedFormData){
+      bodyMono = Mono.just(((SerializedFormData) request.body()).getFormData());
+    }
+    else if (request.body() instanceof Mono) {
       bodyMono = ((Mono<Object>) request.body());
     } else if (request.body() instanceof Flux) {
       bodyMono = ((Flux) request.body()).collectList();
@@ -69,18 +77,18 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
     Mono<Object> bodyMonoFinal = bodyMono.switchIfEmpty(Mono.just(new byte[0]));
 
     return Mono.defer(() -> bodyMonoFinal).<ReactiveHttpResponse>flatMap(body -> {
-      MultiValueMap<String, String> headers = new LinkedMultiValueMap<>(request.headers());
-      if (acceptGzip) {
-        headers.add("Accept-Encoding", "gzip");
-      }
+              MultiValueMap<String, String> headers = new LinkedMultiValueMap<>(request.headers());
+              if (acceptGzip) {
+                headers.add("Accept-Encoding", "gzip");
+              }
 
-      return Mono.fromCallable(() -> {
-        ResponseEntity response = restTemplate.exchange(
-                request.uri(), HttpMethod.valueOf(request.method()),
-                new HttpEntity<>(body, headers), responseType());
-        return new FakeReactiveHttpResponse(request, response, returnPublisherType);
-      });
-    })
+              return Mono.fromCallable(() -> {
+                ResponseEntity response = restTemplate.exchange(
+                        request.uri(), HttpMethod.valueOf(request.method()),
+                        new HttpEntity<>(body, headers), responseType());
+                return new FakeReactiveHttpResponse(request, response, returnPublisherType);
+              });
+            })
             .onErrorResume(HttpStatusCodeException.class,
                     ex -> Mono.just(new ErrorReactiveHttpResponse(request, ex)))
             .onErrorMap(ex -> {

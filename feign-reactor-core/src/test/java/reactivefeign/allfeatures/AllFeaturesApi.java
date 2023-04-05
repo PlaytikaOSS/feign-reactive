@@ -95,6 +95,12 @@ public interface AllFeaturesApi {
 
 	Mono<TestObject> expandDataTimeParameterWithCustomFormat(LocalDateTime dateTime);
 
+	Mono<TestObject> formDataMap(Map<String, ?> form);
+
+	Mono<TestObject> formDataParameters(
+			String organizationName,
+			String organizationId);
+
 	class TestObject {
 
 		public String payload;
