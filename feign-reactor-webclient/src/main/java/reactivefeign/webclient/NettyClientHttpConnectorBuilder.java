@@ -99,7 +99,10 @@ class NettyClientHttpConnectorBuilder {
             httpClient = httpClient.followRedirect(webOptions.isFollowRedirects());
         }
 
-        if (Objects.equals(Boolean.TRUE, webOptions.isDisableSslValidation())) {
+        if(webOptions.getSslContext() != null){
+            httpClient = httpClient.secure(sslProviderBuilder -> sslProviderBuilder.sslContext(webOptions.getSslContext()));
+        }
+        else if (Objects.equals(Boolean.TRUE, webOptions.isDisableSslValidation())) {
             try {
                 SslContext sslContext = SslContextBuilder.forClient()
                         .trustManager(InsecureTrustManagerFactory.INSTANCE)

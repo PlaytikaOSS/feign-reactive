@@ -13,6 +13,7 @@
  */
 package reactivefeign.webclient;
 
+import io.netty.handler.ssl.SslContext;
 import reactivefeign.ReactiveOptions;
 
 /**
@@ -30,6 +31,7 @@ public class WebReactiveOptions extends ReactiveOptions {
   private final Long readTimeoutMillis;
   private final Long writeTimeoutMillis;
   private final Long responseTimeoutMillis;
+  private SslContext sslContext;
   private final Boolean disableSslValidation;
   private final Integer maxConnections;
   private final Integer pendingAcquireMaxCount;
@@ -38,13 +40,15 @@ public class WebReactiveOptions extends ReactiveOptions {
   private WebReactiveOptions(Boolean useHttp2, Long connectTimeoutMillis,
                              Long readTimeoutMillis, Long writeTimeoutMillis, Long responseTimeoutMillis,
                              Boolean tryUseCompression, Boolean followRedirects,
-                             ProxySettings proxySettings, Boolean disableSslValidation,
+                             ProxySettings proxySettings,
+                             SslContext sslContext, Boolean disableSslValidation,
                              Integer maxConnections, Integer pendingAcquireMaxCount, Long pendingAcquireTimeoutMillis) {
     super(useHttp2, connectTimeoutMillis, tryUseCompression, followRedirects, proxySettings);
 
     this.readTimeoutMillis = readTimeoutMillis;
     this.writeTimeoutMillis = writeTimeoutMillis;
     this.responseTimeoutMillis = responseTimeoutMillis;
+    this.sslContext = sslContext;
     this.disableSslValidation = disableSslValidation;
     this.maxConnections = maxConnections;
     this.pendingAcquireMaxCount = pendingAcquireMaxCount;
@@ -71,6 +75,10 @@ public class WebReactiveOptions extends ReactiveOptions {
     return disableSslValidation;
   }
 
+  public SslContext getSslContext() {
+    return sslContext;
+  }
+
   public Integer getMaxConnections() {
     return maxConnections;
   }
@@ -88,6 +96,7 @@ public class WebReactiveOptions extends ReactiveOptions {
     private Long writeTimeoutMillis;
     private Long responseTimeoutMillis;
     private Boolean disableSslValidation;
+    private SslContext sslContext;
     private Integer maxConnections;
     private Integer pendingAcquireMaxCount;
     private Long pendingAcquireTimeoutMillis;
@@ -114,6 +123,11 @@ public class WebReactiveOptions extends ReactiveOptions {
       return this;
     }
 
+    public Builder setSslContext(SslContext sslContext) {
+      this.sslContext = sslContext;
+      return this;
+    }
+
     public Builder setMaxConnections(Integer maxConnections) {
       this.maxConnections = maxConnections;
       return this;
@@ -132,7 +146,8 @@ public class WebReactiveOptions extends ReactiveOptions {
     public WebReactiveOptions build() {
       return new WebReactiveOptions(useHttp2, connectTimeoutMillis,
               readTimeoutMillis, writeTimeoutMillis, responseTimeoutMillis,
-              acceptCompressed, followRedirects, proxySettings, disableSslValidation,
+              acceptCompressed, followRedirects, proxySettings,
+              sslContext, disableSslValidation,
               maxConnections, pendingAcquireMaxCount, pendingAcquireTimeoutMillis);
     }
   }
