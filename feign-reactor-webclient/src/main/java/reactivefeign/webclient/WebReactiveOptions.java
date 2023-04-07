@@ -34,9 +34,11 @@ public class WebReactiveOptions extends ReactiveOptions {
   private final Long responseTimeoutMillis;
   private final SslContext sslContext;
   private final Boolean disableSslValidation;
+  private final Boolean metricsEnabled;
 
   private final ConnectionProvider connectionProvider;
   private final Integer maxConnections;
+  private final Boolean connectionMetricsEnabled;
   private final Long connectionMaxIdleTimeMillis;
   private final Long connectionMaxLifeTimeMillis;
   private final Integer pendingAcquireMaxCount;
@@ -47,8 +49,9 @@ public class WebReactiveOptions extends ReactiveOptions {
                              Boolean tryUseCompression, Boolean followRedirects,
                              ProxySettings proxySettings,
                              SslContext sslContext, Boolean disableSslValidation,
+                             Boolean metricsEnabled,
                              ConnectionProvider connectionProvider,
-                             Integer maxConnections,
+                             Integer maxConnections, Boolean connectionMetricsEnabled,
                              Long connectionMaxIdleTimeMillis, Long connectionMaxLifeTimeMillis,
                              Integer pendingAcquireMaxCount, Long pendingAcquireTimeoutMillis) {
     super(useHttp2, connectTimeoutMillis, tryUseCompression, followRedirects, proxySettings);
@@ -58,8 +61,10 @@ public class WebReactiveOptions extends ReactiveOptions {
     this.responseTimeoutMillis = responseTimeoutMillis;
     this.sslContext = sslContext;
     this.disableSslValidation = disableSslValidation;
+    this.metricsEnabled = metricsEnabled;
     this.connectionProvider = connectionProvider;
     this.maxConnections = maxConnections;
+    this.connectionMetricsEnabled = connectionMetricsEnabled;
     this.connectionMaxIdleTimeMillis = connectionMaxIdleTimeMillis;
     this.connectionMaxLifeTimeMillis = connectionMaxLifeTimeMillis;
     this.pendingAcquireMaxCount = pendingAcquireMaxCount;
@@ -90,12 +95,20 @@ public class WebReactiveOptions extends ReactiveOptions {
     return sslContext;
   }
 
+  public Boolean getMetricsEnabled() {
+    return metricsEnabled;
+  }
+
   public ConnectionProvider getConnectionProvider() {
     return connectionProvider;
   }
 
   public Integer getMaxConnections() {
     return maxConnections;
+  }
+
+  public Boolean getConnectionMetricsEnabled() {
+    return connectionMetricsEnabled;
   }
 
   public Long getConnectionMaxIdleTimeMillis() {
@@ -120,8 +133,10 @@ public class WebReactiveOptions extends ReactiveOptions {
     private Long responseTimeoutMillis;
     private Boolean disableSslValidation;
     private SslContext sslContext;
+    private Boolean metricsEnabled;
     private ConnectionProvider connectionProvider;
     private Integer maxConnections;
+    private Boolean connectionMetricsEnabled;
     private Long connectionMaxIdleTimeMillis;
     private Long connectionMaxLifeTimeMillis;
     private Integer pendingAcquireMaxCount;
@@ -151,6 +166,21 @@ public class WebReactiveOptions extends ReactiveOptions {
 
     public Builder setSslContext(SslContext sslContext) {
       this.sslContext = sslContext;
+      return this;
+    }
+
+    public Builder setMetricsEnabled(Boolean metricsEnabled) {
+      this.metricsEnabled = metricsEnabled;
+      return this;
+    }
+
+    public Builder setConnectionProvider(ConnectionProvider connectionProvider) {
+      this.connectionProvider = connectionProvider;
+      return this;
+    }
+
+    public Builder setConnectionMetricsEnabled(Boolean connectionMetricsEnabled) {
+      this.connectionMetricsEnabled = connectionMetricsEnabled;
       return this;
     }
 
@@ -184,8 +214,10 @@ public class WebReactiveOptions extends ReactiveOptions {
               readTimeoutMillis, writeTimeoutMillis, responseTimeoutMillis,
               acceptCompressed, followRedirects, proxySettings,
               sslContext, disableSslValidation,
+              metricsEnabled,
               connectionProvider,
-              maxConnections, connectionMaxIdleTimeMillis, connectionMaxLifeTimeMillis,
+              maxConnections, connectionMetricsEnabled,
+              connectionMaxIdleTimeMillis, connectionMaxLifeTimeMillis,
               pendingAcquireMaxCount, pendingAcquireTimeoutMillis);
     }
   }

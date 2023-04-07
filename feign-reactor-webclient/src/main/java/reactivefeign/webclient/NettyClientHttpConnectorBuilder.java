@@ -20,7 +20,9 @@ import javax.net.ssl.SSLException;
 import java.time.Duration;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
+import static java.lang.Boolean.TRUE;
 import static reactor.netty.resources.LoopResources.DEFAULT_NATIVE;
 
 class NettyClientHttpConnectorBuilder {
@@ -40,6 +42,9 @@ class NettyClientHttpConnectorBuilder {
             }
 
             ConnectionProvider.Builder connectionProviderBuilder = connectionProvider.mutate();
+            if(webOptions.getConnectionMetricsEnabled() != null){
+                connectionProviderBuilder = connectionProviderBuilder.metrics(webOptions.getConnectionMetricsEnabled());
+            }
             if (webOptions.getMaxConnections() != null) {
                 connectionProviderBuilder = connectionProviderBuilder.maxConnections(webOptions.getMaxConnections());
             }
@@ -63,6 +68,10 @@ class NettyClientHttpConnectorBuilder {
 
             httpClient = HttpClient.create(connectionProvider)
                     .runOn(HttpResources.get(), DEFAULT_NATIVE);
+        }
+
+        if(webOptions.getMetricsEnabled() != null){
+            httpClient = httpClient.metrics(webOptions.getMetricsEnabled(), Function.identity());
         }
 
         if (webOptions.getConnectTimeoutMillis() != null) {
@@ -110,7 +119,7 @@ class NettyClientHttpConnectorBuilder {
         if(webOptions.getSslContext() != null){
             httpClient = httpClient.secure(sslProviderBuilder -> sslProviderBuilder.sslContext(webOptions.getSslContext()));
         }
-        else if (Objects.equals(Boolean.TRUE, webOptions.isDisableSslValidation())) {
+        else if (Objects.equals(TRUE, webOptions.isDisableSslValidation())) {
             try {
                 SslContext sslContext = SslContextBuilder.forClient()
                         .trustManager(InsecureTrustManagerFactory.INSTANCE)
