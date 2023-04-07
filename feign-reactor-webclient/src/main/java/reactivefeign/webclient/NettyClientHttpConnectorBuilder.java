@@ -33,25 +33,33 @@ class NettyClientHttpConnectorBuilder {
     public static ClientHttpConnector buildNettyClientHttpConnector(HttpClient httpClient, WebReactiveOptions webOptions) {
 
         if (httpClient == null) {
-            ConnectionProvider connectionProvider = TcpResources.get();
 
-            Integer maxConnections = webOptions.getMaxConnections();
-            Integer pendingAcquireMaxCount = webOptions.getPendingAcquireMaxCount();
-            Long pendingAcquireTimeoutMillis = webOptions.getPendingAcquireTimeoutMillis();
-            if (maxConnections != null || pendingAcquireMaxCount != null || pendingAcquireTimeoutMillis != null) {
-                ConnectionProvider.Builder connectionProviderBuilder = connectionProvider.mutate();
-                if (maxConnections != null) {
-                    connectionProviderBuilder = connectionProviderBuilder.maxConnections(maxConnections);
-                }
-                if (pendingAcquireMaxCount != null) {
-                    connectionProviderBuilder = connectionProviderBuilder.pendingAcquireMaxCount(pendingAcquireMaxCount);
-                }
-                if (pendingAcquireTimeoutMillis != null) {
-                    Duration pendingAcquireTimeout = Duration.ofMillis(pendingAcquireTimeoutMillis);
-                    connectionProviderBuilder = connectionProviderBuilder.pendingAcquireTimeout(pendingAcquireTimeout);
-                }
-                connectionProvider = connectionProviderBuilder.build();
+            ConnectionProvider connectionProvider = webOptions.getConnectionProvider();
+            if(connectionProvider == null){
+                connectionProvider = TcpResources.get();
             }
+
+            ConnectionProvider.Builder connectionProviderBuilder = connectionProvider.mutate();
+            if (webOptions.getMaxConnections() != null) {
+                connectionProviderBuilder = connectionProviderBuilder.maxConnections(webOptions.getMaxConnections());
+            }
+            if(webOptions.getConnectionMaxIdleTimeMillis() != null){
+                connectionProviderBuilder = connectionProviderBuilder.maxIdleTime(
+                        Duration.ofMillis(webOptions.getConnectionMaxIdleTimeMillis()));
+            }
+            if(webOptions.getConnectionMaxLifeTimeMillis() != null){
+                connectionProviderBuilder = connectionProviderBuilder.maxLifeTime(
+                        Duration.ofMillis(webOptions.getConnectionMaxLifeTimeMillis()));
+            }
+            if (webOptions.getPendingAcquireMaxCount() != null) {
+                connectionProviderBuilder = connectionProviderBuilder.pendingAcquireMaxCount(webOptions.getPendingAcquireMaxCount());
+            }
+            if (webOptions.getPendingAcquireTimeoutMillis() != null) {
+                connectionProviderBuilder = connectionProviderBuilder.pendingAcquireTimeout(
+                        Duration.ofMillis(webOptions.getPendingAcquireTimeoutMillis()));
+            }
+
+            connectionProvider = connectionProviderBuilder.build();
 
             httpClient = HttpClient.create(connectionProvider)
                     .runOn(HttpResources.get(), DEFAULT_NATIVE);
