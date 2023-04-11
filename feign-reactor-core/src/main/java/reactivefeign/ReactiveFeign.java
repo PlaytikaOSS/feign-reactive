@@ -13,9 +13,19 @@
  */
 package reactivefeign;
 
-import feign.*;
+import feign.Contract;
+import feign.Feign;
+import feign.InvocationHandlerFactory;
+import feign.MethodMetadata;
+import feign.Target;
 import org.reactivestreams.Publisher;
-import reactivefeign.client.*;
+import reactivefeign.client.ReactiveErrorMapper;
+import reactivefeign.client.ReactiveHttpClient;
+import reactivefeign.client.ReactiveHttpClientFactory;
+import reactivefeign.client.ReactiveHttpExchangeFilterFunction;
+import reactivefeign.client.ReactiveHttpRequestInterceptor;
+import reactivefeign.client.ReactiveHttpResponseMapper;
+import reactivefeign.client.ResponseMappers;
 import reactivefeign.client.log.DefaultReactiveLogger;
 import reactivefeign.client.log.ReactiveLoggerListener;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
@@ -25,27 +35,37 @@ import reactivefeign.methodhandler.MethodHandler;
 import reactivefeign.methodhandler.MethodHandlerFactory;
 import reactivefeign.methodhandler.ReactiveMethodHandlerFactory;
 import reactivefeign.methodhandler.fallback.FallbackMethodHandlerFactory;
-import reactivefeign.publisher.*;
+import reactivefeign.publisher.FluxPublisherHttpClient;
+import reactivefeign.publisher.MonoPublisherHttpClient;
+import reactivefeign.publisher.PublisherClientFactory;
+import reactivefeign.publisher.PublisherHttpClient;
+import reactivefeign.publisher.ResponsePublisherHttpClient;
 import reactivefeign.publisher.retry.FluxRetryPublisherHttpClient;
 import reactivefeign.publisher.retry.MonoRetryPublisherHttpClient;
 import reactivefeign.retry.ReactiveRetryPolicy;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.time.Clock;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static feign.Util.checkNotNull;
 import static feign.Util.isDefault;
-import static reactivefeign.client.ReactiveHttpExchangeFilterFunction.*;
+import static reactivefeign.client.ReactiveHttpExchangeFilterFunction.ofErrorMapper;
+import static reactivefeign.client.ReactiveHttpExchangeFilterFunction.ofRequestProcessor;
+import static reactivefeign.client.ReactiveHttpExchangeFilterFunction.ofResponseProcessor;
 import static reactivefeign.client.StatusHandlerPostProcessor.handleStatus;
 import static reactivefeign.client.log.LoggerExchangeFilterFunction.log;
 import static reactivefeign.utils.FeignUtils.isResponsePublisher;
@@ -275,7 +295,7 @@ public class ReactiveFeign {
 
           reactivefeign.publisher.PublisherHttpClient publisherClient = toPublisher(reactiveClient, methodMetadata);
           if (retryPolicy != null) {
-            publisherClient = retry(publisherClient, methodMetadata, retryPolicy.retry());
+            publisherClient = retry(publisherClient, methodMetadata, retryPolicy);
           }
 
           return publisherClient;
@@ -294,12 +314,12 @@ public class ReactiveFeign {
     public static PublisherHttpClient retry(
             PublisherHttpClient publisherClient,
             MethodMetadata methodMetadata,
-            Retry retry) {
+            ReactiveRetryPolicy retryPolicy) {
       Type returnPublisherType = returnPublisherType(methodMetadata);
       if(returnPublisherType == Mono.class){
-        return new MonoRetryPublisherHttpClient(publisherClient, methodMetadata, retry);
+        return new MonoRetryPublisherHttpClient(publisherClient, methodMetadata, retryPolicy);
       } else if(returnPublisherType == Flux.class) {
-        return new FluxRetryPublisherHttpClient(publisherClient, methodMetadata, retry);
+        return new FluxRetryPublisherHttpClient(publisherClient, methodMetadata, retryPolicy);
       } else {
         throw new IllegalArgumentException("Unknown returnPublisherType: " + returnPublisherType);
       }

@@ -13,6 +13,7 @@
  */
 package reactivefeign.retry;
 
+import feign.ExceptionPropagationPolicy;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,9 +29,20 @@ import java.time.Duration;
 public abstract class SimpleReactiveRetryPolicy implements ReactiveRetryPolicy {
 
     private final Scheduler scheduler;
+    private final ExceptionPropagationPolicy exceptionPropagationPolicy;
 
-    protected SimpleReactiveRetryPolicy(Scheduler scheduler) {
+    protected SimpleReactiveRetryPolicy(
+            Scheduler scheduler,
+            ExceptionPropagationPolicy exceptionPropagationPolicy) {
         this.scheduler = scheduler;
+        this.exceptionPropagationPolicy = exceptionPropagationPolicy;
+    }
+
+    @Override
+    public ExceptionPropagationPolicy exceptionPropagationPolicy(){
+        return exceptionPropagationPolicy != null
+                ? exceptionPropagationPolicy
+                : ReactiveRetryPolicy.super.exceptionPropagationPolicy();
     }
 
     /**
