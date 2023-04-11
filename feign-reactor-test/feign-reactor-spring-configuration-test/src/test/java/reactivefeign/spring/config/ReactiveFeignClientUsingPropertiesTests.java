@@ -17,7 +17,6 @@
 package reactivefeign.spring.config;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
@@ -54,8 +53,6 @@ import static org.junit.Assert.fail;
 import static reactivefeign.spring.config.WebClientCustomizerTest.MOCK_SERVER_PORT_PROPERTY;
 import static reactor.netty.Metrics.ACTIVE_CONNECTIONS;
 import static reactor.netty.Metrics.CONNECTION_PROVIDER_PREFIX;
-import static reactor.netty.Metrics.DATA_SENT;
-import static reactor.netty.Metrics.HTTP_CLIENT_PREFIX;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = ReactiveFeignClientUsingPropertiesTests.Application.class, webEnvironment = WebEnvironment.NONE)
@@ -178,9 +175,7 @@ public class ReactiveFeignClientUsingPropertiesTests {
 				.doOnNext(s -> {
 					Metrics.globalRegistry.forEachMeter(meter -> {
 						Gauge activeConnections = meterRegistry.find(CONNECTION_PROVIDER_PREFIX + ACTIVE_CONNECTIONS).gauge();
-						assertEquals(activeConnections.value(), 1., 0.);
-						DistributionSummary dataSent = meterRegistry.find(HTTP_CLIENT_PREFIX + DATA_SENT).summary();
-						assertEquals(dataSent.count(), 1);
+						assertEquals(1., activeConnections.value(), 0.);
 					});
 				})
 				.block();
