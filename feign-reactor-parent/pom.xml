@@ -35,7 +35,7 @@
         <junit.version>4.13.2</junit.version>
         <wiremock.version>2.35.0</wiremock.version>
         <awaitility.version>4.2.0</awaitility.version>
-        <blockhound.version>1.0.6.RELEASE</blockhound.version>
+        <blockhound.version>1.0.8.RELEASE</blockhound.version>
         <disruptor.version>3.4.4</disruptor.version>
         <spring-cloud-starter-sleuth.version>3.1.7</spring-cloud-starter-sleuth.version>
         <brave-tests.version>5.13.7</brave-tests.version>
