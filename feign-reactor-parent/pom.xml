@@ -22,13 +22,6 @@
         <spring-boot-dependencies-bom.version>2.6.14</spring-boot-dependencies-bom.version>
 
         <!--other-->
-        <!-- versions in spring-boot-dependency       -->
-        <!--        <jetty.version>9.4.45.v20220203</jetty.version>-->
-        <!--        <jetty-reactive-httpclient.version>1.1.11</jetty-reactive-httpclient.version>-->
-
-        <!--        <jetty.version>11.0.8</jetty.version>-->
-        <!--        <jetty-reactive-httpclient.version>3.0.5</jetty-reactive-httpclient.version>-->
-
         <json-reactor.version>0.0.4</json-reactor.version>
 
         <!-- Tests -->
@@ -56,41 +49,6 @@
         <gpg.useagent>true</gpg.useagent>
         <gpg.lockMode>never</gpg.lockMode>
     </properties>
-
-    <profiles>
-        <profile>
-            <id>ossrh</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>${nexus-staging-maven-plugin.version}</version>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>${maven-gpg-plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
 
     <dependencyManagement>
         <dependencies>

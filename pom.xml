@@ -66,21 +66,6 @@
         </developer>
     </developers>
 
-    <repositories>
-
-        <!--<repository>-->
-        <!--<id>spring-snapshots</id>-->
-        <!--<name>Spring Snapshots</name>-->
-        <!--<url>http://repo.spring.io/snapshot</url>-->
-        <!--</repository>-->
-        <!--<repository>-->
-        <!--<id>oss.sonatype.org</id>-->
-        <!--<name>OSS Maven2 Snapshot Repository</name>-->
-        <!--<url>https://oss.sonatype.org/content/repositories/jetty-snapshots</url>-->
-        <!--</repository>-->
-
-    </repositories>
-
     <distributionManagement>
         <snapshotRepository>
             <id>ossrh</id>
