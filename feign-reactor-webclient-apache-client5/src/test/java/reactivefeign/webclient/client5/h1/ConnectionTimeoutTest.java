@@ -11,29 +11,17 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package reactivefeign.jetty.h1;
+package reactivefeign.webclient.client5.h1;
 
 import reactivefeign.ReactiveFeign;
-import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
 
-import static reactivefeign.jetty.h1.TestUtils.builderHttp;
-import static reactivefeign.jetty.h1.TestUtils.builderHttpWithConnectTimeout;
+import static reactivefeign.webclient.client5.h1.TestUtils.builderHttpWithConnectTimeout;
 
 /**
  * @author Sergii Karpenko
  */
-public class DefaultMethodTest extends reactivefeign.DefaultMethodTest {
-
-  @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
-    return builderHttp();
-  }
-
-  @Override
-  protected <API> ReactiveFeign.Builder<API> builder(Class<API> apiClass) {
-    return JettyReactiveFeign.builder();
-  }
+public class ConnectionTimeoutTest extends reactivefeign.ConnectionTimeoutTest {
 
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long connectTimeoutInMillis) {

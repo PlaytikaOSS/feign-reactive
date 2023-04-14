@@ -11,32 +11,29 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package reactivefeign.jetty.h1;
+package reactivefeign.webclient.client5.h1;
 
+import com.fasterxml.jackson.core.io.JsonEOFException;
+import org.springframework.core.codec.DecodingException;
 import reactivefeign.ReactiveFeign;
-import reactivefeign.jetty.JettyReactiveFeign;
-import reactivefeign.testcase.IcecreamServiceApi;
 
-import static reactivefeign.jetty.h1.TestUtils.builderHttp;
-import static reactivefeign.jetty.h1.TestUtils.builderHttpWithConnectTimeout;
+import java.util.function.Predicate;
+
+import static reactivefeign.webclient.client5.h1.TestUtils.builderHttp;
 
 /**
  * @author Sergii Karpenko
  */
-public class DefaultMethodTest extends reactivefeign.DefaultMethodTest {
+public class BasicFeaturesTest extends reactivefeign.BasicFeaturesTest {
 
   @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
+  protected <T> ReactiveFeign.Builder<T> builder() {
     return builderHttp();
   }
 
   @Override
-  protected <API> ReactiveFeign.Builder<API> builder(Class<API> apiClass) {
-    return JettyReactiveFeign.builder();
-  }
-
-  @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long connectTimeoutInMillis) {
-    return builderHttpWithConnectTimeout(connectTimeoutInMillis);
+  protected Predicate<Throwable> corruptedJsonError() {
+    return throwable -> throwable instanceof DecodingException
+            && throwable.getCause() instanceof JsonEOFException;
   }
 }

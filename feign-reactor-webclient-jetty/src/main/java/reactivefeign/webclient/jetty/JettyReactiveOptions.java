@@ -39,11 +39,7 @@ public class JettyReactiveOptions extends ReactiveOptions {
     return requestTimeoutMillis;
   }
 
-  public boolean isEmpty() {
-    return super.isEmpty() /*&& requestTimeoutMillis == null*/;
-  }
-
-  public static class Builder extends ReactiveOptions.Builder{
+  public static class Builder extends ReactiveOptions.Builder<Builder>{
     private Long requestTimeoutMillis;
 
     public Builder() {}

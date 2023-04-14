@@ -66,12 +66,15 @@ abstract public class BaseReactorTest {
             builder.allowBlockingCallsInside("com.sun.jmx.mbeanserver.Repository", "retrieve");
             builder.allowBlockingCallsInside("com.sun.jmx.mbeanserver.Repository", "addMBean");
 
+            //Apache http client5
+            builder.allowBlockingCallsInside("org.apache.hc.core5.pool.StrictConnPool", "lease");
+            builder.allowBlockingCallsInside("org.apache.hc.core5.reactor.IOSessionImpl", "setEvent");
 
             builder.install();
         }
     }
 
-    //by default we want to detect blocking calls
+    //by default, we want to detect blocking calls
     protected Scheduler testScheduler() {
         return Schedulers.parallel();
     }

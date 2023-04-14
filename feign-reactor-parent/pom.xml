@@ -96,19 +96,6 @@
         <dependencies>
 
             <!-- BOMs -->
-<!--            <dependency>-->
-<!--                <groupId>org.eclipse.jetty</groupId>-->
-<!--                <artifactId>jetty-bom</artifactId>-->
-<!--                <version>${jetty.version}</version>-->
-<!--                <type>pom</type>-->
-<!--                <scope>import</scope>-->
-<!--            </dependency>-->
-
-<!--            <dependency>-->
-<!--                <groupId>org.eclipse.jetty</groupId>-->
-<!--                <artifactId>jetty-reactive-httpclient</artifactId>-->
-<!--                <version>${jetty-reactive-httpclient.version}</version>-->
-<!--            </dependency>-->
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>
@@ -127,6 +114,7 @@
             </dependency>
 
             <!-- project dependencies -->
+
             <dependency>
                 <groupId>com.playtika.reactivefeign</groupId>
                 <artifactId>feign-reactor-core</artifactId>
@@ -145,6 +133,11 @@
             <dependency>
                 <groupId>com.playtika.reactivefeign</groupId>
                 <artifactId>feign-reactor-webclient-jetty</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.playtika.reactivefeign</groupId>
+                <artifactId>feign-reactor-webclient-apache-client5</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

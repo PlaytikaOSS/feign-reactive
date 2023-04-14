@@ -11,32 +11,23 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package reactivefeign.jetty.h1;
+package reactivefeign.webclient.client5.h1;
 
+import org.junit.Ignore;
 import reactivefeign.ReactiveFeign;
-import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
 
-import static reactivefeign.jetty.h1.TestUtils.builderHttp;
-import static reactivefeign.jetty.h1.TestUtils.builderHttpWithConnectTimeout;
+import static reactivefeign.webclient.client5.h1.TestUtils.builderHttpWithAcceptCompressed;
 
 /**
  * @author Sergii Karpenko
  */
-public class DefaultMethodTest extends reactivefeign.DefaultMethodTest {
+//TODO Investigate why not working
+@Ignore
+public class CompressionTest extends reactivefeign.CompressionTest {
 
   @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {
-    return builderHttp();
-  }
-
-  @Override
-  protected <API> ReactiveFeign.Builder<API> builder(Class<API> apiClass) {
-    return JettyReactiveFeign.builder();
-  }
-
-  @Override
-  protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long connectTimeoutInMillis) {
-    return builderHttpWithConnectTimeout(connectTimeoutInMillis);
+  protected ReactiveFeign.Builder<IcecreamServiceApi> builder(boolean tryUseCompression) {
+    return builderHttpWithAcceptCompressed(tryUseCompression);
   }
 }

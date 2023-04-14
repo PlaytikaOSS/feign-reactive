@@ -83,10 +83,6 @@ public class WebReactiveOptions extends ReactiveOptions {
     return responseTimeoutMillis;
   }
 
-  public boolean isEmpty() {
-    return super.isEmpty() && readTimeoutMillis == null && writeTimeoutMillis == null;
-  }
-
   public Boolean isDisableSslValidation() {
     return disableSslValidation;
   }
@@ -127,7 +123,7 @@ public class WebReactiveOptions extends ReactiveOptions {
     return pendingAcquireTimeoutMillis;
   }
 
-  public static class Builder extends ReactiveOptions.Builder {
+  public static class Builder extends ReactiveOptions.Builder<Builder> {
     private Long readTimeoutMillis;
     private Long writeTimeoutMillis;
     private Long responseTimeoutMillis;

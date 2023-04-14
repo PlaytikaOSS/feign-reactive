@@ -53,20 +53,12 @@ abstract public class ReactiveOptions {
     return proxySettings;
   }
 
-  public boolean isEmpty() {
-    return useHttp2 == null
-            && connectTimeoutMillis == null
-            && acceptCompressed == null
-            && followRedirects == null
-            && proxySettings == null;
-  }
-
   public static boolean useHttp2(ReactiveOptions options){
     return options != null && options.getUseHttp2() != null && options.getUseHttp2();
   }
 
 
-  abstract public static class Builder {
+  abstract public static class Builder <B extends Builder<B>> {
     protected Boolean useHttp2;
     protected Long connectTimeoutMillis;
     protected Boolean acceptCompressed;
@@ -75,29 +67,29 @@ abstract public class ReactiveOptions {
 
     public Builder() {}
 
-    public Builder setUseHttp2(boolean useHttp2) {
+    public B setUseHttp2(boolean useHttp2) {
       this.useHttp2 = useHttp2;
-      return this;
+      return (B)this;
     }
 
-    public Builder setConnectTimeoutMillis(long connectTimeoutMillis) {
+    public B setConnectTimeoutMillis(long connectTimeoutMillis) {
       this.connectTimeoutMillis = connectTimeoutMillis;
-      return this;
+      return (B)this;
     }
 
-    public Builder setAcceptCompressed(boolean acceptCompressed) {
+    public B setAcceptCompressed(boolean acceptCompressed) {
       this.acceptCompressed = acceptCompressed;
-      return this;
+      return (B)this;
     }
 
-    public Builder setFollowRedirects(boolean followRedirects) {
+    public B setFollowRedirects(boolean followRedirects) {
       this.followRedirects = followRedirects;
-      return this;
+      return (B)this;
     }
 
-    public Builder setProxySettings(ProxySettings proxySettings) {
+    public B setProxySettings(ProxySettings proxySettings) {
       this.proxySettings = proxySettings;
-      return this;
+      return (B)this;
     }
 
     abstract public ReactiveOptions build();
