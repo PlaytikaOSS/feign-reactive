@@ -6,7 +6,7 @@
         <groupId>com.playtika.reactivefeign</groupId>
         <artifactId>feign-reactor-parent</artifactId>
         <relativePath>../feign-reactor-parent</relativePath>
-        <version>3.2.8</version>
+        <version>3.2.9</version>
     </parent>
 
     <artifactId>feign-reactor-benchmarks</artifactId>
