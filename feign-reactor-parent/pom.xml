@@ -34,7 +34,7 @@
         <brave-tests.version>5.15.1</brave-tests.version>
 
         <!-- Plugins -->
-        <jacoco-plugin.version>0.8.8</jacoco-plugin.version>
+        <jacoco-plugin.version>0.8.9</jacoco-plugin.version>
         <coveralls-plugin.version>4.3.0</coveralls-plugin.version>
 
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
