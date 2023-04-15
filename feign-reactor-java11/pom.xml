@@ -11,10 +11,6 @@
 
     <artifactId>feign-reactor-java11</artifactId>
 
-    <properties>
-        <java.version>11</java.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>com.playtika.reactivefeign</groupId>
