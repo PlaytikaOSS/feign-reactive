@@ -13,6 +13,7 @@
  */
 package reactivefeign.publisher.retry;
 
+import feign.ExceptionPropagationPolicy;
 import feign.MethodMetadata;
 import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import reactivefeign.client.ReactiveFeignException;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.publisher.PublisherHttpClient;
+import reactivefeign.retry.ReactiveRetryPolicy;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -39,14 +41,17 @@ abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
     protected final PublisherHttpClient publisherClient;
     private final Retry retry;
 
+    private final ExceptionPropagationPolicy exceptionPropagationPolicy;
+
     protected RetryPublisherHttpClient(
             PublisherHttpClient publisherClient,
             MethodMetadata methodMetadata,
-            Retry retry) {
+            ReactiveRetryPolicy retryPolicy) {
 
         this.publisherClient = publisherClient;
         this.feignMethodKey = methodMetadata.configKey();
-        this.retry = wrapWithRetryLog(retry, feignMethodKey);
+        this.retry = wrapWithRetryLog(retryPolicy.retry(), feignMethodKey);
+        this.exceptionPropagationPolicy = retryPolicy.exceptionPropagationPolicy();
     }
 
     protected Retry getRetry(ReactiveHttpRequest request){
@@ -66,7 +71,10 @@ abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
                                     throw Exceptions.propagate(wrapper.getCause());
                                 } else {
                                     logger.debug("[{}]---> USED ALL RETRIES", feignMethodKey, wrapper.getCause());
-                                    throw Exceptions.propagate(new OutOfRetriesException(wrapper.getCause(), request));
+                                    throw Exceptions.propagate(
+                                            exceptionPropagationPolicy == ExceptionPropagationPolicy.UNWRAP
+                                                    ? wrapper.getCause()
+                                                    : new OutOfRetriesException(wrapper.getCause(), request));
                                 }
                             } else {
                                 return object;

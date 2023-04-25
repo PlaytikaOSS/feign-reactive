@@ -13,6 +13,7 @@
  */
 package reactivefeign.webclient;
 
+import com.fasterxml.jackson.core.io.JsonEOFException;
 import feign.FeignException;
 import org.junit.Test;
 import org.springframework.core.codec.DecodingException;
@@ -38,7 +39,8 @@ public class BasicFeaturesTest extends reactivefeign.BasicFeaturesTest {
 
   @Override
   protected Predicate<Throwable> corruptedJsonError() {
-    return throwable -> throwable instanceof DecodingException;
+    return throwable -> throwable instanceof DecodingException
+            && throwable.getCause() instanceof JsonEOFException;
   }
   
   @Test

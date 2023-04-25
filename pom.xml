@@ -13,6 +13,7 @@
         <module>feign-reactor-webclient-core</module>
         <module>feign-reactor-webclient</module>
         <module>feign-reactor-webclient-jetty</module>
+        <module>feign-reactor-webclient-apache-client5</module>
         <module>feign-reactor-cloud</module>
         <module>feign-reactor-rx2</module>
         <module>feign-reactor-jetty</module>
@@ -45,16 +46,8 @@
     </scm>
 
     <properties>
-        <nexus-staging-maven-plugin.version>1.6.12</nexus-staging-maven-plugin.version>
+        <nexus-staging-maven-plugin.version>1.6.13</nexus-staging-maven-plugin.version>
         <maven-gpg-plugin.version>3.0.1</maven-gpg-plugin.version>
-        <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
-        <versions-maven-plugin.version>2.3</versions-maven-plugin.version>
-
-        <!-- GPG -->
-        <gpg.keyname>3EEF24C7</gpg.keyname>
-        <gpg.defaultKeyring>false</gpg.defaultKeyring>
-        <gpg.useagent>true</gpg.useagent>
-        <gpg.lockMode>never</gpg.lockMode>
     </properties>
 
     <developers>
@@ -65,20 +58,16 @@
         </developer>
     </developers>
 
-    <repositories>
-
-        <!--<repository>-->
-        <!--<id>spring-snapshots</id>-->
-        <!--<name>Spring Snapshots</name>-->
-        <!--<url>http://repo.spring.io/snapshot</url>-->
-        <!--</repository>-->
-        <!--<repository>-->
-        <!--<id>oss.sonatype.org</id>-->
-        <!--<name>OSS Maven2 Snapshot Repository</name>-->
-        <!--<url>https://oss.sonatype.org/content/repositories/jetty-snapshots</url>-->
-        <!--</repository>-->
-
-    </repositories>
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
     <profiles>
         <profile>

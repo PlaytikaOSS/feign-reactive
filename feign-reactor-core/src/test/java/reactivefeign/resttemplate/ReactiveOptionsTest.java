@@ -9,11 +9,6 @@ import static reactivefeign.ReactiveOptions.useHttp2;
 public class ReactiveOptionsTest {
 
     @Test
-    public void shouldBeEmptyByDefault(){
-        assertThat(new RestTemplateReactiveOptions.Builder().build().isEmpty()).isTrue();
-    }
-
-    @Test
     public void shouldNotUseHttp2ByDefault(){
         assertThat(useHttp2(new RestTemplateReactiveOptions.Builder().build())).isFalse();
     }

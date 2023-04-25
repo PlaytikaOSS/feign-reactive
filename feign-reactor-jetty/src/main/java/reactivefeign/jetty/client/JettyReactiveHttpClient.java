@@ -29,6 +29,7 @@ import org.eclipse.jetty.reactive.client.ContentChunk;
 import org.eclipse.jetty.reactive.client.ReactiveRequest;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.*;
+import reactivefeign.utils.SerializedFormData;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -114,7 +115,8 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 		}
 
 		ReactiveRequest.Builder requestBuilder = ReactiveRequest.newBuilder(jettyRequest);
-		if(bodyActualClass != null){
+		if(bodyActualClass != null
+				|| request.body() instanceof SerializedFormData){
 			requestBuilder.content(provideBody(request));
 		}
 
@@ -167,7 +169,11 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 	protected ReactiveRequest.Content provideBody(ReactiveHttpRequest request) {
 		Publisher<ContentChunk> bodyPublisher;
 		String contentType;
-		if(request.body() instanceof Mono){
+		if(request.body() instanceof SerializedFormData){
+			bodyPublisher =  Mono.just(toByteBufferChunk(((SerializedFormData)request.body()).getFormData()));
+			contentType = FORM_URL_ENCODED;
+		}
+		else if(request.body() instanceof Mono){
 			if(bodyActualClass == ByteBuffer.class){
 				bodyPublisher = ((Mono)request.body()).map(this::toByteBufferChunk);
 				contentType = APPLICATION_OCTET_STREAM;
@@ -191,6 +197,8 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
 				contentType = APPLICATION_STREAM_JSON_UTF_8;
 			}
 		}
+		//TODO
+		//String originalContentType = request.headers().get(CONTENT_TYPE_HEADER).get(0);
 
 		return ReactiveRequest.Content.fromPublisher(bodyPublisher, contentType);
 	}

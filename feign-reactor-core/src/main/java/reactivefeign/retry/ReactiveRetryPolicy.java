@@ -1,9 +1,7 @@
 package reactivefeign.retry;
 
-import reactor.core.publisher.Flux;
+import feign.ExceptionPropagationPolicy;
 import reactor.util.retry.Retry;
-
-import java.util.function.Function;
 
 /**
  * @author Sergii Karpenko
@@ -14,5 +12,9 @@ public interface ReactiveRetryPolicy {
 
     interface Builder {
         ReactiveRetryPolicy build();
+    }
+
+    default ExceptionPropagationPolicy exceptionPropagationPolicy(){
+        return ExceptionPropagationPolicy.NONE;
     }
 }

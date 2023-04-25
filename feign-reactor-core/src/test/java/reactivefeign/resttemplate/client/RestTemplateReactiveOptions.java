@@ -33,11 +33,7 @@ public class RestTemplateReactiveOptions extends ReactiveOptions {
     return readTimeoutMillis;
   }
 
-  public boolean isEmpty() {
-    return super.isEmpty() && readTimeoutMillis == null;
-  }
-
-  public static class Builder extends ReactiveOptions.Builder{
+  public static class Builder extends ReactiveOptions.Builder<Builder>{
     private Long readTimeoutMillis;
 
     public Builder() {}

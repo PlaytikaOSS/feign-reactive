@@ -14,6 +14,7 @@ package reactivefeign;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import feign.Headers;
 import feign.Param;
 import feign.QueryMap;
 import feign.RequestLine;
@@ -32,13 +33,21 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static java.util.Arrays.asList;
-import static reactivefeign.TestUtils.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static reactivefeign.TestUtils.MAPPER;
+import static reactivefeign.TestUtils.readJsonFromFile;
+import static reactivefeign.TestUtils.toLowerCaseKeys;
 
 /**
  * @author Sergii Karpenko
@@ -68,8 +77,8 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
   public void setUp() {
     String targetUrl = getTargetUrl();
     client = this.<TestClient>builder()
-        .decode404()
-        .target(TestClient.class, targetUrl);
+            .decode404()
+            .target(TestClient.class, targetUrl);
   }
 
   public String getTargetUrl() {
@@ -101,7 +110,7 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
     Mono<TestObject> emptyMono = client.decode404ToEmptyMono(123);
 
     StepVerifier.create(emptyMono)
-        .verifyComplete();
+            .verifyComplete();
   }
 
   @Test
@@ -142,12 +151,19 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
     wireMockRule.stubFor(get(urlEqualTo("/reactiveHttpResponse"))
             .willReturn(aResponse().withStatus(200)
                     .withHeader("Content-Type", "application/json")
+                    .withHeader("header1", "value1")
+                    .withHeader("header1", "value2")
                     .withBody(MAPPER.writeValueAsString(testObjects))));
 
     Mono<ReactiveHttpResponse<Flux<TestObject>>> result = client.reactiveHttpResponse();
     StepVerifier.create(result)
-            .expectNextMatches(response -> toLowerCaseKeys(response.headers())
-                    .containsKey("content-type"))
+            .expectNextMatches(response -> {
+              Map<String, List<String>> headers = toLowerCaseKeys(response.headers());
+              return headers.containsKey("content-type")
+                      && headers.get("header1").containsAll(
+                              new HashSet<>((asList("value1", "value2"))));
+            })
+
             .verifyComplete();
 
     Flux<TestObject> flux = result.flatMapMany(ReactiveHttpResponse::body);
@@ -171,7 +187,7 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
             .target(Target.EmptyTarget.create(EmptyTargetClient.class));
 
     StepVerifier.create(testClient.expandUrl(new URI(getTargetUrl()), testObject)
-            .subscribeOn(testScheduler()))
+                    .subscribeOn(testScheduler()))
             .expectNext(testObject)
             .verifyComplete();
   }
@@ -185,7 +201,7 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
             .willReturn(aResponse().withStatus(200)));
 
     StepVerifier.create(client.queryMap(new HashMap<String, Object>(){{put(queryParameter, value);}})
-            .subscribeOn(testScheduler()))
+                    .subscribeOn(testScheduler()))
             .verifyComplete();
   }
 
@@ -200,7 +216,7 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
             .willReturn(aResponse().withStatus(200)));
 
     StepVerifier.create(client.queryParam(asList(value1, value2))
-            .subscribeOn(testScheduler()))
+                    .subscribeOn(testScheduler()))
             .verifyComplete();
   }
 
@@ -211,8 +227,40 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
             .willReturn(aResponse().withStatus(200)));
 
     StepVerifier.create(client.queryPojo(new TestObject(1))
-            .subscribeOn(testScheduler()))
+                    .subscribeOn(testScheduler()))
             .verifyComplete();
+  }
+
+  @Test
+  public void shouldPassExplicitContentTypeHeader() {
+
+    String body = "123";
+    String contentTypeHeader = "Content-Type";
+    wireMockRule.stubFor(post(urlEqualTo("/passExplicitContentType"))
+            .withRequestBody(equalTo(body))
+            .withHeader(contentTypeHeader, equalTo("application/customContentType"))
+            .willReturn(aResponse().withStatus(200)));
+
+    StepVerifier.create(client.passExplicitContentTypeHeader(body)
+                    .subscribeOn(testScheduler()))
+            .verifyComplete();
+
+    assertThat(wireMockRule.getAllServeEvents().get(0).getRequest().header(contentTypeHeader).values())
+            .containsExactly("application/customContentType");
+  }
+
+  @Test
+  public void shouldNotCutTrailingSlash() {
+
+    wireMockRule.stubFor(get(urlEqualTo("/users/1/dogs/"))
+            .willReturn(aResponse().withStatus(200)));
+
+    StepVerifier.create(client.keepTrailingSlash(1)
+                    .subscribeOn(testScheduler()))
+            .verifyComplete();
+
+    assertThat(wireMockRule.getAllServeEvents().get(0).getRequest().getUrl())
+            .endsWith("/users/1/dogs/");
   }
 
   public interface TestClient {
@@ -239,6 +287,13 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
 
     @RequestLine("POST /queryPojo")
     Mono<Void> queryPojo(@QueryMap TestObject queryPojo);
+
+    @Headers("Content-Type: application/customContentType")
+    @RequestLine("POST /passExplicitContentType")
+    Mono<Void> passExplicitContentTypeHeader(String body);
+
+    @RequestLine("GET /users/{userId}/dogs/")
+    Mono<Void> keepTrailingSlash(@Param("userId") int userId);
   }
 
   public interface EmptyTargetClient {

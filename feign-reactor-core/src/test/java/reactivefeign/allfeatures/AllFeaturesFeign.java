@@ -16,7 +16,12 @@
 
 package reactivefeign.allfeatures;
 
-import feign.*;
+import feign.CollectionFormat;
+import feign.HeaderMap;
+import feign.Headers;
+import feign.Param;
+import feign.QueryMap;
+import feign.RequestLine;
 import org.reactivestreams.Publisher;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -28,7 +33,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import static org.springframework.http.MediaType.*;
+import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_STREAM_JSON_VALUE;
+import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
 
 @Headers({ "Accept: application/json" })
 public interface AllFeaturesFeign extends AllFeaturesApi{
@@ -164,9 +172,25 @@ public interface AllFeaturesFeign extends AllFeaturesApi{
 	Mono<TestObject> expandPathParameter(@Param(value = "timestamp", expander = TimestampToDateExpander.class) long timestamp);
 
 	@Override
+	@RequestLine("GET /Invoices?filter=Company:{companyName}")
+	Mono<TestObject> expandPathParameterInRequestParameter(@Param("companyName") String companyName);
+
+	@Override
 	@RequestLine("GET /expand")
 	Mono<TestObject> expandDataTimeParameterWithCustomFormat(
 			@Param(value = "dateTime", expander = LocalDateTimeExpander.class) LocalDateTime dateTime);
+
+	@Override
+	@Headers({ "Content-Type: application/x-www-form-urlencoded" })
+	@RequestLine("POST /formDataMap")
+	Mono<TestObject> formDataMap(Map<String, ?> form);
+
+	@Headers({"Content-Type: application/x-www-form-urlencoded",
+			"Accept: " + APPLICATION_JSON_VALUE})
+	@RequestLine("POST " + "/formDataParameters")
+	Mono<TestObject> formDataParameters(
+			@Param("key1") String organizationName,
+			@Param("key2") String organizationId);
 
 	class TimestampToDateExpander implements Param.Expander {
 

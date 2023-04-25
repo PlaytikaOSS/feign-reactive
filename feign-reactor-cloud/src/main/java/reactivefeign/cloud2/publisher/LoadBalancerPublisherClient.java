@@ -5,7 +5,7 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.publisher.PublisherHttpClient;
-import reactor.core.publisher.Mono;
+import reactor.core.publisher.Flux;
 
 import java.net.URI;
 
@@ -27,8 +27,8 @@ public class LoadBalancerPublisherClient implements PublisherHttpClient {
 
     @Override
     public Publisher<Object> executeRequest(ReactiveHttpRequest request) {
-        return Mono.from(reactiveLoadBalancer.choose())
-                .flatMapMany(serviceInstanceResponse -> {
+        return Flux.from(reactiveLoadBalancer.choose())
+                .flatMap(serviceInstanceResponse -> {
                     URI lbUrl = reconstructURI(serviceInstanceResponse.getServer(), request.uri());
                     ReactiveHttpRequest lbRequest = new ReactiveHttpRequest(request, lbUrl);
                     return publisherClient.executeRequest(lbRequest);

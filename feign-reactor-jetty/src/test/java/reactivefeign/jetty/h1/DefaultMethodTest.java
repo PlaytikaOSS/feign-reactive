@@ -15,10 +15,10 @@ package reactivefeign.jetty.h1;
 
 import reactivefeign.ReactiveFeign;
 import reactivefeign.jetty.JettyReactiveFeign;
-import reactivefeign.jetty.JettyReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 import static reactivefeign.jetty.h1.TestUtils.builderHttp;
+import static reactivefeign.jetty.h1.TestUtils.builderHttpWithConnectTimeout;
 
 /**
  * @author Sergii Karpenko
@@ -37,8 +37,6 @@ public class DefaultMethodTest extends reactivefeign.DefaultMethodTest {
 
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long connectTimeoutInMillis) {
-    return JettyReactiveFeign.<IcecreamServiceApi>builder().options(
-            new JettyReactiveOptions.Builder().setConnectTimeoutMillis(connectTimeoutInMillis).build()
-    );
+    return builderHttpWithConnectTimeout(connectTimeoutInMillis);
   }
 }

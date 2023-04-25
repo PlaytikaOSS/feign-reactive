@@ -13,6 +13,7 @@
  */
 package reactivefeign.retry;
 
+import feign.ExceptionPropagationPolicy;
 import feign.RetryableException;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
@@ -29,8 +30,11 @@ public class BasicReactiveRetryPolicy extends SimpleReactiveRetryPolicy{
   private final long periodInMs;
   private final Clock clock;
 
-  private BasicReactiveRetryPolicy(int maxRetries, long periodInMs, Clock clock, Scheduler scheduler){
-    super(scheduler);
+  private BasicReactiveRetryPolicy(
+          int maxRetries, long periodInMs,
+          Clock clock, Scheduler scheduler,
+          ExceptionPropagationPolicy exceptionPropagationPolicy){
+    super(scheduler, exceptionPropagationPolicy);
     this.maxRetries = maxRetries;
     this.periodInMs = periodInMs;
     this.clock = clock;
@@ -76,6 +80,7 @@ public class BasicReactiveRetryPolicy extends SimpleReactiveRetryPolicy{
   public static class Builder implements ReactiveRetryPolicy.Builder{
     private int maxRetries;
     private long backoffInMs = 0;
+    private ExceptionPropagationPolicy exceptionPropagationPolicy;
     private Scheduler scheduler = Schedulers.parallel();
     private Clock clock = Clock.systemUTC();
 
@@ -86,6 +91,11 @@ public class BasicReactiveRetryPolicy extends SimpleReactiveRetryPolicy{
 
     public Builder setBackoffInMs(long backoffInMs) {
       this.backoffInMs = backoffInMs;
+      return this;
+    }
+
+    public Builder setExceptionPropagationPolicy(ExceptionPropagationPolicy exceptionPropagationPolicy) {
+      this.exceptionPropagationPolicy = exceptionPropagationPolicy;
       return this;
     }
 
@@ -100,7 +110,7 @@ public class BasicReactiveRetryPolicy extends SimpleReactiveRetryPolicy{
     }
 
     public BasicReactiveRetryPolicy build(){
-      return new BasicReactiveRetryPolicy(maxRetries, backoffInMs, clock, scheduler);
+      return new BasicReactiveRetryPolicy(maxRetries, backoffInMs, clock, scheduler, exceptionPropagationPolicy);
     }
   }
 }

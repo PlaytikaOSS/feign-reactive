@@ -1,11 +1,11 @@
 /**
  * Copyright 2018 The Feign Authors
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- * <p>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -42,120 +42,102 @@ import static java.util.Optional.ofNullable;
  *
  * @author Sergii Karpenko
  */
-public class RestTemplateFakeReactiveFeign
-{
+public class RestTemplateFakeReactiveFeign {
 
-    public static <T> ReactiveFeign.Builder<T> builder()
-    {
+  public static <T> ReactiveFeign.Builder<T> builder() {
 
-        return new ReactiveFeign.Builder<T>()
-        {
+    return new ReactiveFeign.Builder<T>(){
 
-            private RestTemplate restTemplate = new RestTemplate();
-            private boolean acceptGzip = false;
+      private RestTemplate restTemplate = new RestTemplate();
+      private boolean acceptGzip = false;
 
-            {
-                ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
-                MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(mapper);
-                restTemplate.getMessageConverters().add(0, converter);
-            }
+      {
+        ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(mapper);
+        restTemplate.getMessageConverters().add(0, converter);
+        restTemplate.getMessageConverters().add(new SerializedFormMessageConverter());
+      }
 
-            @Override
-            protected ReactiveHttpClientFactory clientFactory()
-            {
-                return methodMetadata -> new RestTemplateFakeReactiveHttpClient(
-                    methodMetadata, restTemplate, acceptGzip);
-            }
+      @Override
+      protected ReactiveHttpClientFactory clientFactory() {
+        return methodMetadata -> new RestTemplateFakeReactiveHttpClient(
+                methodMetadata, restTemplate, acceptGzip);
+      }
 
+      @Override
+      public ReactiveFeignBuilder<T> objectMapper(ObjectMapper objectMapper) {
+        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(objectMapper);
+        restTemplate.getMessageConverters().set(0, converter);
+        restTemplate.getMessageConverters().add(new SerializedFormMessageConverter());
+        return this;
+      }
 
-            @Override
-            public ReactiveFeignBuilder<T> objectMapper(ObjectMapper objectMapper)
-            {
-                MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(objectMapper);
-                restTemplate.getMessageConverters().set(0, converter);
-                return this;
-            }
+      @Override
+      public ReactiveFeign.Builder<T> options(ReactiveOptions options) {
 
+        if(options.isFollowRedirects() != null || options.getProxySettings() != null){
+          SimpleClientHttpRequestFactory requestFactory;
+          if(options.isFollowRedirects() != null){
+            requestFactory = new SimpleClientHttpRequestFactory(){
+              @Override
+              protected void prepareConnection(HttpURLConnection connection, String httpMethod) throws IOException {
+                super.prepareConnection(connection, httpMethod);
+                connection.setInstanceFollowRedirects(options.isFollowRedirects());
+              }
+            };
+          } else {
+            requestFactory = new SimpleClientHttpRequestFactory();
+          }
 
-            @Override
-            public ReactiveFeign.Builder<T> options(ReactiveOptions options)
-            {
+          ReactiveOptions.ProxySettings proxySettings = options.getProxySettings();
+          if(proxySettings != null){
+            requestFactory.setProxy(new Proxy(Proxy.Type.HTTP,
+                    new InetSocketAddress(proxySettings.getHost(), proxySettings.getPort())));
+          }
 
-                if (options.isFollowRedirects() != null || options.getProxySettings() != null)
-                {
-                    SimpleClientHttpRequestFactory requestFactory;
-                    if (options.isFollowRedirects() != null)
-                    {
-                        requestFactory = new SimpleClientHttpRequestFactory()
-                        {
-                            @Override
-                            protected void prepareConnection(HttpURLConnection connection, String httpMethod) throws IOException
-                            {
-                                super.prepareConnection(connection, httpMethod);
-                                connection.setInstanceFollowRedirects(options.isFollowRedirects());
-                            }
-                        };
-                    }
-                    else
-                    {
-                        requestFactory = new SimpleClientHttpRequestFactory();
-                    }
+          if (options.getConnectTimeoutMillis() != null) {
+            requestFactory.setConnectTimeout(options.getConnectTimeoutMillis().intValue());
+          }
 
-                    ReactiveOptions.ProxySettings proxySettings = options.getProxySettings();
-                    if (proxySettings != null)
-                    {
-                        requestFactory.setProxy(new Proxy(
-                            Proxy.Type.HTTP,
-                            new InetSocketAddress(proxySettings.getHost(), proxySettings.getPort())));
-                    }
+          RestTemplateReactiveOptions restTemplateOptions = (RestTemplateReactiveOptions)options;
+          if (restTemplateOptions.getReadTimeoutMillis() != null) {
+            requestFactory.setReadTimeout(restTemplateOptions.getReadTimeoutMillis().intValue());
+          }
 
-                    if (options.getConnectTimeoutMillis() != null)
-                    {
-                        requestFactory.setConnectTimeout(options.getConnectTimeoutMillis().intValue());
-                    }
+          this.restTemplate = new RestTemplate(requestFactory);
+          this.acceptGzip = ofNullable(options.isTryUseCompression()).orElse(false);
+          return this;
 
-                    RestTemplateReactiveOptions restTemplateOptions = (RestTemplateReactiveOptions) options;
-                    if (restTemplateOptions.getReadTimeoutMillis() != null)
-                    {
-                        requestFactory.setReadTimeout(restTemplateOptions.getReadTimeoutMillis().intValue());
-                    }
+        }
 
-                    this.restTemplate = new RestTemplate(requestFactory);
-                    this.acceptGzip = ofNullable(options.isTryUseCompression()).orElse(false);
-                    return this;
+        else {
 
-                }
+          final HttpClientBuilder clientBuilder = HttpClients.custom();
+          final PoolingHttpClientConnectionManagerBuilder httpClientConnectionManagerBuilder = PoolingHttpClientConnectionManagerBuilder.create();
 
-                else
-                {
-                    final HttpClientBuilder clientBuilder = HttpClients.custom();
-                    final PoolingHttpClientConnectionManagerBuilder httpClientConnectionManagerBuilder = PoolingHttpClientConnectionManagerBuilder.create();
+          RestTemplateReactiveOptions restTemplateOptions = (RestTemplateReactiveOptions) options;
+          if (restTemplateOptions.getReadTimeoutMillis() != null) {
+            SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(restTemplateOptions.getReadTimeoutMillis().intValue(), TimeUnit.MILLISECONDS).build();
+            httpClientConnectionManagerBuilder.setDefaultSocketConfig(socketConfig);
+          }
 
-                    RestTemplateReactiveOptions restTemplateOptions = (RestTemplateReactiveOptions) options;
-                    if (restTemplateOptions.getReadTimeoutMillis() != null)
-                    {
-                        SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(restTemplateOptions.getReadTimeoutMillis().intValue(), TimeUnit.MILLISECONDS).build();
-                        httpClientConnectionManagerBuilder.setDefaultSocketConfig(socketConfig);
-                    }
+          if (options.getConnectTimeoutMillis() != null) {
+            clientBuilder.setDefaultRequestConfig(
+                RequestConfig.custom().setConnectTimeout(Timeout.ofMilliseconds(options.getConnectTimeoutMillis().intValue())).build()
+            );
+          }
 
-                    if (options.getConnectTimeoutMillis() != null)
-                    {
-                        clientBuilder.setDefaultRequestConfig(
-                            RequestConfig.custom().setConnectTimeout(Timeout.ofMilliseconds(options.getConnectTimeoutMillis().intValue())).build()
-                        );
-                    }
+          clientBuilder.setConnectionManager(httpClientConnectionManagerBuilder.build());
 
-                    clientBuilder.setConnectionManager(httpClientConnectionManagerBuilder.build());
+          HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(clientBuilder.build());
 
-                    HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(clientBuilder.build());
-
-                    this.restTemplate = new RestTemplate(requestFactory);
-                    this.acceptGzip = ofNullable(options.isTryUseCompression()).orElse(false);
-                    return this;
-                }
-            }
-        };
-    }
+          this.restTemplate = new RestTemplate(requestFactory);
+          this.acceptGzip = ofNullable(options.isTryUseCompression()).orElse(false);
+          return this;
+        }
+      }
+    };
+  }
 }
 
 

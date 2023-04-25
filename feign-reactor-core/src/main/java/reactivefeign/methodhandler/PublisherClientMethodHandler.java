@@ -13,7 +13,12 @@
  */
 package reactivefeign.methodhandler;
 
-import feign.*;
+import feign.CollectionFormat;
+import feign.MethodMetadata;
+import feign.Param;
+import feign.QueryMapEncoder;
+import feign.RequestTemplate;
+import feign.Target;
 import feign.querymap.FieldQueryMapEncoder;
 import feign.template.UriUtils;
 import org.reactivestreams.Publisher;
@@ -21,13 +26,23 @@ import org.reactivestreams.Subscriber;
 import reactivefeign.client.ReactiveHttpClient;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.publisher.PublisherHttpClient;
+import reactivefeign.utils.ContentType;
 import reactivefeign.utils.LinkedCaseInsensitiveMap;
 import reactivefeign.utils.Pair;
+import reactivefeign.utils.SerializedFormData;
 import reactor.core.publisher.Mono;
 
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
-import java.util.*;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,10 +53,18 @@ import static feign.Util.checkNotNull;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.mapping;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
+import static reactivefeign.utils.FormUtils.serializeForm;
 import static reactivefeign.utils.HttpUtils.CONTENT_TYPE_HEADER;
+import static reactivefeign.utils.HttpUtils.FORM_URL_ENCODED;
 import static reactivefeign.utils.HttpUtils.MULTIPART_MIME_TYPES;
-import static reactivefeign.utils.MultiValueMapUtils.*;
+import static reactivefeign.utils.MultiValueMapUtils.add;
+import static reactivefeign.utils.MultiValueMapUtils.addAll;
+import static reactivefeign.utils.MultiValueMapUtils.addAllOrdered;
+import static reactivefeign.utils.MultiValueMapUtils.addOrdered;
 import static reactivefeign.utils.StringUtils.cutPrefix;
 import static reactivefeign.utils.StringUtils.cutTail;
 
@@ -66,7 +89,10 @@ public class PublisherClientMethodHandler implements MethodHandler {
     private final URI staticUri;
 
     private final QueryMapEncoder queryMapEncoder = new FieldQueryMapEncoder();
+
+    private final Optional<ContentType> contentType;
     private final boolean isMultipart;
+    private final boolean isFormUrlEncoded;
 
     public PublisherClientMethodHandler(Target<?> target,
                                         MethodMetadata methodMetadata,
@@ -80,18 +106,20 @@ public class PublisherClientMethodHandler implements MethodHandler {
         this.headerExpanders = buildExpanders(requestTemplate.headers());
 
         this.queriesAll = new HashMap<>(requestTemplate.queries());
-        this.isMultipart = isMultipartForm(requestTemplate.headers());
+        this.contentType = getContentType(requestTemplate.headers());
+        this.isMultipart = contentType.map(ct -> MULTIPART_MIME_TYPES.contains(ct.getMediaType())).orElse(false);
         if(isMultipart && methodMetadata.template().bodyTemplate() != null){
             throw new IllegalArgumentException("isMultipart && methodMetadata.template().bodyTemplate() != null");
         }
-        if(!isMultipart) {
+        this.isFormUrlEncoded = contentType.map(ct -> ct.getMediaType().equalsIgnoreCase(FORM_URL_ENCODED)).orElse(false);
+        if(!isMultipart && !isFormUrlEncoded) {
             methodMetadata.formParams()
                     .forEach(param -> add(queriesAll, param, "{" + param + "}"));
         }
         this.queryExpanders = buildExpanders(queriesAll);
 
         //static template (POST & PUT)
-        if(pathExpander instanceof StaticPathExpander
+        if(pathExpander instanceof StaticExpander
                 && queriesAll.isEmpty()
                 && methodMetadata.queryMapIndex() == null){
             staticUri = URI.create(target.url() + cutTail(requestTemplate.url(), "/"));
@@ -236,19 +264,40 @@ public class PublisherClientMethodHandler implements MethodHandler {
     protected Publisher<Object> body(
             Object[] argv,
             Substitutions substitutions) {
+
+        if(isFormUrlEncoded){
+            return serializeFormData(argv, substitutions);
+        }
+
         if (methodMetadata.bodyIndex() != null) {
-            return body(argv[methodMetadata.bodyIndex()]);
-        } else if(isMultipart) {
-            Map<String, List<Object>> formVariables = new LinkedHashMap<>();
-            for (Map.Entry<String, Object> entry : substitutions.placeholderToSubstitution.entrySet()) {
-                if (methodMetadata.formParams().contains(entry.getKey())) {
-                    formVariables.put(entry.getKey(), singletonList(entry.getValue()));
-                }
-            }
-            return new MultipartMap(formVariables);
+            Object body = argv[methodMetadata.bodyIndex()];
+            return body(body);
+        } else if(isMultipart) { //all arguments have Param annotation
+            return new MultipartMap(collectFormData(substitutions));
         } else {
             return Mono.empty();
         }
+    }
+
+    private SerializedFormData serializeFormData(Object[] argv, Substitutions substitutions) {
+        Map<String, ?> formData;
+        if (methodMetadata.bodyIndex() != null) {
+            Object body = argv[methodMetadata.bodyIndex()];
+            formData = (Map<String, Object>)body;
+        } else {
+            formData = collectFormData(substitutions);
+        }
+        return serializeForm(formData, contentType.get().getCharset());
+    }
+
+    private Map<String, List<Object>> collectFormData(Substitutions substitutions) {
+        Map<String, List<Object>> formVariables = new LinkedHashMap<>();
+        for (Map.Entry<String, Object> entry : substitutions.placeholderToSubstitution.entrySet()) {
+            if (methodMetadata.formParams().contains(entry.getKey())) {
+                formVariables.put(entry.getKey(), singletonList(entry.getValue()));
+            }
+        }
+        return formVariables;
     }
 
     protected Publisher<Object> body(Object body) {
@@ -266,7 +315,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
                         .map(v -> new Pair<>(e.getKey(), v)));
         return templatesFlattened.collect(groupingBy(
                 entry -> entry.left,
-                mapping(entry -> buildExpandFunction(entry.right), toList())));
+                mapping(entry -> buildMultiValueExpandFunction(entry.right), toList())));
     }
 
     /**
@@ -274,7 +323,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
      * @param template
      * @return function that able to map substitutions map to actual value for specified template
      */
-    private static Function<Substitutions, List<String>> buildExpandFunction(String template) {
+    private static Function<Substitutions, List<String>> buildMultiValueExpandFunction(String template) {
         Matcher matcher = SUBSTITUTION_PATTERN.matcher(template);
         if(matcher.matches()){
             String placeholder = matcher.group(1);
@@ -299,7 +348,8 @@ public class PublisherClientMethodHandler implements MethodHandler {
                 }
             };
         } else {
-            return substitutions -> singletonList(template);
+            Function<Substitutions, String> expandFunction = buildExpandFunction(template);
+            return substitutions -> singletonList(expandFunction.apply(substitutions));
         }
     }
 
@@ -308,19 +358,18 @@ public class PublisherClientMethodHandler implements MethodHandler {
         String requestUrl = getRequestUrl(requestTemplate);
 
         if(target instanceof Target.EmptyTarget){
-            return expandUrlForEmptyTarget(buildUrlExpandFunction(requestUrl));
+            return expandUrlForEmptyTarget(buildExpandFunction(requestUrl));
         } else {
             String targetUrl = cutTail(target.url(), "/");
-            return buildUrlExpandFunction(targetUrl+requestUrl);
+            return buildExpandFunction(targetUrl+requestUrl);
         }
     }
 
     private static String getRequestUrl(RequestTemplate requestTemplate) {
         String requestUrl = cutTail(requestTemplate.url(), requestTemplate.queryLine());
         requestUrl = cutPrefix(requestUrl, "/");
-        requestUrl = cutTail(requestUrl, "/");
         if(!requestUrl.isEmpty()){
-            requestUrl = "/"+requestUrl;
+            requestUrl = "/" + requestUrl;
         }
         return requestUrl;
     }
@@ -335,7 +384,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
      * @param template
      * @return function that able to map substitutions map to actual value for specified template
      */
-    private static Function<Substitutions, String> buildUrlExpandFunction(String template) {
+    private static Function<Substitutions, String> buildExpandFunction(String template) {
         List<Function<Substitutions, String>> chunks = new ArrayList<>();
         Matcher matcher = SUBSTITUTION_PATTERN.matcher(template);
         int previousMatchEnd = 0;
@@ -357,9 +406,9 @@ public class PublisherClientMethodHandler implements MethodHandler {
             previousMatchEnd = matcher.end();
         }
 
-        //no substitutions in path
+        //no substitutions in template
         if(previousMatchEnd == 0){
-            return new StaticPathExpander(template);
+            return new StaticExpander(template);
         }
 
         String textChunk = template.substring(previousMatchEnd);
@@ -371,11 +420,11 @@ public class PublisherClientMethodHandler implements MethodHandler {
                 .collect(Collectors.joining());
     }
 
-    private static class StaticPathExpander implements Function<Substitutions, String>{
+    private static class StaticExpander implements Function<Substitutions, String>{
 
         private final String staticPath;
 
-        private StaticPathExpander(String staticPath) {
+        private StaticExpander(String staticPath) {
             this.staticPath = staticPath;
         }
 
@@ -463,9 +512,10 @@ public class PublisherClientMethodHandler implements MethodHandler {
         }
     }
 
-    public boolean isMultipartForm(Map<String, Collection<String>> headers){
+    public Optional<ContentType> getContentType(Map<String, Collection<String>> headers){
         return headers.entrySet().stream()
-                .anyMatch(entry -> entry.getKey().equalsIgnoreCase(CONTENT_TYPE_HEADER)
-                && MULTIPART_MIME_TYPES.contains(entry.getValue().iterator().next().toLowerCase()));
+                .filter(entry -> entry.getKey().equalsIgnoreCase(CONTENT_TYPE_HEADER))
+                .map(entry -> ContentType.parse(entry.getValue().iterator().next().toLowerCase()))
+                .findFirst();
     }
 }

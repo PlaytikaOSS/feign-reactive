@@ -22,53 +22,40 @@
         <spring-boot-dependencies-bom.version>3.0.1</spring-boot-dependencies-bom.version>
 
         <!--other-->
-        <!-- versions in spring-boot-dependency       -->
-        <!--        <jetty.version>9.4.45.v20220203</jetty.version>-->
-        <!--        <jetty-reactive-httpclient.version>1.1.11</jetty-reactive-httpclient.version>-->
-
-        <!--        <jetty.version>11.0.8</jetty.version>-->
-        <!--        <jetty-reactive-httpclient.version>3.0.5</jetty-reactive-httpclient.version>-->
-
         <json-reactor.version>0.0.4</json-reactor.version>
         <rxjava.version>1.3.8</rxjava.version>
         <rxjava2.version>2.2.21</rxjava2.version>
 
         <!-- Tests -->
         <junit.version>4.13.2</junit.version>
-        <wiremock.version>2.32.0</wiremock.version>
+        <wiremock.version>2.35.0</wiremock.version>
         <awaitility.version>4.2.0</awaitility.version>
-        <blockhound.version>1.0.6.RELEASE</blockhound.version>
+        <blockhound.version>1.0.8.RELEASE</blockhound.version>
         <disruptor.version>3.4.4</disruptor.version>
+        <spring-cloud-starter-sleuth.version>3.1.1</spring-cloud-starter-sleuth.version>
         <brave-tests.version>5.13.7</brave-tests.version>
 
         <!-- Plugins -->
-        <jacoco-plugin.version>0.8.7</jacoco-plugin.version>
+        <jacoco-plugin.version>0.8.8</jacoco-plugin.version>
         <coveralls-plugin.version>4.3.0</coveralls-plugin.version>
 
-        <maven-compiler-plugin.version>3.10.1</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
+        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+        <maven-surefire-plugin.version>3.0.0</maven-surefire-plugin.version>
 
         <maven.javadoc.plugin.version>3.3.2</maven.javadoc.plugin.version>
         <maven.source.plugin.version>3.2.1</maven.source.plugin.version>
+
+        <!-- GPG -->
+        <gpg.keyname>3EEF24C7</gpg.keyname>
+        <gpg.defaultKeyring>false</gpg.defaultKeyring>
+        <gpg.useagent>true</gpg.useagent>
+        <gpg.lockMode>never</gpg.lockMode>
     </properties>
 
     <dependencyManagement>
         <dependencies>
 
             <!-- BOMs -->
-<!--            <dependency>-->
-<!--                <groupId>org.eclipse.jetty</groupId>-->
-<!--                <artifactId>jetty-bom</artifactId>-->
-<!--                <version>${jetty.version}</version>-->
-<!--                <type>pom</type>-->
-<!--                <scope>import</scope>-->
-<!--            </dependency>-->
-
-<!--            <dependency>-->
-<!--                <groupId>org.eclipse.jetty</groupId>-->
-<!--                <artifactId>jetty-reactive-httpclient</artifactId>-->
-<!--                <version>${jetty-reactive-httpclient.version}</version>-->
-<!--            </dependency>-->
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>
@@ -115,6 +102,11 @@
             <dependency>
                 <groupId>com.playtika.reactivefeign</groupId>
                 <artifactId>feign-reactor-webclient-jetty</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.playtika.reactivefeign</groupId>
+                <artifactId>feign-reactor-webclient-apache-client5</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

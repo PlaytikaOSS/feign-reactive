@@ -17,8 +17,15 @@
 package reactivefeign.allfeatures;
 
 import org.reactivestreams.Publisher;
+import org.springframework.http.MediaType;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -126,4 +133,16 @@ public interface AllFeaturesMvc {
 
 	@GetMapping(path = "/expand")
 	Mono<TestObject> expandRequestParameter(@RequestParam("dateTime") String date);
+
+	@GetMapping(path = "/Invoices")
+	Mono<TestObject> expandPathParameterInRequestParameter(@RequestParam("filter") String filter);
+
+	@PostMapping(path = "/formDataMap",
+			consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
+	Mono<AllFeaturesApi.TestObject> formDataMap(ServerWebExchange serverWebExchange);
+
+	@PostMapping(path = "/formDataParameters",
+			consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
+	Mono<AllFeaturesApi.TestObject> formDataParameters(ServerWebExchange serverWebExchange);
+
 }

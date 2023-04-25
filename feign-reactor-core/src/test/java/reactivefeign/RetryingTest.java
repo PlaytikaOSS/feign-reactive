@@ -18,6 +18,7 @@ import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
+import feign.ExceptionPropagationPolicy;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -32,7 +33,10 @@ import reactor.test.StepVerifier;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -184,6 +188,33 @@ public abstract class RetryingTest extends BaseReactorTest {
   }
 
   @Test
+  public void shouldFailAsNoMoreRetriesWithUnwrap() {
+
+    String orderUrl = "/icecream/orders/1";
+
+    wireMockRule.stubFor(get(urlEqualTo(orderUrl))
+            .withHeader("Accept", equalTo("application/json"))
+            .willReturn(aResponse().withStatus(503).withHeader(RETRY_AFTER, "1")));
+
+    int maxRetries = 3;
+    IcecreamServiceApi client = builder()
+            .statusHandler(errorDecoder((methodKey, response) -> {
+              throw new BusinessException();
+            }))
+            .retryWhen(new BasicReactiveRetryPolicy.Builder()
+                    .setMaxRetries(maxRetries)
+                    .setExceptionPropagationPolicy(ExceptionPropagationPolicy.UNWRAP)
+                    .build())
+            .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
+
+    StepVerifier.create(client.findOrder(1).subscribeOn(testScheduler()))
+            .expectErrorMatches(throwable -> throwable instanceof BusinessException)
+            .verify();
+
+    assertThat(getEventsForPath(orderUrl).size()).isEqualTo(maxRetries + 1);
+  }
+
+  @Test
   public void shouldFailAsNoMoreRetriesWithBackoff() {
 
     String orderUrl = "/icecream/orders/1";
@@ -229,6 +260,9 @@ public abstract class RetryingTest extends BaseReactorTest {
 
   private List<ServeEvent> getEventsForPath(String path) {
     return wireMockRule.getAllServeEvents().stream().filter(serveEvent -> serveEvent.getRequest().getUrl().contains(path)).collect(toList());
+  }
+
+  static class BusinessException extends RuntimeException {
   }
 
 

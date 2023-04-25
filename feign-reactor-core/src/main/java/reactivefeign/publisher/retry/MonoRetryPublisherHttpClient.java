@@ -17,8 +17,8 @@ import feign.MethodMetadata;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.publisher.PublisherHttpClient;
+import reactivefeign.retry.ReactiveRetryPolicy;
 import reactor.core.publisher.Mono;
-import reactor.util.retry.Retry;
 
 /**
  * Wraps {@link PublisherHttpClient} with retry logic provided by retryFunction
@@ -30,8 +30,8 @@ public class MonoRetryPublisherHttpClient extends RetryPublisherHttpClient {
   public MonoRetryPublisherHttpClient(
           PublisherHttpClient publisherClient,
           MethodMetadata methodMetadata,
-          Retry retry) {
-    super(publisherClient, methodMetadata, retry);
+          ReactiveRetryPolicy retryPolicy) {
+    super(publisherClient, methodMetadata, retryPolicy);
   }
 
   @Override

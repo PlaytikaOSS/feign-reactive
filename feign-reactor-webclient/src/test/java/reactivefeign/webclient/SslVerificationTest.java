@@ -17,6 +17,8 @@ package reactivefeign.webclient;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.junit.Rule;
 import org.junit.Test;
 import reactivefeign.ReactiveFeign;
@@ -27,6 +29,8 @@ import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.OrderGenerator;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+
+import javax.net.ssl.SSLException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
@@ -56,11 +60,10 @@ public class SslVerificationTest extends reactivefeign.BaseReactorTest {
 
     private ReactiveFeign.Builder<IcecreamServiceApi> builder(boolean disableSslValidation) {
 
-        return (ReactiveFeign.Builder) WebReactiveFeign.builder()
+        return WebReactiveFeign.<IcecreamServiceApi>builder()
                 .options(new WebReactiveOptions.Builder()
                         .setDisableSslValidation(disableSslValidation)
-                        .build()
-                );
+                        .build());
     }
 
 
@@ -77,6 +80,32 @@ public class SslVerificationTest extends reactivefeign.BaseReactorTest {
                         .withBody(TestUtils.MAPPER.writeValueAsString(billExpected))));
 
         IcecreamServiceApi client = client(true);
+        Mono<Bill> bill = client.makeOrder(order);
+
+        StepVerifier.create(bill.subscribeOn(testScheduler()))
+                .expectNextMatches(equalsComparingFieldByFieldRecursively(billExpected))
+                .verifyComplete();
+    }
+
+    @Test
+    public void givenDisabledSslValidationContext_shouldPass() throws JsonProcessingException, SSLException {
+
+        IceCreamOrder order = new OrderGenerator().generate(20);
+        Bill billExpected = Bill.makeBill(order);
+
+        wireMockRule.stubFor(post(urlEqualTo("/icecream/orders"))
+                .withRequestBody(equalTo(TestUtils.MAPPER.writeValueAsString(order)))
+                .willReturn(aResponse().withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody(TestUtils.MAPPER.writeValueAsString(billExpected))));
+
+        IcecreamServiceApi client = WebReactiveFeign.<IcecreamServiceApi>builder()
+                .options(new WebReactiveOptions.Builder()
+                        .setSslContext(SslContextBuilder.forClient()
+                                .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                                .build())
+                        .build())
+                .target(IcecreamServiceApi.class, "https://localhost:" + wireMockRule.httpsPort());
         Mono<Bill> bill = client.makeOrder(order);
 
         StepVerifier.create(bill.subscribeOn(testScheduler()))

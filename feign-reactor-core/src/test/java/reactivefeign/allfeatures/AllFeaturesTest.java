@@ -17,9 +17,7 @@
 package reactivefeign.allfeatures;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -40,7 +38,11 @@ import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.time.Month;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
@@ -83,9 +85,6 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 
 	@LocalServerPort
 	protected int port;
-
-	@Rule
-	public ExpectedException expectedException = ExpectedException.none();
 
 	abstract protected AllFeaturesApi buildClient(String url);
 
@@ -507,6 +506,37 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 		StepVerifier.create(client.expandDataTimeParameterWithCustomFormat(dateTime)
 				.subscribeOn(testScheduler()))
 				.expectNextMatches(result -> result.payload.equals(dateTime.format(DateTimeFormatter.ofPattern(DATE_TIME_FORMAT))))
+				.verifyComplete();
+	}
+
+	@Test
+	public void shouldExpandPathParamInRequestParameter() {
+
+		String companyName = "XRTGFS";
+		StepVerifier.create(client.expandPathParameterInRequestParameter(companyName)
+						.subscribeOn(testScheduler()))
+				.expectNextMatches(result -> result.payload.equals("Company:"+companyName))
+				.verifyComplete();
+	}
+
+	@Test
+	public void shouldPassUrlEncodedFormMap() {
+		Map<String, String> form = new HashMap<>();
+		form.put("key1", "value1");
+		form.put("key2", "value2");
+
+		StepVerifier.create(client.formDataMap(form)
+						.subscribeOn(testScheduler()))
+				.expectNextMatches(result -> result.payload.equals("{key1=[value1], key2=[value2]}"))
+				.verifyComplete();
+	}
+
+	@Test
+	public void shouldPassUrlEncodedFormParameters() {
+
+		StepVerifier.create(client.formDataParameters("value1", "value2")
+						.subscribeOn(testScheduler()))
+				.expectNextMatches(result -> result.payload.equals("{key1=[value1], key2=[value2]}"))
 				.verifyComplete();
 	}
 

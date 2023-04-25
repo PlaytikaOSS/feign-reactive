@@ -20,7 +20,14 @@ import org.reactivestreams.Publisher;
 import org.springframework.cloud.openfeign.CollectionFormat;
 import org.springframework.cloud.openfeign.SpringQueryMap;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.http.MediaType;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -158,9 +165,24 @@ public interface AllFeaturesMvc extends reactivefeign.allfeatures.AllFeaturesApi
 	@GetMapping(path = "/expand/{timestamp}")
 	Mono<TestObject> expandPathParameter(@PathVariable("timestamp") long timestamp);
 
+	@Override
+	@GetMapping(path = "/Invoices?filter=Company:{companyName}")
+	Mono<TestObject> expandPathParameterInRequestParameter(@RequestParam("companyName") String companyName);
+
 	@GetMapping(path = "/expand")
 	Mono<TestObject> expandDataTimeParameterWithCustomFormat(
 			@DateTimeFormat(pattern = DATE_TIME_FORMAT)
 			@RequestParam("dateTime") LocalDateTime dateTime);
+
+
+	@PostMapping(path = "/formDataMap",
+			consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
+	Mono<TestObject> formDataMap(Map<String, ?> form);
+
+	@PostMapping(path = "/formDataParameters",
+			consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE})
+	Mono<TestObject> formDataParameters(
+			@RequestPart("key1") String organizationName,
+			@RequestPart("key2") String organizationId);
 
 }

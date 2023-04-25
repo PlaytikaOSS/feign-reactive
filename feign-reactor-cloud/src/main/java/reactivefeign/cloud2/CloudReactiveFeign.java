@@ -196,7 +196,7 @@ public class CloudReactiveFeign {
                         publisherClient = new LoadBalancerPublisherClient(
                                 loadBalancerFactory.getInstance(target.name()), publisherClient);
                         if(retryOnNextPolicy != null){
-                            publisherClient = retry(publisherClient, methodMetadata, retryOnNextPolicy.retry());
+                            publisherClient = retry(publisherClient, methodMetadata, retryOnNextPolicy);
                         }
                         return publisherClient;
                     } else {

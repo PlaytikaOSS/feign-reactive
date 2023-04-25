@@ -16,7 +16,12 @@ package reactivefeign.client.log;
 import feign.MethodMetadata;
 import feign.Target;
 import org.reactivestreams.Publisher;
-import reactivefeign.client.*;
+import reactivefeign.client.DelegatingReactiveHttpResponse;
+import reactivefeign.client.ReactiveHttpClient;
+import reactivefeign.client.ReactiveHttpExchangeFilterFunction;
+import reactivefeign.client.ReactiveHttpRequest;
+import reactivefeign.client.ReactiveHttpResponse;
+import reactivefeign.utils.SerializedFormData;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -87,6 +92,8 @@ public class LoggerExchangeFilterFunction<P extends Publisher<?>> implements Rea
       } else if (request.body() instanceof Flux) {
         bodyLogged = ((Flux<Object>) request.body())
                 .doOnNext(requestBodyLogger(logContext));
+      } else if(request.body() instanceof SerializedFormData){
+        bodyLogged =  ((SerializedFormData) request.body()).logged(requestBodyLogger(logContext));
       } else {
         throw new IllegalArgumentException("Unsupported publisher type: " + request.body().getClass());
       }

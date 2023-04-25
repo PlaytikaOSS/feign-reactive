@@ -3,7 +3,7 @@ package reactivefeign.jetty.client;
 import com.fasterxml.jackson.core.async_.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectReader;
 import org.eclipse.jetty.client.api.Response;
-import org.eclipse.jetty.http.HttpField;
+import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.reactive.client.ContentChunk;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpRequest;
@@ -15,12 +15,13 @@ import reactor.core.publisher.Mono;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static java.util.Optional.ofNullable;
 import static org.eclipse.jetty.http.HttpHeader.CONTENT_TYPE;
 
@@ -59,8 +60,21 @@ class JettyReactiveHttpResponse implements ReactiveHttpResponse{
 
 	@Override
 	public Map<String, List<String>> headers() {
-		return clientResponse.getHeaders().stream()
-				.collect(Collectors.toMap(HttpField::getName, field -> asList(field.getValues())));
+		HttpFields headers = clientResponse.getHeaders();
+		Map<String, List<String>> headersMap = new HashMap<>(headers.size());
+		headers.forEach(httpField ->
+				headersMap.compute(httpField.getName(), (oldName, oldValues) -> {
+					List<String> values;
+					if(oldValues == null){
+						values = Arrays.asList(httpField.getValues());
+					} else {
+						values = new ArrayList<>(oldValues.size() + httpField.getValues().length);
+						values.addAll(oldValues);
+						values.addAll(Arrays.asList(httpField.getValues()));
+					}
+					return values;
+				}));
+		return headersMap;
 	}
 
 	@Override

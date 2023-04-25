@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.utils.Pair;
+import reactivefeign.utils.SerializedFormData;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -73,7 +74,10 @@ public class DefaultReactiveLogger implements ReactiveLoggerListener<DefaultReac
                 logger.trace("[{}] REQUEST BODY\n{}", logContext.feignMethodKey, body);
             } else if (requestBody instanceof Flux) {
                 logger.trace("[{}] REQUEST BODY ELEMENT\n{}", logContext.feignMethodKey, body);
-            } else {
+            } else if(requestBody instanceof SerializedFormData){
+                logger.trace("[{}] REQUEST BODY FORM DATA\n{}", logContext.feignMethodKey, body);
+            }
+            else {
                 throw new IllegalArgumentException("Unsupported publisher type: " + requestBody.getClass());
             }
         }

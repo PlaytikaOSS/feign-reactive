@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 abstract public class ResponseEntityTest {
 
@@ -40,14 +41,15 @@ abstract public class ResponseEntityTest {
                 .target(TestCaller.class, "http://localhost:" + wireMockRule.port());
 
         Mono<ResponseEntity<Flux<Integer>>> result = client.call();
-        StepVerifier.create(result)
-                .expectNextMatches(response -> toLowerCaseKeys(response.getHeaders())
-                        .containsKey("content-type"))
-                .verifyComplete();
 
-        StepVerifier.create(result.flatMapMany(HttpEntity::getBody))
+        StepVerifier.create(result
+                        .doOnNext(response -> assertThat(toLowerCaseKeys(response.getHeaders())
+                                .containsKey("content-type")).isTrue())
+                        .flatMapMany(HttpEntity::getBody))
                 .expectNextSequence(asList(1, 2))
                 .verifyComplete();
+
+        assertThat(wireMockRule.getAllServeEvents().size()).isEqualTo(1);
     }
 
     @Test
@@ -63,12 +65,10 @@ abstract public class ResponseEntityTest {
 
         Mono<ResponseEntity<Mono<byte[]>>> resultRaw = client.callRaw();
 
-        StepVerifier.create(resultRaw)
-                .expectNextMatches(response -> toLowerCaseKeys(response.getHeaders())
-                        .containsKey("content-type"))
-                .verifyComplete();
-
-        StepVerifier.create(resultRaw.flatMapMany(HttpEntity::getBody))
+        StepVerifier.create(resultRaw
+                        .doOnNext(response -> assertThat(toLowerCaseKeys(response.getHeaders())
+                                .containsKey("content-type")).isTrue())
+                        .flatMapMany(HttpEntity::getBody))
                 .expectNextMatches(bytes -> Arrays.equals("[1, 2]".getBytes(), bytes))
                 .verifyComplete();
     }
