@@ -28,20 +28,20 @@
 
     <name>feign-reactive</name>
     <description>Use Feign client on WebClient</description>
-    <url>https://github.com/Playtika/feign-reactive</url>
+    <url>https://github.com/PlaytikaOSS/feign-reactive</url>
 
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
             <distribution>repo</distribution>
         </license>
     </licenses>
 
     <scm>
-        <url>https://svn.apache.org/viewvc/maven</url>
-        <connection>scm:git:git://github.com/Playtika/feign-reactive.git</connection>
-        <developerConnection>scm:git:git@github.com:Playtika/feign-reactive.git</developerConnection>
+        <url>https://github.com/PlaytikaOSS/feign-reactive</url>
+        <connection>scm:git:git://github.com/PlaytikaOSS/feign-reactive.git</connection>
+        <developerConnection>scm:git:git@github.com:PlaytikaOSS/feign-reactive.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
