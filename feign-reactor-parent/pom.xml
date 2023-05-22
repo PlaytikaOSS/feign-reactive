@@ -43,7 +43,7 @@
         <maven-surefire-plugin.version>3.0.0</maven-surefire-plugin.version>
 
         <maven.javadoc.plugin.version>3.3.2</maven.javadoc.plugin.version>
-        <maven.source.plugin.version>3.2.1</maven.source.plugin.version>
+        <maven.source.plugin.version>3.3.0</maven.source.plugin.version>
 
         <!-- GPG -->
         <gpg.keyname>3EEF24C7</gpg.keyname>
