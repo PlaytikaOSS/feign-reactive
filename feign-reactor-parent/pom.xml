@@ -18,7 +18,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--BOMs-->
-        <spring-cloud-bom.version>2022.0.0</spring-cloud-bom.version>
+        <spring-cloud-bom.version>2022.0.3</spring-cloud-bom.version>
         <spring-boot-dependencies-bom.version>3.0.1</spring-boot-dependencies-bom.version>
 
         <!--other-->
