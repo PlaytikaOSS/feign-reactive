@@ -27,7 +27,7 @@
 
     <name>feign-reactive</name>
     <description>Use Feign client on WebClient</description>
-    <url>https://github.com/mukeshj13/feign-reactive</url>
+    <url>https://github.com/Playtika/feign-reactive</url>
 
     <licenses>
         <license>
