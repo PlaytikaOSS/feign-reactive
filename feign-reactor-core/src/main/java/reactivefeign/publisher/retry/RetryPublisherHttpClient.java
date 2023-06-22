@@ -40,6 +40,7 @@ abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
     protected final String feignMethodKey;
     protected final PublisherHttpClient publisherClient;
     private final Retry retry;
+    private final ReactiveRetryPolicy retryPolicy;
 
     private final ExceptionPropagationPolicy exceptionPropagationPolicy;
 
@@ -52,6 +53,7 @@ abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
         this.feignMethodKey = methodMetadata.configKey();
         this.retry = wrapWithRetryLog(retryPolicy.retry(), feignMethodKey);
         this.exceptionPropagationPolicy = retryPolicy.exceptionPropagationPolicy();
+        this.retryPolicy = retryPolicy;
     }
 
     protected Retry getRetry(ReactiveHttpRequest request){
@@ -64,7 +66,7 @@ abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
             public Publisher<?> generateCompanion(Flux<RetrySignal> retrySignals) {
                 return Flux.<Object>from(retry.generateCompanion(retrySignals))
                         .onErrorResume(throwable -> Mono.just(new OutOfRetriesWrapper(throwable, request)))
-                        .zipWith(Flux.range(1, Integer.MAX_VALUE), (object, index) -> {
+                        .zipWith(Flux.range(1, retryPolicy.maxAllowedRetries()), (object, index) -> {
                             if(object instanceof OutOfRetriesWrapper){
                                 OutOfRetriesWrapper wrapper = (OutOfRetriesWrapper) object;
                                 if(index == 1){

@@ -77,6 +77,11 @@ public class BasicReactiveRetryPolicy extends SimpleReactiveRetryPolicy{
     }
   }
 
+  @Override
+  public int maxAllowedRetries() {
+    return maxRetries;
+  }
+
   public static class Builder implements ReactiveRetryPolicy.Builder{
     private int maxRetries;
     private long backoffInMs = 0;

@@ -10,6 +10,8 @@ public interface ReactiveRetryPolicy {
 
     Retry retry();
 
+    int maxAllowedRetries();
+
     interface Builder {
         ReactiveRetryPolicy build();
     }

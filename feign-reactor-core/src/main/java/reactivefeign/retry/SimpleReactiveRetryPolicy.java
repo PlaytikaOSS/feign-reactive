@@ -55,7 +55,7 @@ public abstract class SimpleReactiveRetryPolicy implements ReactiveRetryPolicy {
   @Override
   public Retry retry() {
     return Retry.from(errors -> errors
-        .zipWith(Flux.range(1, Integer.MAX_VALUE), (signal, index) -> {
+        .zipWith(Flux.range(1, maxAllowedRetries()), (signal, index) -> {
           long delay = retryDelay(signal.failure(), index);
           if (delay >= 0) {
             return Tuples.of(delay, signal);
