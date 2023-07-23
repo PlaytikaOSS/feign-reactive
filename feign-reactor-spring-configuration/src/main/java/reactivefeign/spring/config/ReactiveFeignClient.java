@@ -35,6 +35,11 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface ReactiveFeignClient {
+	/**
+	 * Id of the feign client that will be used to set the bean name
+	 * @return - id of the reactive feign client
+	 */
+	String id() default "";
 
 	/**
 	 * The name of the service with optional protocol prefix. Synonym for {@link #name()
