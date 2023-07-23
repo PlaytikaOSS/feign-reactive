@@ -174,7 +174,8 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 		definition.addPropertyValue("fallbackFactory", attributes.get("fallbackFactory"));
 		definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
 
-		String alias = name + "ReactiveFeignClient";
+		String id = StringUtils.hasText(getId(attributes))  ?  getId(attributes) : name;
+		String alias = id + "ReactiveFeignClient";
 		AbstractBeanDefinition beanDefinition = definition.getBeanDefinition();
 		beanDefinition.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, className);
 
@@ -211,6 +212,13 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 		Assert.isTrue(!clazz.isInterface(),
 			"Fallback factory must produce instances of fallback classes that implement the interface annotated by @FeignClient"
 		);
+	}
+
+	String getId(Map<String, Object> attributes) {
+		if (attributes == null) {
+			return "";
+		}
+		return (String) attributes.get("id");
 	}
 
 	/* for testing */ String getName(Map<String, Object> attributes) {
@@ -345,6 +353,10 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 	private String getClientName(Map<String, Object> client) {
 		if (client == null) {
 			return null;
+		}
+		String id = getId(client);
+		if (StringUtils.hasText(id)) {
+			return id;
 		}
 		String value = (String) client.get("value");
 		if (!StringUtils.hasText(value)) {
