@@ -6,7 +6,7 @@
         <groupId>com.playtika.reactivefeign</groupId>
         <artifactId>feign-reactor-parent</artifactId>
         <relativePath>../feign-reactor-parent</relativePath>
-        <version>3.2.10</version>
+        <version>4.0.2</version>
     </parent>
 
     <artifactId>feign-reactor-webclient-jetty</artifactId>
@@ -99,7 +99,17 @@
 
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-slf4j-impl</artifactId>
+            <artifactId>log4j-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j2-impl</artifactId>
             <scope>test</scope>
         </dependency>
 

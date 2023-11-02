@@ -53,6 +53,6 @@ public class LoggerTest extends reactivefeign.LoggerTest<LoggerTest.IcecreamServ
   //to not detect blocking calls
   @Override
   protected Scheduler testScheduler(){
-    return Schedulers.elastic();
+    return Schedulers.boundedElastic();
   }
 }

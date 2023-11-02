@@ -46,6 +46,6 @@ public class DefaultMethodTest extends reactivefeign.DefaultMethodTest {
   //to not detect blocking calls
   @Override
   protected Scheduler testScheduler(){
-    return Schedulers.elastic();
+    return Schedulers.boundedElastic();
   }
 }

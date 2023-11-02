@@ -1,7 +1,7 @@
 package reactivefeign.spring.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -20,9 +20,8 @@ import reactivefeign.webclient.WebReactiveOptions;
 import java.util.ArrayList;
 import java.util.List;
 
-@Configuration
+@AutoConfiguration(after = LoadBalancerAutoConfiguration.class)
 @ConditionalOnClass(ReactiveFeign.class)
-@AutoConfigureAfter(LoadBalancerAutoConfiguration.class)
 public class ReactiveFeignAutoConfiguration {
 
     @Autowired(required = false)

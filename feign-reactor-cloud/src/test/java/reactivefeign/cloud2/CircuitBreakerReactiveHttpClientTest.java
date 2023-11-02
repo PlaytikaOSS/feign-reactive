@@ -6,6 +6,7 @@ import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.awaitility.Awaitility;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -51,7 +52,10 @@ public class CircuitBreakerReactiveHttpClientTest extends BaseReactorTest {
 
     private static CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
     private static ReactiveResilience4JCircuitBreakerFactory circuitBreakerFactory
-            = new ReactiveResilience4JCircuitBreakerFactory();
+            = new ReactiveResilience4JCircuitBreakerFactory(
+        CircuitBreakerRegistry.ofDefaults(),
+        TimeLimiterRegistry.ofDefaults()
+    );
 
     @BeforeClass
     public static void setupServersList() {

@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.playtika.reactivefeign</groupId>
         <artifactId>feign-reactor</artifactId>
-        <version>3.2.10</version>
+        <version>4.0.2</version>
     </parent>
 
     <artifactId>feign-reactor-parent</artifactId>
@@ -13,16 +13,18 @@
 
 
     <properties>
-        <java.version>1.8</java.version>
+        <java.version>17</java.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--BOMs-->
-        <spring-cloud-bom.version>2021.0.6</spring-cloud-bom.version>
-        <spring-boot-dependencies-bom.version>2.6.14</spring-boot-dependencies-bom.version>
+        <spring-cloud-bom.version>2022.0.4</spring-cloud-bom.version>
+        <spring-boot-dependencies-bom.version>3.0.1</spring-boot-dependencies-bom.version>
 
         <!--other-->
         <json-reactor.version>0.0.4</json-reactor.version>
+        <rxjava.version>1.3.8</rxjava.version>
+        <rxjava2.version>2.2.21</rxjava2.version>
 
         <!-- Tests -->
         <junit.version>4.13.2</junit.version>
@@ -31,17 +33,17 @@
         <blockhound.version>1.0.8.RELEASE</blockhound.version>
         <disruptor.version>3.4.4</disruptor.version>
         <spring-cloud-starter-sleuth.version>3.1.7</spring-cloud-starter-sleuth.version>
-        <brave-tests.version>5.15.1</brave-tests.version>
+        <brave-tests.version>5.16.0</brave-tests.version>
 
         <!-- Plugins -->
-        <jacoco-plugin.version>0.8.8</jacoco-plugin.version>
+        <jacoco-plugin.version>0.8.11</jacoco-plugin.version>
         <coveralls-plugin.version>4.3.0</coveralls-plugin.version>
 
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.0.0</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.2.1</maven-surefire-plugin.version>
 
         <maven.javadoc.plugin.version>3.3.2</maven.javadoc.plugin.version>
-        <maven.source.plugin.version>3.2.1</maven.source.plugin.version>
+        <maven.source.plugin.version>3.3.0</maven.source.plugin.version>
 
         <!-- GPG -->
         <gpg.keyname>3EEF24C7</gpg.keyname>
@@ -72,7 +74,16 @@
             </dependency>
 
             <!-- project dependencies -->
-
+            <dependency>
+                <groupId>io.reactivex</groupId>
+                <artifactId>rxjava</artifactId>
+                <version>${rxjava.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.reactivex.rxjava2</groupId>
+                <artifactId>rxjava</artifactId>
+                <version>${rxjava2.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.playtika.reactivefeign</groupId>
                 <artifactId>feign-reactor-core</artifactId>
@@ -187,12 +198,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-starter-sleuth</artifactId>
-                <version>${spring-cloud-starter-sleuth.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
                 <groupId>io.zipkin.brave</groupId>
                 <artifactId>brave-tests</artifactId>
                 <version>${brave-tests.version}</version>
@@ -225,6 +230,9 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>${maven-surefire-plugin.version}</version>
+                    <configuration>
+                        <argLine>-XX:+AllowRedefinitionToAddDeleteMethods</argLine>
+                    </configuration>
                 </plugin>
 
                 <!-- Produce code coverage -->

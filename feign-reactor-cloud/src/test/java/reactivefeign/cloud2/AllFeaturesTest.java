@@ -16,6 +16,8 @@
 
 package reactivefeign.cloud2;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -54,7 +56,10 @@ public class AllFeaturesTest extends reactivefeign.allfeatures.AllFeaturesTest {
 	@BeforeClass
 	public static void setupServersList() {
 		loadBalancerFactory = LoadBalancingReactiveHttpClientTest.loadBalancerFactory(serviceName, 8080);
-		circuitBreakerFactory = new ReactiveResilience4JCircuitBreakerFactory();
+		circuitBreakerFactory = new ReactiveResilience4JCircuitBreakerFactory(
+			CircuitBreakerRegistry.ofDefaults(),
+			TimeLimiterRegistry.ofDefaults()
+		);
 	}
 
 	@Override

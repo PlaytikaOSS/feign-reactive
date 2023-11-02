@@ -9,7 +9,7 @@ jobs: # a collection of steps
       # Configure the JVMto avoid OOM errors
       _JAVA_OPTIONS: "-Xmx3g"
     docker: # run the steps with Docker
-      - image: circleci/openjdk:11.0.3-jdk-stretch
+      - image: circleci/openjdk:17.0.1-jdk-buster
 
     steps:
       - add_ssh_keys:

@@ -32,6 +32,6 @@ public class ObjectMapperTest extends reactivefeign.ObjectMapperTest {
   //to not detect blocking calls
   @Override
   protected Scheduler testScheduler(){
-    return Schedulers.elastic();
+    return Schedulers.boundedElastic();
   }
 }
