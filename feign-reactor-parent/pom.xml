@@ -5,7 +5,7 @@
     <parent>
         <groupId>com.playtika.reactivefeign</groupId>
         <artifactId>feign-reactor</artifactId>
-        <version>4.0.0</version>
+        <version>4.0.2</version>
     </parent>
 
     <artifactId>feign-reactor-parent</artifactId>
@@ -18,7 +18,7 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--BOMs-->
-        <spring-cloud-bom.version>2022.0.0</spring-cloud-bom.version>
+        <spring-cloud-bom.version>2022.0.3</spring-cloud-bom.version>
         <spring-boot-dependencies-bom.version>3.0.1</spring-boot-dependencies-bom.version>
 
         <!--other-->
@@ -33,17 +33,17 @@
         <blockhound.version>1.0.8.RELEASE</blockhound.version>
         <disruptor.version>3.4.4</disruptor.version>
         <spring-cloud-starter-sleuth.version>3.1.7</spring-cloud-starter-sleuth.version>
-        <brave-tests.version>5.15.1</brave-tests.version>
+        <brave-tests.version>5.16.0</brave-tests.version>
 
         <!-- Plugins -->
         <jacoco-plugin.version>0.8.8</jacoco-plugin.version>
         <coveralls-plugin.version>4.3.0</coveralls-plugin.version>
 
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
-        <maven-surefire-plugin.version>3.0.0</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.1.2</maven-surefire-plugin.version>
 
         <maven.javadoc.plugin.version>3.3.2</maven.javadoc.plugin.version>
-        <maven.source.plugin.version>3.2.1</maven.source.plugin.version>
+        <maven.source.plugin.version>3.3.0</maven.source.plugin.version>
 
         <!-- GPG -->
         <gpg.keyname>3EEF24C7</gpg.keyname>
