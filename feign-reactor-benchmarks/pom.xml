@@ -13,7 +13,7 @@
 
     <properties>
         <java.version>11</java.version>
-        <jmh.version>1.36</jmh.version>
+        <jmh.version>1.37</jmh.version>
     </properties>
 
     <dependencies>
@@ -96,7 +96,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.4.1</version>
+                <version>3.5.1</version>
                 <executions>
                     <execution>
                         <phase>package</phase>
