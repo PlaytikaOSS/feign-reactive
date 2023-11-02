@@ -14,6 +14,13 @@
 package reactivefeign.resttemplate.client;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.concurrent.TimeUnit;
+import org.apache.hc.client5.http.config.RequestConfig;
+import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.PoolingHttpClientConnectionManagerBuilder;
+import org.apache.hc.core5.http.io.SocketConfig;
+import org.apache.hc.core5.util.Timeout;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
@@ -105,21 +112,28 @@ public class RestTemplateFakeReactiveFeign {
 
         else {
 
-          HttpComponentsClientHttpRequestFactory requestFactory =
-                  new HttpComponentsClientHttpRequestFactory();
-          if (options.getConnectTimeoutMillis() != null) {
-            requestFactory.setConnectTimeout(options.getConnectTimeoutMillis().intValue());
+          final HttpClientBuilder clientBuilder = HttpClients.custom();
+          final PoolingHttpClientConnectionManagerBuilder httpClientConnectionManagerBuilder = PoolingHttpClientConnectionManagerBuilder.create();
+
+          RestTemplateReactiveOptions restTemplateOptions = (RestTemplateReactiveOptions) options;
+          if (restTemplateOptions.getReadTimeoutMillis() != null) {
+            SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(restTemplateOptions.getReadTimeoutMillis().intValue(), TimeUnit.MILLISECONDS).build();
+            httpClientConnectionManagerBuilder.setDefaultSocketConfig(socketConfig);
           }
 
-          RestTemplateReactiveOptions restTemplateOptions = (RestTemplateReactiveOptions)options;
-          if (restTemplateOptions.getReadTimeoutMillis() != null) {
-            requestFactory.setReadTimeout(restTemplateOptions.getReadTimeoutMillis().intValue());
+          if (options.getConnectTimeoutMillis() != null) {
+            clientBuilder.setDefaultRequestConfig(
+                RequestConfig.custom().setConnectTimeout(Timeout.ofMilliseconds(options.getConnectTimeoutMillis().intValue())).build()
+            );
           }
+
+          clientBuilder.setConnectionManager(httpClientConnectionManagerBuilder.build());
+
+          HttpComponentsClientHttpRequestFactory requestFactory = new HttpComponentsClientHttpRequestFactory(clientBuilder.build());
 
           this.restTemplate = new RestTemplate(requestFactory);
           this.acceptGzip = ofNullable(options.isTryUseCompression()).orElse(false);
           return this;
-
         }
       }
     };

@@ -20,6 +20,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -256,7 +257,10 @@ public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
 
 		@Bean
 		public ReactiveResilience4JCircuitBreakerFactory circuitBreakerFactory(){
-			ReactiveResilience4JCircuitBreakerFactory circuitBreakerFactory = new ReactiveResilience4JCircuitBreakerFactory();
+			ReactiveResilience4JCircuitBreakerFactory circuitBreakerFactory = new ReactiveResilience4JCircuitBreakerFactory(
+				CircuitBreakerRegistry.ofDefaults(),
+				TimeLimiterRegistry.ofDefaults()
+			);
 			circuitBreakerFactory.configureDefault(id -> new Resilience4JConfigBuilder(id)
 					.circuitBreakerConfig(CircuitBreakerConfig.custom()
 							.minimumNumberOfCalls(VOLUME_THRESHOLD)

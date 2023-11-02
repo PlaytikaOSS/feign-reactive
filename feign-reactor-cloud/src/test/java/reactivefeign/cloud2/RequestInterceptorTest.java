@@ -13,6 +13,8 @@
  */
 package reactivefeign.cloud2;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.junit.Before;
 import org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JCircuitBreakerFactory;
 import org.springframework.cloud.client.ServiceInstance;
@@ -30,7 +32,10 @@ public class RequestInterceptorTest extends reactivefeign.RequestInterceptorTest
     protected static String serviceName = "RequestInterceptorTest";
 
     private ReactiveResilience4JCircuitBreakerFactory circuitBreakerFactory
-            = new ReactiveResilience4JCircuitBreakerFactory();
+            = new ReactiveResilience4JCircuitBreakerFactory(
+                CircuitBreakerRegistry.ofDefaults(),
+                TimeLimiterRegistry.ofDefaults()
+            );
 
     private ReactiveLoadBalancer.Factory<ServiceInstance> lbFactory;
 

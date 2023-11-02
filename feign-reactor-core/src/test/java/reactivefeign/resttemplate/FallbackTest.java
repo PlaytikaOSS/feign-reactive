@@ -31,6 +31,6 @@ public class FallbackTest extends reactivefeign.FallbackTest {
   //to not detect blocking calls
   @Override
   protected Scheduler testScheduler(){
-    return Schedulers.elastic();
+    return Schedulers.boundedElastic();
   }
 }
