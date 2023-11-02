@@ -1,27 +1,22 @@
 version: 2
 updates:
-- package-ecosystem: maven
-  directory: "/"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
-  ignore:
-  - dependency-name: io.projectreactor.tools:blockhound
-    versions:
-    - 1.0.5.RELEASE
-  - dependency-name: org.springframework.boot:spring-boot-dependencies
-    versions:
-    - 2.4.2
-    - 2.4.3
-    - 2.4.4
-  - dependency-name: org.openjdk.jmh:jmh-generator-annprocess
-    versions:
-    - "1.27"
-    - "1.28"
-  - dependency-name: org.openjdk.jmh:jmh-core
-    versions:
-    - "1.27"
-    - "1.28"
-  - dependency-name: org.springframework.cloud:spring-cloud-dependencies
-    versions:
-    - Hoxton.SR10
+  - package-ecosystem: "maven"
+    directory: "/"
+    target-branch: "develop"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 50
+    ignore:
+      - dependency-name: "com.amazonaws:*"
+        update-types: ["version-update:semver-patch"]
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "develop"
+    labels:
+      - "housekeeping"
+    schedule:
+      interval: "monthly"
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
