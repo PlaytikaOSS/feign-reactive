@@ -6,7 +6,7 @@
         <groupId>com.playtika.reactivefeign</groupId>
         <artifactId>feign-reactor-parent</artifactId>
         <relativePath>../feign-reactor-parent</relativePath>
-        <version>4.0.0</version>
+        <version>4.0.2</version>
     </parent>
 
     <artifactId>feign-reactor-java11</artifactId>
@@ -154,12 +154,6 @@
                     <artifactId>hamcrest-core</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-
-        <dependency>
-            <groupId>org.eclipse.jetty.http2</groupId>
-            <artifactId>http2-server</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
