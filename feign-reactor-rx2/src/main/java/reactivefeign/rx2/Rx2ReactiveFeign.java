@@ -19,7 +19,7 @@ import reactivefeign.rx2.client.statushandler.Rx2ReactiveStatusHandler;
 import reactivefeign.rx2.client.statushandler.Rx2StatusHandler;
 import reactivefeign.rx2.methodhandler.Rx2MethodHandlerFactory;
 import reactivefeign.webclient.WebClientFeignCustomizer;
-import reactivefeign.webclient.WebReactiveFeign;
+import reactivefeign.webclient.netty.NettyWebReactiveFeign;
 import reactivefeign.webclient.client.WebReactiveHttpClient;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -52,7 +52,7 @@ public final class Rx2ReactiveFeign {
         return new Builder<>(webClientBuilder, webClientCustomizer);
     }
 
-    public static class Builder<T> extends WebReactiveFeign.Builder<T> {
+    public static class Builder<T> extends NettyWebReactiveFeign.Builder<T> {
 
         private BackpressureStrategy backpressureStrategy;
 

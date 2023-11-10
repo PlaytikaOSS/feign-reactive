@@ -19,7 +19,7 @@ package reactivefeign.spring.mvc.allfeatures;
 import org.junit.Ignore;
 import org.junit.Test;
 import reactivefeign.ReactiveFeign;
-import reactivefeign.webclient.WebReactiveFeign;
+import reactivefeign.webclient.netty.NettyWebReactiveFeign;
 
 /**
  * @author Sergii Karpenko
@@ -30,7 +30,7 @@ public class AllFeaturesMvcWebTest extends AllFeaturesMvcTest{
 
 	@Override
 	protected ReactiveFeign.Builder<AllFeaturesMvc> builder() {
-		return WebReactiveFeign.builder();
+		return NettyWebReactiveFeign.builder();
 	}
 
 	@Test

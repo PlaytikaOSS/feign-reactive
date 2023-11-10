@@ -19,21 +19,21 @@ import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.testcase.IcecreamServiceApi;
-import reactivefeign.webclient.WebReactiveOptions;
+import reactivefeign.webclient.netty.NettyReactiveOptions;
 
 /**
  * @author Sergii Karpenko
  */
 public class MetricsTest extends reactivefeign.MetricsTest {
 
-  private static String serviceName = "MetricsTest-loadBalancingDefaultPolicyRoundRobin";
+  private static final String serviceName = "MetricsTest-loadBalancingDefaultPolicyRoundRobin";
 
-    private static ReactiveLoadBalancer.Factory<ServiceInstance> loadBalancerFactory;
+  private static ReactiveLoadBalancer.Factory<ServiceInstance> loadBalancerFactory;
 
-    @BeforeClass
-    public static void setupServersList() {
-        loadBalancerFactory = LoadBalancingReactiveHttpClientTest.loadBalancerFactory(serviceName, wireMockRule.port());
-    }
+  @BeforeClass
+  public static void setupServersList() {
+    loadBalancerFactory = LoadBalancingReactiveHttpClientTest.loadBalancerFactory(serviceName, wireMockRule.port());
+  }
 
   @Override
   protected String getHost() {
@@ -55,7 +55,7 @@ public class MetricsTest extends reactivefeign.MetricsTest {
   protected ReactiveFeignBuilder<IcecreamServiceApi> builder(long readTimeoutInMillis) {
     return BuilderUtils.<IcecreamServiceApi>cloudBuilder()
             .enableLoadBalancer(loadBalancerFactory)
-            .options(new WebReactiveOptions.Builder().setReadTimeoutMillis(readTimeoutInMillis).build()
+            .options(new NettyReactiveOptions.Builder().setReadTimeoutMillis(readTimeoutInMillis).build()
     );
   }
 

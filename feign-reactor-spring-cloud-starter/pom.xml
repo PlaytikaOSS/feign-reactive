@@ -25,7 +25,7 @@
         </dependency>
         <dependency>
             <groupId>com.playtika.reactivefeign</groupId>
-            <artifactId>feign-reactor-webclient</artifactId>
+            <artifactId>feign-reactor-webclient-netty</artifactId>
         </dependency>
     </dependencies>
 </project>

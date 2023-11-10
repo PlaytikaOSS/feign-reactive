@@ -6,7 +6,7 @@ version: 2 # use CircleCI 2.0
 jobs: # a collection of steps
   build:
     environment:
-      # Configure the JVMto avoid OOM errors
+      # Configure the JVM to avoid OOM errors
       _JAVA_OPTIONS: "-Xmx3g"
     docker: # run the steps with Docker
       - image: circleci/openjdk:17.0.1-jdk-buster

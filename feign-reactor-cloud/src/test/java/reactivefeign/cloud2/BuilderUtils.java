@@ -4,7 +4,7 @@ import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
 import org.springframework.cloud.client.circuitbreaker.ConfigBuilder;
 import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
-import reactivefeign.webclient.WebReactiveFeign;
+import reactivefeign.webclient.netty.NettyWebReactiveFeign;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,7 +16,7 @@ public class BuilderUtils {
     private static final AtomicInteger uniqueCircuitBreakerCounter = new AtomicInteger();
 
     static <T> CloudReactiveFeign.Builder<T> cloudBuilder(){
-        return CloudReactiveFeign.<T>builder(WebReactiveFeign.builder());
+        return CloudReactiveFeign.<T>builder(NettyWebReactiveFeign.builder());
     }
 
     static <T> CloudReactiveFeign.Builder<T> cloudBuilder(ReactiveCircuitBreakerFactory circuitBreakerFactory){
@@ -38,7 +38,7 @@ public class BuilderUtils {
             Consumer<ConfigBuilder> customizer,
             AtomicReference<String> lastCircuitBreakerId) {
         int uniqueId = uniqueCircuitBreakerCounter.incrementAndGet();
-        return CloudReactiveFeign.<T>builder(WebReactiveFeign.builder())
+        return CloudReactiveFeign.<T>builder(NettyWebReactiveFeign.builder())
                 .enableCircuitBreaker(circuitBreakerId -> {
                     String uniqueCircuitBreakerId = circuitBreakerId + "."+uniqueId;
                     if(lastCircuitBreakerId != null) {

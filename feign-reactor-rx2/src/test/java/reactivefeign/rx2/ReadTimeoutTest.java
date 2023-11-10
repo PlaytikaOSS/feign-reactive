@@ -20,7 +20,7 @@ import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReadTimeoutException;
 import reactivefeign.rx2.testcase.IcecreamServiceApi;
-import reactivefeign.webclient.WebReactiveOptions;
+import reactivefeign.webclient.netty.NettyReactiveOptions;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -48,7 +48,7 @@ public class ReadTimeoutTest {
         .willReturn(aResponse().withFixedDelay(200)));
 
     IcecreamServiceApi client = builder(
-        new WebReactiveOptions.Builder()
+        new NettyReactiveOptions.Builder()
             .setReadTimeoutMillis(100)
             .setConnectTimeoutMillis(300)
             .build())

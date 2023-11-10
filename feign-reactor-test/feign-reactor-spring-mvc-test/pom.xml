@@ -43,7 +43,7 @@
 
         <dependency>
             <groupId>com.playtika.reactivefeign</groupId>
-            <artifactId>feign-reactor-webclient</artifactId>
+            <artifactId>feign-reactor-webclient-netty</artifactId>
             <scope>test</scope>
         </dependency>
 
