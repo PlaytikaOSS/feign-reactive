@@ -9,7 +9,6 @@ public class ReactiveFeignException extends RuntimeException {
     public ReactiveFeignException(Throwable cause, ReactiveHttpRequest request) {
         super(String.format(MESSAGE_PATTERN, request, cause.getMessage()), cause);
         this.request = request;
-        cause.printStackTrace();
     }
 
     public ReactiveHttpRequest getRequest() {
