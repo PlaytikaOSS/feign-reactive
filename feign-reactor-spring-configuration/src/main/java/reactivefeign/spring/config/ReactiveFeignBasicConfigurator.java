@@ -33,6 +33,7 @@ import reactivefeign.utils.Pair;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 
@@ -48,7 +49,7 @@ public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigu
 			ReactiveFeignBuilder builder,
 			ReactiveFeignNamedContext namedContext) {
 
-		if (namedContext.getProperties().isDefaultToProperties()) {
+		if (isDefaultToProperties(namedContext)) {
 			builder = configureUsingConfiguration(builder, namedContext);
 			for(ReactiveFeignClientsProperties.ReactiveFeignClientProperties<?> config : namedContext.getConfigsReverted()){
 				builder = configureUsingProperties(builder, namedContext, config);
@@ -60,6 +61,13 @@ public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigu
 			builder = configureUsingConfiguration(builder, namedContext);
 		}
 		return builder;
+	}
+
+	private boolean isDefaultToProperties(ReactiveFeignNamedContext namedContext){
+		Map<String, ReactiveFeignClientsProperties.ReactiveFeignClientProperties<?>> config = namedContext.getProperties().getConfig();
+		return Optional.ofNullable(config.get(namedContext.getClientName()))
+				.map(ReactiveFeignClientsProperties.ReactiveFeignClientProperties::getDefaultToProperties)
+				.orElse(namedContext.getProperties().isDefaultToProperties());
 	}
 
 	private ReactiveFeignBuilder configureUsingConfiguration(ReactiveFeignBuilder builder, ReactiveFeignNamedContext namedContext) {

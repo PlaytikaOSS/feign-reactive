@@ -10,7 +10,6 @@ import reactivefeign.client.metrics.MicrometerReactiveLogger;
 import reactivefeign.client.statushandler.ReactiveStatusHandler;
 import reactivefeign.retry.ReactiveRetryPolicy;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,6 +64,8 @@ public class ReactiveFeignClientsProperties<O extends ReactiveOptions.Builder> {
 
     public static class ReactiveFeignClientProperties<O extends ReactiveOptions.Builder> {
 
+        private Boolean defaultToProperties;
+
         private O options;
 
         //used for no cloud configuration
@@ -91,6 +92,14 @@ public class ReactiveFeignClientsProperties<O extends ReactiveOptions.Builder> {
         private Map<String, List<String>> defaultRequestHeaders;
 
         private Map<String, List<String>> defaultQueryParameters;
+
+        public Boolean getDefaultToProperties() {
+            return defaultToProperties;
+        }
+
+        public void setDefaultToProperties(Boolean defaultToProperties) {
+            this.defaultToProperties = defaultToProperties;
+        }
 
         public O getOptions() {
             return options;
@@ -193,7 +202,8 @@ public class ReactiveFeignClientsProperties<O extends ReactiveOptions.Builder> {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             ReactiveFeignClientProperties that = (ReactiveFeignClientProperties) o;
-            return Objects.equals(options, that.options) &&
+            return Objects.equals(defaultToProperties, that.defaultToProperties) &&
+                    Objects.equals(options, that.options) &&
                     Objects.equals(retryOnSame, that.retryOnSame) &&
                     Objects.equals(retryOnNext, that.retryOnNext) &&
                     Objects.equals(statusHandler, that.statusHandler) &&

@@ -91,7 +91,7 @@ public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
 	public static final int UPDATE_INTERVAL = 5;
 	public static final int SLEEP_WINDOW = 1000;
 
-	private static WireMockServer mockHttpServer = new WireMockServer(wireMockConfig().dynamicPort());
+	private static final WireMockServer mockHttpServer = new WireMockServer(wireMockConfig().dynamicPort());
 
 	//configured via properties file
 	@Autowired
@@ -107,7 +107,7 @@ public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
 	@Autowired
 	private ErrorDecoderSampleClient errorDecoderSampleClient;
 
-	private static CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
+	private static final CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
 
 	//this test checks that default readTimeoutMillis is overridden for each client
 	// (one in via properties file and other via configuration class)
@@ -119,7 +119,7 @@ public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
 						.withBody("OK")));
 
 		asList(propertiesSampleClient, configsSampleClient).forEach(feignClient -> {
-			StepVerifier.create(propertiesSampleClient.sampleMethod())
+			StepVerifier.create(feignClient.sampleMethod())
 					.expectErrorMatches(throwable ->
 							throwable instanceof RuntimeException
 							&& throwable.getCause() instanceof OutOfRetriesException
@@ -204,7 +204,7 @@ public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
 	}
 
 	@ReactiveFeignClient(name = RFGN_PROPER)
-	protected interface PropertiesSampleClient {
+	protected interface PropertiesSampleClient extends SampleClient{
 
 		@RequestMapping(method = RequestMethod.GET, value = "/sampleUrl")
 		Mono<String> sampleMethod();
@@ -212,23 +212,26 @@ public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
 
 	@ReactiveFeignClient(name = RFGN_CONFIGS,
 			configuration = ReactiveFeignSampleConfiguration.class)
-	protected interface ConfigsSampleClient {
+	protected interface ConfigsSampleClient extends SampleClient{
 
 		@RequestMapping(method = RequestMethod.GET, value = "/sampleUrl")
 		Mono<String> sampleMethod();
 	}
-
 	@ReactiveFeignClient(name = RFGN_FALLBACK,
 			fallback = ReactiveFeignFallbackConfiguration.Fallback.class,
 			configuration = ReactiveFeignFallbackConfiguration.class)
-	protected interface FallbackSampleClient {
+	protected interface FallbackSampleClient extends SampleClient{
 		@RequestMapping(method = RequestMethod.GET, value = "/sampleUrl")
 		Mono<String> sampleMethod();
 	}
 
 	@ReactiveFeignClient(name = RFGN_ERRORDECODER, fallbackFactory = ErrorDecoderSkipFallbackFactory.class)
-	protected interface ErrorDecoderSampleClient {
+	protected interface ErrorDecoderSampleClient extends SampleClient{
 		@RequestMapping(method = RequestMethod.GET, value = "/sampleUrl")
+		Mono<String> sampleMethod();
+	}
+
+	protected interface SampleClient{
 		Mono<String> sampleMethod();
 	}
 
@@ -297,7 +300,7 @@ public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
 
 		@Bean
 		public ReactiveOptions reactiveOptions(){
-			return new WebReactiveOptions.Builder().setReadTimeoutMillis(500).build();
+			return new WebReactiveOptions.Builder().setReadTimeoutMillis(300).build();
 		}
 
 		@Bean

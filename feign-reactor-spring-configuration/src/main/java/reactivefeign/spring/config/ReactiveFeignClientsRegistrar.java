@@ -40,7 +40,6 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.core.type.filter.TypeFilter;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
-import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -53,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.springframework.util.StringUtils.hasText;
 import static reactivefeign.utils.StringUtils.cutTail;
 
 /**
@@ -148,9 +148,11 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 							.getAnnotationAttributes(
 									ReactiveFeignClient.class.getCanonicalName());
 
-					String name = getClientName(attributes);
-					registerClientConfiguration(registry, name,
-							attributes.get("configuration"));
+					String name = getQualifier(attributes);
+					if(!hasText(name)){
+						name = getClientName(attributes);
+					}
+					registerClientConfiguration(registry, name, attributes.get("configuration"));
 
 					registerReactiveFeignClient(registry, annotationMetadata, attributes);
 				}
@@ -183,7 +185,7 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 		beanDefinition.setPrimary(primary);
 
 		String qualifier = getQualifier(attributes);
-		if (StringUtils.hasText(qualifier)) {
+		if (hasText(qualifier)) {
 			alias = qualifier;
 		}
 
@@ -215,10 +217,10 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 
 	/* for testing */ String getName(Map<String, Object> attributes) {
 		String name = (String) attributes.get("serviceId");
-		if (!StringUtils.hasText(name)) {
+		if (!hasText(name)) {
 			name = (String) attributes.get("name");
 		}
-		if (!StringUtils.hasText(name)) {
+		if (!hasText(name)) {
 			name = (String) attributes.get("value");
 		}
 		name = resolve(name);
@@ -226,7 +228,7 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 	}
 
 	static String getName(String name) {
-		if (!StringUtils.hasText(name)) {
+		if (!hasText(name)) {
 			return "";
 		}
 
@@ -248,7 +250,7 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 	}
 
 	private String resolve(String value) {
-		if (StringUtils.hasText(value)) {
+		if (hasText(value)) {
 			return this.environment.resolvePlaceholders(value);
 		}
 		return value;
@@ -260,7 +262,7 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 	}
 
 	static String getUrl(String url) {
-		if (StringUtils.hasText(url) && !(url.startsWith("#{") && url.contains("}"))) {
+		if (hasText(url) && !(url.startsWith("#{") && url.contains("}"))) {
 			if (!url.contains("://")) {
 				url = "http://" + url;
 			}
@@ -280,7 +282,7 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 	}
 
 	static String getPath(String path) {
-		if (StringUtils.hasText(path)) {
+		if (hasText(path)) {
 			path = path.trim();
 			if (!path.startsWith("/")) {
 				path = "/" + path;
@@ -311,12 +313,12 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 
 		Set<String> basePackages = new HashSet<>();
 		for (String pkg : (String[]) attributes.get("value")) {
-			if (StringUtils.hasText(pkg)) {
+			if (hasText(pkg)) {
 				basePackages.add(pkg);
 			}
 		}
 		for (String pkg : (String[]) attributes.get("basePackages")) {
-			if (StringUtils.hasText(pkg)) {
+			if (hasText(pkg)) {
 				basePackages.add(pkg);
 			}
 		}
@@ -336,7 +338,7 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 			return null;
 		}
 		String qualifier = (String) client.get("qualifier");
-		if (StringUtils.hasText(qualifier)) {
+		if (hasText(qualifier)) {
 			return qualifier;
 		}
 		return null;
@@ -347,13 +349,13 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 			return null;
 		}
 		String value = (String) client.get("value");
-		if (!StringUtils.hasText(value)) {
+		if (!hasText(value)) {
 			value = (String) client.get("name");
 		}
-		if (!StringUtils.hasText(value)) {
+		if (!hasText(value)) {
 			value = (String) client.get("serviceId");
 		}
-		if (StringUtils.hasText(value)) {
+		if (hasText(value)) {
 			return value;
 		}
 
