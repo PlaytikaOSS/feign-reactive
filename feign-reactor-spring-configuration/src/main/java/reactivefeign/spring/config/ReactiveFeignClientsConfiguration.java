@@ -44,7 +44,7 @@ import reactivefeign.java11.Java11ReactiveFeign;
 import reactivefeign.jetty.JettyHttpClientFactory;
 import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.webclient.WebClientFeignCustomizer;
-import reactivefeign.webclient.WebReactiveFeign;
+import reactivefeign.webclient.netty.NettyWebReactiveFeign;
 
 import java.time.Clock;
 import java.util.ArrayList;
@@ -124,7 +124,7 @@ public class ReactiveFeignClientsConfiguration {
 		}
 
 		@Configuration
-		@ConditionalOnClass({WebReactiveFeign.class, WebClient.class})
+		@ConditionalOnClass({NettyWebReactiveFeign.class, WebClient.class})
 		@ConditionalOnProperty(name = {"reactive.feign.jetty", "reactive.feign.java11"}, havingValue = "false", matchIfMissing = true)
 		protected static class ReactiveFeignWebConfiguration {
 
@@ -134,8 +134,8 @@ public class ReactiveFeignClientsConfiguration {
 					WebClient.Builder builder,
 					@Autowired(required = false) WebClientFeignCustomizer webClientCustomizer) {
 				return webClientCustomizer != null
-						? WebReactiveFeign.builder(builder, webClientCustomizer)
-						: WebReactiveFeign.builder(builder);
+						? NettyWebReactiveFeign.builder(builder, webClientCustomizer)
+						: NettyWebReactiveFeign.builder(builder);
 			}
 		}
 

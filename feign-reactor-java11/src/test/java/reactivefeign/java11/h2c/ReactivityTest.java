@@ -15,10 +15,18 @@ package reactivefeign.java11.h2c;
 
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
+import reactor.netty.http.HttpProtocol;
 
 import static reactivefeign.java11.h2c.TestUtils.builderHttp2;
+import static reactor.netty.http.HttpProtocol.H2C;
+import static reactor.netty.http.HttpProtocol.HTTP11;
 
 public class ReactivityTest extends reactivefeign.ReactivityTest {
+
+  @Override
+  protected HttpProtocol[] serverProtocols(){
+    return new HttpProtocol[]{H2C, HTTP11};
+  }
 
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {

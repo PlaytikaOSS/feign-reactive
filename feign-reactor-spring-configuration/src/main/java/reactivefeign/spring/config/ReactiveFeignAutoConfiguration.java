@@ -14,8 +14,8 @@ import reactivefeign.java11.Java11ReactiveFeign;
 import reactivefeign.java11.Java11ReactiveOptions;
 import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.jetty.JettyReactiveOptions;
-import reactivefeign.webclient.WebReactiveFeign;
-import reactivefeign.webclient.WebReactiveOptions;
+import reactivefeign.webclient.netty.NettyWebReactiveFeign;
+import reactivefeign.webclient.netty.NettyReactiveOptions;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,13 +40,13 @@ public class ReactiveFeignAutoConfiguration {
     }
 
     @Configuration
-    @ConditionalOnClass(WebReactiveFeign.class)
+    @ConditionalOnClass(NettyWebReactiveFeign.class)
     public class WebClientReactiveFeignClientPropertiesAutoConfiguration {
 
         @Bean
         @ConditionalOnMissingBean
         @ConfigurationProperties("reactive.feign.client")
-        public ReactiveFeignClientsProperties<WebReactiveOptions.Builder> webClientReactiveFeignClientProperties() {
+        public ReactiveFeignClientsProperties<NettyReactiveOptions.Builder> webClientReactiveFeignClientProperties() {
             return new ReactiveFeignClientsProperties<>();
         }
 

@@ -47,7 +47,7 @@ import reactivefeign.retry.BasicReactiveRetryPolicy;
 import reactivefeign.spring.config.EnableReactiveFeignClients;
 import reactivefeign.spring.config.ReactiveFeignClient;
 import reactivefeign.spring.config.ReactiveRetryPolicies;
-import reactivefeign.webclient.WebReactiveOptions;
+import reactivefeign.webclient.netty.NettyReactiveOptions;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
@@ -297,7 +297,7 @@ public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
 
 		@Bean
 		public ReactiveOptions reactiveOptions(){
-			return new WebReactiveOptions.Builder().setReadTimeoutMillis(500).build();
+			return new NettyReactiveOptions.Builder().setReadTimeoutMillis(500).build();
 		}
 
 		@Bean

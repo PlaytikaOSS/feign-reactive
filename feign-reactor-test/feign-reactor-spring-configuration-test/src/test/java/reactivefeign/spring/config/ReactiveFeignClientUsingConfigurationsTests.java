@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReadTimeoutException;
-import reactivefeign.webclient.WebReactiveOptions;
+import reactivefeign.webclient.netty.NettyReactiveOptions;
 import reactor.core.publisher.Mono;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
@@ -116,7 +116,7 @@ public class ReactiveFeignClientUsingConfigurationsTests {
 	protected static class DefaultConfiguration {
 		@Bean
 		public ReactiveOptions reactiveFeignOptions(){
-			return new WebReactiveOptions.Builder()
+			return new NettyReactiveOptions.Builder()
 					.setReadTimeoutMillis(5000)
 					.setConnectTimeoutMillis(5000)
 					.build();
@@ -140,7 +140,7 @@ public class ReactiveFeignClientUsingConfigurationsTests {
 		@Primary
 		@Bean
 		public ReactiveOptions options(){
-			return new WebReactiveOptions.Builder()
+			return new NettyReactiveOptions.Builder()
 					.setReadTimeoutMillis(500)
 					.setConnectTimeoutMillis(500)
 					.build();

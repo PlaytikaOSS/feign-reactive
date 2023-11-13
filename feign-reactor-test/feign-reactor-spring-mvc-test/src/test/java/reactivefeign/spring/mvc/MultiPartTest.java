@@ -26,7 +26,7 @@ import org.springframework.http.codec.multipart.Part;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.*;
 import reactivefeign.BaseReactorTest;
-import reactivefeign.webclient.WebReactiveFeign;
+import reactivefeign.webclient.netty.NettyWebReactiveFeign;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -53,7 +53,7 @@ public class MultiPartTest extends BaseReactorTest {
 
     @Before
     public void setUp() {
-        client = WebReactiveFeign.<MultipartClient>builder()
+        client = NettyWebReactiveFeign.<MultipartClient>builder()
                 .decode404()
                 .contract(new SpringMvcContract(emptyList(), new DefaultFormattingConversionService()))
                 .target(MultipartClient.class, "http://localhost:" + port);

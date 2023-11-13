@@ -24,7 +24,7 @@ import reactivefeign.java11.Java11ReactiveFeign;
 import reactivefeign.java11.Java11ReactiveOptions;
 import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.jetty.JettyReactiveOptions;
-import reactivefeign.webclient.WebReactiveFeign;
+import reactivefeign.webclient.netty.NettyWebReactiveFeign;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
@@ -86,7 +86,7 @@ abstract public class RealRequestBenchmarks {
 
         webClient = WebClient.create();
 
-        webClientFeign = WebReactiveFeign.<FeignReactorTestInterface>builder()
+        webClientFeign = NettyWebReactiveFeign.<FeignReactorTestInterface>builder()
                 .target(FeignReactorTestInterface.class, SERVER_URL);
 
         jettyHttpClient = new HttpClient();

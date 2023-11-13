@@ -17,8 +17,16 @@ import reactivefeign.ReactiveFeign;
 import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.jetty.JettyReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
+import reactor.netty.http.HttpProtocol;
+
+import static reactor.netty.http.HttpProtocol.H2C;
 
 public class ReactivityTest extends reactivefeign.ReactivityTest {
+
+  @Override
+  protected HttpProtocol[] serverProtocols(){
+    return new HttpProtocol[]{H2C};
+  }
 
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder() {

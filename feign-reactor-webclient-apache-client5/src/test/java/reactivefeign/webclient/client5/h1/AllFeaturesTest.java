@@ -25,6 +25,7 @@ import org.springframework.test.context.ActiveProfiles;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.allfeatures.AllFeaturesFeign;
 import reactivefeign.allfeatures.AllFeaturesFeignTest;
+import reactivefeign.webclient.client5.HttpClient5ReactiveOptions;
 import reactivefeign.webclient.client5.HttpClient5WebReactiveFeign;
 
 /**
@@ -38,16 +39,13 @@ public class AllFeaturesTest extends AllFeaturesFeignTest {
 
 	@Override
 	protected ReactiveFeign.Builder<AllFeaturesFeign> builder() {
-		return HttpClient5WebReactiveFeign.builder();
-	}
-
-	//Need specific client options configuration
-	/*.setConnectionsMaxTotal(1000)
-      .setConnectionsDefaultMaxPerRoute(1000)*/
-	@Ignore
-	@Override
-	@Test
-	public void shouldRunReactively() {
+		return HttpClient5WebReactiveFeign.<AllFeaturesFeign>builder()
+				.options(
+						new HttpClient5ReactiveOptions.Builder()
+								.setConnectionsMaxTotal(1000)
+								.setConnectionsDefaultMaxPerRoute(1000)
+								.build()
+				);
 	}
 
 	@Ignore
