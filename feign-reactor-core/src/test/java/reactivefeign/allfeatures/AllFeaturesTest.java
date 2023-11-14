@@ -155,7 +155,7 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 
 	@Test
 	public void shouldNotReturnNullPassedParametersNew() {
-		Map<String, String> paramMap = new HashMap<String, String>() {
+		Map<String, String> paramMap = new HashMap<>() {
 			{
 				put("paramKey", "paramValue");
 				put("paramKeyNull", null);

@@ -41,7 +41,7 @@ public class ReactiveFeignAutoConfiguration {
 
     @Configuration
     @ConditionalOnClass(WebReactiveFeign.class)
-    public class WebClientReactiveFeignClientPropertiesAutoConfiguration {
+    public static class WebClientReactiveFeignClientPropertiesAutoConfiguration {
 
         @Bean
         @ConditionalOnMissingBean
@@ -54,7 +54,7 @@ public class ReactiveFeignAutoConfiguration {
 
     @Configuration
     @ConditionalOnClass(Java11ReactiveFeign.class)
-    public class Java11ReactiveFeignClientPropertiesAutoConfiguration {
+    public static class Java11ReactiveFeignClientPropertiesAutoConfiguration {
 
         @Bean
         @ConditionalOnMissingBean
@@ -67,7 +67,7 @@ public class ReactiveFeignAutoConfiguration {
 
     @Configuration
     @ConditionalOnClass(JettyReactiveFeign.class)
-    public class JettyReactiveFeignClientPropertiesAutoConfiguration {
+    public static class JettyReactiveFeignClientPropertiesAutoConfiguration {
 
         @Bean
         @ConditionalOnMissingBean

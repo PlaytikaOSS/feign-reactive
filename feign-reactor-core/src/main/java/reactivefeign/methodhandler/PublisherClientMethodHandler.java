@@ -189,8 +189,12 @@ public class PublisherClientMethodHandler implements MethodHandler {
             Collection<String> valuesEncoded = query.getValue().stream()
                     .map(value -> UriUtils.encode(value, UTF_8))
                     .collect(toList());
-            queryBuilder.append('&');
-            queryBuilder.append(collectionFormat.join(query.getKey(), valuesEncoded, UTF_8));
+
+            CharSequence queryString = collectionFormat.join(query.getKey(), valuesEncoded, UTF_8);
+            if(queryString.length() > 0){
+                queryBuilder.append('&');
+                queryBuilder.append(queryString);
+            }
         }
         if(queryBuilder.length() > 0) {
             queryBuilder.deleteCharAt(0);
