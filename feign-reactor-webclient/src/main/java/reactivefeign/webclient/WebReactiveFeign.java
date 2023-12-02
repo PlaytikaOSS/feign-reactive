@@ -22,6 +22,7 @@ import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReadTimeoutException;
 import reactor.netty.http.client.HttpClient;
 
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 import static reactivefeign.webclient.NettyClientHttpConnectorBuilder.buildNettyClientHttpConnector;
@@ -78,13 +79,13 @@ public class WebReactiveFeign {
 
         @Override
         public BiFunction<ReactiveHttpRequest, Throwable, Throwable> errorMapper(){
-            return (request, throwable) -> {
-                if(throwable instanceof WebClientRequestException
-                   && throwable.getCause() instanceof io.netty.handler.timeout.ReadTimeoutException){
+            return Objects.requireNonNullElseGet(this.errorMapper, () -> (request, throwable) -> {
+                if (throwable instanceof WebClientRequestException
+                        && throwable.getCause() instanceof io.netty.handler.timeout.ReadTimeoutException) {
                     return new ReadTimeoutException(throwable, request);
                 }
                 return null;
-            };
+            });
         }
     }
 
