@@ -39,7 +39,7 @@
         <jacoco-plugin.version>0.8.11</jacoco-plugin.version>
         <coveralls-plugin.version>4.3.0</coveralls-plugin.version>
 
-        <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.2.1</maven-surefire-plugin.version>
 
         <maven.javadoc.plugin.version>3.5.0</maven.javadoc.plugin.version>
