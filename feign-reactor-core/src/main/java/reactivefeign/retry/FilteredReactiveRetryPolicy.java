@@ -1,5 +1,6 @@
 package reactivefeign.retry;
 
+import feign.ExceptionPropagationPolicy;
 import org.reactivestreams.Publisher;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Flux;
@@ -14,6 +15,8 @@ public class FilteredReactiveRetryPolicy implements ReactiveRetryPolicy {
 
     private final ReactiveRetryPolicy retryPolicy;
     private final Predicate<Throwable> toRetryOn;
+    private final ExceptionPropagationPolicy exceptionPropagationPolicy;
+
 
     public static FilteredReactiveRetryPolicy notRetryOn(ReactiveRetryPolicy retryPolicy, Class<? extends Throwable>... errorClasses) {
         return new FilteredReactiveRetryPolicy(retryPolicy,
@@ -22,8 +25,18 @@ public class FilteredReactiveRetryPolicy implements ReactiveRetryPolicy {
     }
 
     public FilteredReactiveRetryPolicy(ReactiveRetryPolicy retryPolicy, Predicate<Throwable> toRetryOn) {
+        this(retryPolicy, toRetryOn, retryPolicy.exceptionPropagationPolicy());
+    }
+
+    public FilteredReactiveRetryPolicy(ReactiveRetryPolicy retryPolicy, Predicate<Throwable> toRetryOn, ExceptionPropagationPolicy exceptionPropagationPolicy) {
         this.retryPolicy = retryPolicy;
         this.toRetryOn = toRetryOn;
+        this.exceptionPropagationPolicy = exceptionPropagationPolicy;
+    }
+
+    @Override
+    public ExceptionPropagationPolicy exceptionPropagationPolicy(){
+        return exceptionPropagationPolicy;
     }
 
     @Override
