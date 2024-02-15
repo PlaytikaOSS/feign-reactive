@@ -16,6 +16,7 @@
         <module>feign-reactor-webclient-apache-client5</module>
         <module>feign-reactor-cloud</module>
         <module>feign-reactor-rx2</module>
+        <module>feign-reactor-rx3</module>
         <module>feign-reactor-jetty</module>
         <module>feign-reactor-java11</module>
         <module>feign-reactor-benchmarks</module>
