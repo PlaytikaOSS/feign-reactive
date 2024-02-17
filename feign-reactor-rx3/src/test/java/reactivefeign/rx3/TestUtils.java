@@ -16,8 +16,12 @@ package reactivefeign.rx3;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import io.reactivex.rxjava3.annotations.NonNull;
+import io.reactivex.rxjava3.observers.TestObserver;
 
 import java.util.function.Predicate;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 
 /**
@@ -49,5 +53,24 @@ class TestUtils {
         throw new RuntimeException(e);
       }
     };
+  }
+
+  public static <T> void assertValue(TestObserver<T> testObserver, @NonNull io.reactivex.rxjava3.functions.Predicate<T> valuePredicate) {
+    assertTrue(testObserver.hasSubscription());
+    testObserver.assertValue(valuePredicate)
+            .assertNoErrors()
+            .assertComplete();
+  }
+
+  public static <T> void assertNoValues(TestObserver<T> testObserver) {
+    assertTrue(testObserver.hasSubscription());
+    testObserver.assertNoValues()
+            .assertNoErrors()
+            .assertComplete();
+  }
+
+  public static <T> void assertError(TestObserver<T> testObserver, @NonNull Class<? extends Throwable> errorClass) {
+    assertTrue(testObserver.hasSubscription());
+    testObserver.assertError(errorClass);
   }
 }

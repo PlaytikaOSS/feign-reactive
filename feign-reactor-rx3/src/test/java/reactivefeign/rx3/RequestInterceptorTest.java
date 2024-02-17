@@ -16,6 +16,7 @@ package reactivefeign.rx3;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.FeignException;
+import io.reactivex.rxjava3.observers.TestObserver;
 import org.junit.ClassRule;
 import org.junit.Test;
 import reactivefeign.ReactiveFeign;
@@ -28,7 +29,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static java.util.Collections.singletonList;
 import static reactivefeign.client.ReactiveHttpRequestInterceptors.addHeaders;
-import static reactivefeign.rx3.TestUtils.equalsComparingFieldByFieldRecursivelyRx;
+import static reactivefeign.rx3.TestUtils.*;
 import static reactivefeign.utils.HttpStatus.SC_UNAUTHORIZED;
 
 /**
@@ -68,22 +69,15 @@ public class RequestInterceptorTest {
     IcecreamServiceApi clientWithoutAuth = builder()
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
-    clientWithoutAuth.findFirstOrder().test()
-            .await()
-            .assertSubscribed()
-            .assertError(FeignException.class);
+    TestObserver<IceCreamOrder> testObserver = clientWithoutAuth.findFirstOrder().test().await();
+    assertError(testObserver, FeignException.class);
 
     IcecreamServiceApi clientWithAuth = builder()
         .addRequestInterceptor(addHeaders(singletonList(new Pair<>("Authorization", "Bearer mytoken123"))))
         .target(IcecreamServiceApi.class,
             "http://localhost:" + wireMockRule.port());
 
-    clientWithAuth.findFirstOrder().test()
-            .await()
-            .assertSubscribed()
-            .assertValue(equalsComparingFieldByFieldRecursivelyRx(orderGenerated))
-            .assertNoErrors()
-            .assertComplete();
-
+    testObserver = clientWithAuth.findFirstOrder().test().await();
+    assertValue(testObserver, equalsComparingFieldByFieldRecursivelyRx(orderGenerated));
   }
 }

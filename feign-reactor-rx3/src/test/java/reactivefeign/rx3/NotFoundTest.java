@@ -14,13 +14,16 @@
 package reactivefeign.rx3;
 
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import io.reactivex.rxjava3.observers.TestObserver;
 import org.junit.ClassRule;
 import org.junit.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.rx3.testcase.IcecreamServiceApi;
+import reactivefeign.rx3.testcase.domain.IceCreamOrder;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static reactivefeign.rx3.TestUtils.assertNoValues;
 import static reactivefeign.utils.HttpStatus.SC_NOT_FOUND;
 
 /**
@@ -48,11 +51,7 @@ public class NotFoundTest {
         .decode404()
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
-    client.findOrder(2).test()
-            .await()
-            .assertSubscribed()
-            .assertNoValues()
-            .assertNoErrors()
-            .assertComplete();
+    TestObserver<IceCreamOrder> testObserver = client.findOrder(2).test().await();
+    assertNoValues(testObserver);
   }
 }

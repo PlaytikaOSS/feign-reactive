@@ -105,7 +105,7 @@ public class LoggerTest {
         "[IcecreamServiceApi#makeOrder(IceCreamOrder)]<--- headers takes");
     assertLogEvent(logEvents, 5, Level.TRACE,
         "[IcecreamServiceApi#makeOrder(IceCreamOrder)] RESPONSE BODY",
-            "reactivefeign.rx2.testcase.domain.Bill");
+            "reactivefeign.rx3.testcase.domain.Bill");
     assertLogEvent(logEvents, 6, Level.DEBUG,
         "[IcecreamServiceApi#makeOrder(IceCreamOrder)]<--- body takes");
   }
