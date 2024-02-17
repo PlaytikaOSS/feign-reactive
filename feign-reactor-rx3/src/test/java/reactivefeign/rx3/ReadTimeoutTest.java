@@ -14,16 +14,19 @@
 package reactivefeign.rx3;
 
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import io.reactivex.rxjava3.observers.TestObserver;
 import org.junit.ClassRule;
 import org.junit.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReadTimeoutException;
 import reactivefeign.rx3.testcase.IcecreamServiceApi;
+import reactivefeign.rx3.testcase.domain.IceCreamOrder;
 import reactivefeign.webclient.WebReactiveOptions;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static reactivefeign.rx3.TestUtils.assertError;
 
 /**
  * @author Sergii Karpenko
@@ -55,9 +58,7 @@ public class ReadTimeoutTest {
                 .target(IcecreamServiceApi.class,
                     "http://localhost:" + wireMockRule.port());
 
-    client.findOrder(1).test()
-            .await()
-            .assertSubscribed()
-            .assertError(ReadTimeoutException.class);
+    TestObserver<IceCreamOrder> testObserver = client.findOrder(1).test().await();
+    assertError(testObserver, ReadTimeoutException.class);
   }
 }

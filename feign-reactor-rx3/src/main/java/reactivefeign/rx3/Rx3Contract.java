@@ -68,6 +68,4 @@ public class Rx3Contract implements Contract {
     return (type instanceof ParameterizedType)
         && RX3_TYPES.contains(((ParameterizedType) type).getRawType());
   }
-
-
 }

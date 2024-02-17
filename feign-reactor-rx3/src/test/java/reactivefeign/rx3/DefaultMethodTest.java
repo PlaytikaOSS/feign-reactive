@@ -17,6 +17,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.RequestLine;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.observers.TestObserver;
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -30,6 +31,7 @@ import reactivefeign.webclient.WebReactiveOptions;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static reactivefeign.rx3.TestUtils.assertValue;
 import static reactivefeign.rx3.TestUtils.equalsComparingFieldByFieldRecursivelyRx;
 
 /**
@@ -72,12 +74,9 @@ public class DefaultMethodTest {
     IcecreamServiceApi client = builder()
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
-    client.findFirstOrder().test()
-            .await()
-            .assertSubscribed()
-            .assertValue(equalsComparingFieldByFieldRecursivelyRx(orderGenerated))
-            .assertNoErrors()
-            .assertComplete();
+
+    TestObserver<IceCreamOrder> testObserver = client.findFirstOrder().test().await();
+    assertValue(testObserver, equalsComparingFieldByFieldRecursivelyRx(orderGenerated));
   }
 
   @Test(expected = RuntimeException.class)

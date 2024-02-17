@@ -16,6 +16,7 @@ package reactivefeign.rx3;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.observers.TestObserver;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -35,6 +36,8 @@ import java.util.stream.Collectors;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static org.assertj.core.api.Assertions.assertThat;
+import static reactivefeign.rx3.TestUtils.assertNoValues;
+import static reactivefeign.rx3.TestUtils.assertValue;
 
 /**
  * @author Sergii Karpenko
@@ -102,23 +105,14 @@ public class SmokeTest {
             .withHeader("Content-Type", "application/json")
             .withBody(TestUtils.MAPPER.writeValueAsString(orderExpected))));
 
-    client.findOrder(1).test()
-            .await()
-            .assertSubscribed()
-            .assertValue(TestUtils.equalsComparingFieldByFieldRecursivelyRx(orderExpected))
-            .assertNoErrors()
-            .assertComplete();
+    TestObserver<IceCreamOrder> testObserver = client.findOrder(1).test().await();
+    assertValue(testObserver, TestUtils.equalsComparingFieldByFieldRecursivelyRx(orderExpected));
   }
 
   @Test
   public void testFindOrder_empty() throws InterruptedException {
-
-    client.findOrder(123).test()
-            .await()
-            .assertSubscribed()
-            .assertNoValues()
-            .assertNoErrors()
-            .assertComplete();
+    TestObserver<IceCreamOrder> testObserver = client.findOrder(123).test().await();
+    assertNoValues(testObserver);
   }
 
   @Test
