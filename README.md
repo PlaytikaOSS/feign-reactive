@@ -26,6 +26,8 @@ non-blocking HTTP client of Spring WebClient.
   **_feign-reactor-java11_** : Java 11 HttpClient based implementation of reactor Feign (!! Winner of benchmarks !!)
   
   **_feign-reactor-rx2_** : Rx2 compatible implementation of reactor Feign (depends on feign-reactor-webclient)
+
+  **_feign-reactor-rx3_** : Rx3 compatible implementation of reactor Feign (depends on feign-reactor-webclient)
   
   **_feign-reactor-jetty_** : experimental Reactive Jetty client based implementation of reactor Feign (doesn't depend on feign-reactor-webclient). In future will allow to write pure Rx2 version.
   - have greater reactivity level then Spring WebClient. By default don't collect body to list instead starts sending request body as stream. 
@@ -103,7 +105,7 @@ Flux<Flavor> flavors = icecreamApi.getAvailableFlavors();
 Flux<Mixin> mixins = icecreamApi.getAvailableMixins();
 ```
 
-## Rx2 Usage 
+## Rx2 or Rx3 Usage 
 
 Write Feign API as usual, but every method of interface
  - may accept `Flowable`, `Observable`, `Single` or `Maybe` as body
