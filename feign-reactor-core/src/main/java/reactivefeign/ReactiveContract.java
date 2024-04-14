@@ -15,6 +15,7 @@ package reactivefeign;
 
 import feign.Contract;
 import feign.MethodMetadata;
+import kotlinx.coroutines.flow.Flow;
 import reactivefeign.utils.KtCoroutinesUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -88,7 +89,7 @@ public class ReactiveContract implements Contract {
     }
   }
 
-  private static final Set<Class> REACTOR_PUBLISHERS = new HashSet<>(asList(Mono.class, Flux.class));
+  private static final Set<Class> REACTOR_PUBLISHERS = new HashSet<>(asList(Mono.class, Flux.class, Flow.class));
 
   public static boolean isReactorType(final Type type) {
     return (type instanceof ParameterizedType)

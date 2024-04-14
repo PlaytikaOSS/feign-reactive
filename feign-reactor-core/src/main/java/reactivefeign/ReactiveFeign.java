@@ -18,6 +18,7 @@ import feign.Feign;
 import feign.InvocationHandlerFactory;
 import feign.MethodMetadata;
 import feign.Target;
+import kotlinx.coroutines.flow.Flow;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveErrorMapper;
 import reactivefeign.client.ReactiveHttpClient;
@@ -319,7 +320,7 @@ public class ReactiveFeign {
       Type returnPublisherType = returnPublisherType(methodMetadata);
       if (returnPublisherType == Mono.class || KtCoroutinesUtils.isSuspend(methodMetadata.method())) {
         return new MonoRetryPublisherHttpClient(publisherClient, methodMetadata, retryPolicy);
-      } else if(returnPublisherType == Flux.class) {
+      } else if(returnPublisherType == Flux.class || returnPublisherType == Flow.class) {
         return new FluxRetryPublisherHttpClient(publisherClient, methodMetadata, retryPolicy);
       } else {
         throw new IllegalArgumentException("Unknown returnPublisherType: " + returnPublisherType);
@@ -334,7 +335,7 @@ public class ReactiveFeign {
       Class returnPublisherType = returnPublisherType(methodMetadata);
       if(returnPublisherType == Mono.class || KtCoroutinesUtils.isSuspend(methodMetadata.method())) {
         return new MonoPublisherHttpClient(reactiveHttpClient);
-      } else if(returnPublisherType == Flux.class){
+      } else if(returnPublisherType == Flux.class || returnPublisherType == Flow.class) {
         return new FluxPublisherHttpClient(reactiveHttpClient);
       } else {
         throw new IllegalArgumentException("Unknown returnPublisherType: " + returnPublisherType);

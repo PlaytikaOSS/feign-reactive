@@ -3,6 +3,7 @@ package reactivefeign.methodhandler;
 import feign.MethodMetadata;
 import feign.Target;
 import kotlin.coroutines.Continuation;
+import kotlinx.coroutines.flow.Flow;
 import reactivefeign.publisher.PublisherClientFactory;
 import reactivefeign.publisher.ResponsePublisherHttpClient;
 import reactivefeign.utils.KtCoroutinesUtils;
@@ -48,6 +49,8 @@ public class ReactiveMethodHandlerFactory implements MethodHandlerFactory {
 			return new FluxMethodHandler(methodHandler);
 		} else if(KtCoroutinesUtils.isSuspend(metadata.method())){
 			return new SuspendMethodHandler(methodHandler);
+		} else if(returnPublisherType == Flow.class) {
+			return new FlowMethodHandler(methodHandler);
 		} else {
 			throw new IllegalArgumentException("Unknown returnPublisherType: " + returnPublisherType);
 		}
@@ -63,6 +66,8 @@ public class ReactiveMethodHandlerFactory implements MethodHandlerFactory {
 			return new FluxMethodHandler(defaultMethodHandler);
 		} else if(method.getReturnType() == Continuation.class){
 			return new SuspendMethodHandler(defaultMethodHandler);
+		} else if(method.getReturnType() == Flow.class) {
+			return new FlowMethodHandler(defaultMethodHandler);
 		} else {
 			throw new IllegalArgumentException("Unknown returnPublisherType: " + method.getReturnType());
 		}
