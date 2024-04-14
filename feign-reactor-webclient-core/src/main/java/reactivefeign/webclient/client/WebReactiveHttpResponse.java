@@ -1,5 +1,6 @@
 package reactivefeign.webclient.client;
 
+import kotlin.coroutines.Continuation;
 import org.reactivestreams.Publisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -49,7 +50,7 @@ class WebReactiveHttpResponse<P extends Publisher<?>> implements ReactiveHttpRes
 
 	@Override
 	public P body() {
-		if (returnPublisherType == Mono.class) {
+		if (returnPublisherType == Mono.class || returnPublisherType == Continuation.class) {
 			return (P)clientResponse.bodyToMono(returnActualType);
 		} else if(returnPublisherType == Flux.class){
 			return (P)clientResponse.bodyToFlux(returnActualType);

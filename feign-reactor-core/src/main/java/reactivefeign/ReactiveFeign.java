@@ -43,6 +43,7 @@ import reactivefeign.publisher.ResponsePublisherHttpClient;
 import reactivefeign.publisher.retry.FluxRetryPublisherHttpClient;
 import reactivefeign.publisher.retry.MonoRetryPublisherHttpClient;
 import reactivefeign.retry.ReactiveRetryPolicy;
+import reactivefeign.utils.KtCoroutinesUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -316,7 +317,7 @@ public class ReactiveFeign {
             MethodMetadata methodMetadata,
             ReactiveRetryPolicy retryPolicy) {
       Type returnPublisherType = returnPublisherType(methodMetadata);
-      if(returnPublisherType == Mono.class){
+      if (returnPublisherType == Mono.class || KtCoroutinesUtils.isSuspend(methodMetadata.method())) {
         return new MonoRetryPublisherHttpClient(publisherClient, methodMetadata, retryPolicy);
       } else if(returnPublisherType == Flux.class) {
         return new FluxRetryPublisherHttpClient(publisherClient, methodMetadata, retryPolicy);
@@ -331,7 +332,7 @@ public class ReactiveFeign {
       }
 
       Class returnPublisherType = returnPublisherType(methodMetadata);
-      if(returnPublisherType == Mono.class){
+      if(returnPublisherType == Mono.class || KtCoroutinesUtils.isSuspend(methodMetadata.method())) {
         return new MonoPublisherHttpClient(reactiveHttpClient);
       } else if(returnPublisherType == Flux.class){
         return new FluxPublisherHttpClient(reactiveHttpClient);
