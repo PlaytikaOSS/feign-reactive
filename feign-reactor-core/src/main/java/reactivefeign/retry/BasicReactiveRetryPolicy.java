@@ -57,12 +57,10 @@ public class BasicReactiveRetryPolicy extends SimpleReactiveRetryPolicy{
     if (attemptNo <= maxRetries) {
       if(periodInMs > 0) {
         long delay;
-        Date retryAfter;
+        Long retryAfter;
         // "Retry-After" header set
-        if (error instanceof RetryableException
-                && (retryAfter = ((RetryableException) error)
-                .retryAfter()) != null) {
-          delay = retryAfter.getTime() - clock.millis();
+        if (error instanceof RetryableException re && (retryAfter = re.retryAfter()) != null) {
+          delay = retryAfter - clock.millis();
           delay = Math.min(delay, periodInMs);
           delay = Math.max(delay, 0);
         } else {

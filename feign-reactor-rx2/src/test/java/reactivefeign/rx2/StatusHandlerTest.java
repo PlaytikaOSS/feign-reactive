@@ -65,7 +65,7 @@ public class StatusHandlerTest {
               return new RetryableException(
                       response.status(),
                       "Should retry on next node",
-                      httpMethod, null, request);
+                      httpMethod, (Long) null, request);
             }))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 

@@ -178,7 +178,8 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 
 		String alias = name + "ReactiveFeignClient";
 		AbstractBeanDefinition beanDefinition = definition.getBeanDefinition();
-		beanDefinition.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, className);
+		Class<?> type = ClassUtils.resolveClassName(className, null);
+		beanDefinition.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, type);
 
 		boolean primary = (Boolean)attributes.get("primary"); // has a default, won't be null
 

@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
+import java.util.Arrays;
+
 import static java.util.Collections.singleton;
 
 @Configuration
@@ -30,14 +32,20 @@ public class TestServerConfigurations {
             Http2 http2 = new Http2();
             http2.setEnabled(true);
             jettyReactiveWebServerFactory.setHttp2(http2);
-            jettyReactiveWebServerFactory.setServerCustomizers(singleton(server -> {
-                ServerConnector sc = (ServerConnector) server.getConnectors()[0];
+            jettyReactiveWebServerFactory.addServerCustomizers(server -> {
                 HttpConfiguration httpConfig = new HttpConfiguration();
                 httpConfig.setIdleTimeout(0);
-                HTTP2CServerConnectionFactory http2CFactory = new HTTP2CServerConnectionFactory(httpConfig);
+                HTTP2CServerConnectionFactory http2CFactory = new HTTP2CServerConnectionFactory(httpConfig, "h2c");
                 http2CFactory.setMaxConcurrentStreams(1000);
-                sc.addConnectionFactory(http2CFactory);
-            }));
+                Arrays.stream(server.getConnectors())
+                        .filter(ServerConnector.class::isInstance)
+                        .map(ServerConnector.class::cast)
+                        .findFirst()
+                        .ifPresentOrElse(sc -> sc.addConnectionFactory(http2CFactory), () -> {
+                            ServerConnector sc = new ServerConnector(server, http2CFactory);
+                            server.addConnector(sc);
+                        });
+            });
             return jettyReactiveWebServerFactory;
         }
     }
