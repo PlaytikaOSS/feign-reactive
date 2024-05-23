@@ -2,9 +2,10 @@ package reactivefeign.jetty.client;
 
 import com.fasterxml.jackson.core.async_.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectReader;
-import org.eclipse.jetty.client.api.Response;
+import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.http.HttpFields;
-import org.eclipse.jetty.reactive.client.ContentChunk;
+import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.io.Retainable;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
@@ -30,13 +31,13 @@ class JettyReactiveHttpResponse implements ReactiveHttpResponse{
 	public static final String CHARSET_DELIMITER = ";charset=";
 	private ReactiveHttpRequest request;
 	private final Response clientResponse;
-	private final Publisher<ContentChunk> contentChunks;
+	private final Publisher<Content.Chunk> contentChunks;
 	private final Class returnPublisherType;
 	private Class<?> returnActualClass;
 	private final ObjectReader objectReader;
 	private final JsonFactory jsonFactory;
 
-	JettyReactiveHttpResponse(ReactiveHttpRequest request, Response clientResponse, Publisher<ContentChunk> contentChunks,
+	JettyReactiveHttpResponse(ReactiveHttpRequest request, Response clientResponse, Publisher<Content.Chunk> contentChunks,
 							  Class returnPublisherType, Class returnActualClass,
 							  JsonFactory jsonFactory, ObjectReader objectReader) {
 		this.request = request;
@@ -102,7 +103,9 @@ class JettyReactiveHttpResponse implements ReactiveHttpResponse{
 
 	@Override
 	public Mono<Void> releaseBody() {
-		return Flux.from(contentChunks).then();
+		return Flux.from(contentChunks)
+				.doOnNext(Retainable::release)
+				.then();
 	}
 
 	private Charset getCharset() {
@@ -120,7 +123,8 @@ class JettyReactiveHttpResponse implements ReactiveHttpResponse{
 	}
 
 	private Flux<ByteBuffer> directContent() {
-		return Flux.from(contentChunks).map(contentChunk -> contentChunk.buffer.slice());
+		return Flux.from(contentChunks)
+				.map(contentChunk -> contentChunk.getByteBuffer().slice());
 	}
 
 	@Override

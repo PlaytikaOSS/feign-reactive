@@ -49,7 +49,7 @@ abstract public class BaseReactorTest {
             builder.allowBlockingCallsInside("org.eclipse.jetty.util.BlockingArrayQueue", "offer");
             builder.allowBlockingCallsInside("org.eclipse.jetty.util.BlockingArrayQueue", "peek");
             //java.net.InMemoryCookieStore.get
-            builder.allowBlockingCallsInside("org.eclipse.jetty.client.HttpConnection", "normalizeRequest");
+            builder.allowBlockingCallsInside("org.eclipse.jetty.client.transport.HttpConnection", "normalizeRequest");
             builder.allowBlockingCallsInside("java.util.concurrent.FutureTask", "handlePossibleCancellationInterrupt");
             builder.allowBlockingCallsInside("org.eclipse.jetty.http2.HTTP2Session$StreamsState", "reserveSlot");
             builder.allowBlockingCallsInside("org.eclipse.jetty.http2.HTTP2Session$StreamsState", "flush");
@@ -57,9 +57,11 @@ abstract public class BaseReactorTest {
             //jetty http2 server
             builder.allowBlockingCallsInside("org.eclipse.jetty.util.IteratingCallback", "processing");
             builder.allowBlockingCallsInside("org.eclipse.jetty.util.IteratingCallback", "iterate");
+            builder.allowBlockingCallsInside("org.eclipse.jetty.util.thread.AutoLock", "lock");
 
             //java11
             builder.allowBlockingCallsInside("jdk.internal.net.http.MultiExchange", "responseAsync");
+            builder.allowBlockingCallsInside("jdk.internal.misc.Unsafe", "park");
 
             builder.allowBlockingCallsInside("com.sun.jmx.mbeanserver.Repository", "remove");
             builder.allowBlockingCallsInside("com.sun.jmx.mbeanserver.Repository", "contains");

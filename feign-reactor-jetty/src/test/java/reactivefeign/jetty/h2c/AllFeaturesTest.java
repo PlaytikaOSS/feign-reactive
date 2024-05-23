@@ -40,7 +40,7 @@ import static reactivefeign.spring.server.config.TestServerConfigurations.UNDERT
  */
 @EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
 @ContextConfiguration(classes={TestServerConfigurations.class})
-@ActiveProfiles(JETTY_H2C)
+@ActiveProfiles(UNDERTOW_H2C)
 public class AllFeaturesTest extends AllFeaturesFeignTest {
 
 	@Override

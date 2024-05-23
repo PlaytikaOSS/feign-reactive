@@ -10,14 +10,19 @@ import io.reactivex.netty.protocol.http.server.HttpServer;
 import io.reactivex.netty.protocol.http.server.HttpServerRequest;
 import io.reactivex.netty.protocol.http.server.HttpServerResponse;
 import io.reactivex.netty.protocol.http.server.RequestHandler;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.http2.client.HTTP2Client;
-import org.eclipse.jetty.http2.client.http.HttpClientTransportOverHTTP2;
+import org.eclipse.jetty.http2.client.transport.HttpClientTransportOverHTTP2;
 import org.eclipse.jetty.http2.server.HTTP2CServerConnectionFactory;
-import org.eclipse.jetty.server.*;
-import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.io.Content;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.HttpConfiguration;
+import org.eclipse.jetty.server.HttpConnectionFactory;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.Response;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.util.Callback;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactivefeign.java11.Java11ReactiveFeign;
@@ -27,8 +32,8 @@ import reactivefeign.jetty.JettyReactiveOptions;
 import reactivefeign.webclient.WebReactiveFeign;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
 import java.lang.reflect.ParameterizedType;
+import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
@@ -161,16 +166,17 @@ abstract public class RealRequestBenchmarks {
     private Server jettyH2c(int port){
         Server serverJetty = new Server();
 
-        serverJetty.setHandler(new AbstractHandler(){
+        serverJetty.setHandler(new Handler.Abstract(){
             @Override
-            public void handle(String target, Request baseRequest, HttpServletRequest request, HttpServletResponse response) throws IOException {
-                request.getInputStream().skip(Integer.MAX_VALUE);
-                if(target.equals(PATH_WITH_PAYLOAD)){
-                    response.addHeader("Content-Type", "application/json");
-                    response.getOutputStream().write(responseJson);
-                    response.getOutputStream().flush();
+            public boolean handle(Request request, Response response, Callback callback) throws Exception {
+                Content.Chunk chunk = request.read();
+                chunk.skip(Integer.MAX_VALUE);
+                if (request.getHttpURI().getPath().startsWith(PATH_WITH_PAYLOAD)) {
+                    response.getHeaders().add("Content-Type", "application/json");
+                    response.write(true, ByteBuffer.wrap(responseJson), callback);
                 }
-                baseRequest.setHandled(true);
+                callback.succeeded();
+                return true;
             }
         });
 

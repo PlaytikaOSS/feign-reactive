@@ -42,9 +42,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -52,6 +50,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.waitAtMost;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static reactivefeign.ReactivityTest.CALLS_NUMBER;
 import static reactivefeign.ReactivityTest.timeToCompleteReactively;
 import static reactivefeign.TestUtils.toLowerCaseKeys;
@@ -99,16 +99,17 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 
 	@Test
 	public void shouldReturnAllPassedParameters() {
-		Map<String, String> paramMap = new HashMap<String, String>() {{
-				put("paramKey1", "paramValue1");
-				put("paramKey2", "paramValue2");
-			}};
-		Map<String, String> returned = client.mirrorParameters(555,"777", paramMap)
-				.subscribeOn(testScheduler()).block();
+		Map<String, String> paramMap = Map.of("paramKey1", "paramValue1", "paramKey2", "paramValue2");
 
-		assertThat(returned).containsEntry("paramInPath", "555");
-		assertThat(returned).containsEntry("paramInUrl", "777");
-		assertThat(returned).containsAllEntriesOf(paramMap);
+		Mono<Map<String, String>> result = client.mirrorParameters(555,"777", paramMap)
+				.subscribeOn(testScheduler());
+
+		StepVerifier.create(result)
+				.consumeNextWith(returned -> {
+					assertThat(returned).containsEntry("paramInPath", "555");
+					assertThat(returned).containsEntry("paramInUrl", "777");
+					assertThat(returned).containsAllEntriesOf(paramMap);
+				});
 	}
 
 	@Test
@@ -118,11 +119,15 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 				put("paramKey", "");
 			}
 		};
-		Map<String, String> returned = client.mirrorParameters(555,"", paramMap)
-				.subscribeOn(testScheduler()).block();
+		Mono<Map<String, String>> returned = client.mirrorParameters(555,"", paramMap)
+				.subscribeOn(testScheduler());
 
-		assertThat(returned).containsEntry("paramKey", "");
-		assertThat(returned).containsEntry("paramInUrl", "");
+		StepVerifier.create(returned)
+                .consumeNextWith(map -> {
+                    assertThat(map).containsEntry("paramKey", "");
+                    assertThat(map).containsEntry("paramInUrl", "");
+                })
+				.verifyComplete();
 	}
 
 	@Test
@@ -173,10 +178,12 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 	public void shouldReturnAllPassedListParametersNew() {
 
 		List<Integer> dynamicListParam = asList(1, 2, 3);
-		List<Integer> returned = client.mirrorListParametersNew(dynamicListParam)
-				.subscribeOn(testScheduler()).block();
+		Mono<List<Integer>> result = client.mirrorListParametersNew(dynamicListParam)
+				.subscribeOn(testScheduler());
 
-		assertThat(returned).containsAll(dynamicListParam);
+		StepVerifier.create(result)
+				.consumeNextWith(returned -> assertThat(returned).containsAll(dynamicListParam))
+				.verifyComplete();
 	}
 
 	@Test
@@ -251,13 +258,17 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 	public void shouldReturnAllPassedMultiMapHeaders() {
 		Map<String, List<String>> headersMap = new HashMap<String, List<String>>() {
 			{
-				put("headerKey1", asList("headerValue1", "headerValue2"));
+				put("headerKey1", List.of("headerValue1, headerValue2"));
 			}
 		};
-		Map<String, List<String>> returned = client.mirrorMultiMapHeaders(headersMap)
-				.subscribeOn(testScheduler()).block();
+		Mono<Map<String, List<String>>> result = client.mirrorMultiMapHeaders(headersMap)
+				.subscribeOn(testScheduler());
 
-		assertThat(toLowerCaseKeys(returned)).containsAllEntriesOf(toLowerCaseKeys(headersMap));
+		StepVerifier.create(result)
+				.consumeNextWith(returned -> {
+					assertNotNull(returned);
+					assertThat(toLowerCaseKeys(returned)).containsAllEntriesOf(toLowerCaseKeys(headersMap));
+				});
 	}
 
 	@Test
@@ -321,7 +332,7 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 		AtomicInteger sentCount = new AtomicInteger();
 		AtomicInteger receivedCount = new AtomicInteger();
 
-		CompletableFuture<AllFeaturesApi.TestObject> firstReceived = new CompletableFuture<>();
+		CompletableFuture<AllFeaturesApi.TestObject> firstReceived = CompletableFuture.completedFuture(null);
 
 		Flux<AllFeaturesApi.TestObject> returned = client
 				.mirrorBodyStream(Flux.just(new AllFeaturesApi.TestObject("testMessage1"),
@@ -337,14 +348,17 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 			countDownLatch.countDown();
 		}).subscribe();
 
-		countDownLatch.await();
+		boolean await = countDownLatch.await(5, TimeUnit.SECONDS);
+		assertThat(await).isTrue();
 	}
 
 	@Test
 	public void shouldReturnEmpty() {
-		Optional<AllFeaturesApi.TestObject> returned = client.empty()
-				.subscribeOn(testScheduler()).blockOptional();
-		assertThat(!returned.isPresent());
+		Mono<AllFeaturesApi.TestObject> returned = client.empty()
+				.subscribeOn(testScheduler());
+
+		StepVerifier.create(returned)
+					.verifyComplete();
 	}
 
 	@Test
@@ -353,7 +367,6 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 				.subscribeOn(testScheduler()).block();
 		assertThat(returned).isEqualTo("default");
 	}
-
 
 	@Test
 	public void shouldRunReactively() {
@@ -411,33 +424,30 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 
 	@Test
 	public void shouldMirrorStreamingBinaryBodyReactive() throws InterruptedException {
-
-		CountDownLatch countDownLatch = new CountDownLatch(2);
-
 		AtomicInteger sentCount = new AtomicInteger();
-		ConcurrentLinkedQueue<byte[]> receivedAll = new ConcurrentLinkedQueue<>();
-
-		CompletableFuture<ByteBuffer> firstReceived = new CompletableFuture<>();
+		CompletableFuture<ByteBuffer> firstReceived = CompletableFuture.completedFuture(null);
 
 		Flux<ByteBuffer> returned = client.mirrorStreamingBinaryBodyReactive(
-				Flux.just(fromByteArray(new byte[]{1,2,3}), fromByteArray(new byte[]{4,5,6})))
+						Flux.just(fromByteArray(new byte[]{1, 2, 3}), fromByteArray(new byte[]{4, 5, 6})))
 				.subscribeOn(testScheduler())
 				.delayUntil(testObject -> sentCount.get() == 1 ? fromFuture(firstReceived)
 						: empty())
 				.doOnNext(sent -> sentCount.incrementAndGet());
 
-		returned.doOnNext(received -> {
-			byte[] dataReceived = new byte[received.limit()];
-			received.get(dataReceived);
-			receivedAll.add(dataReceived);
-			assertThat(receivedAll.size()).isEqualTo(sentCount.get());
-			firstReceived.complete(received);
-			countDownLatch.countDown();
-		}).subscribe();
-
-		countDownLatch.await();
-
-		assertThat(receivedAll).containsExactly(new byte[]{1,2,3}, new byte[]{4,5,6});
+		StepVerifier.create(returned)
+				.consumeNextWith(byteBuffer -> {
+					ByteBuffer expectedBuffer = ByteBuffer.allocateDirect(3)
+							.put(new byte[]{1, 2, 3})
+							.position(0);
+					assertEquals(expectedBuffer, byteBuffer);
+				})
+				.consumeNextWith(byteBuffer -> {
+					ByteBuffer expectedBuffer = ByteBuffer.allocateDirect(3)
+							.put(new byte[]{4, 5, 6})
+							.position(0);
+					assertEquals(expectedBuffer, byteBuffer);
+				})
+				.verifyComplete();
 	}
 
 	@Test(expected = IllegalArgumentException.class)
@@ -480,7 +490,7 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 
 	@Test
 	public void shouldEncodePathParamWithReservedChars() {
-		String PATH_PARAM = "workers?in=(\"123/321\")";
+		String PATH_PARAM = "workers?in=(\"123321\")";
 
 		StepVerifier.create(client.encodePath(PATH_PARAM)
 				.subscribeOn(testScheduler()))

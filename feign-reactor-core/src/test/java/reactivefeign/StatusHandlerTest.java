@@ -139,7 +139,7 @@ public abstract class StatusHandlerTest extends BaseReactorTest {
                   return new RetryableException(
                           response.status(),
                           "Should retry on next node",
-                          httpMethod, null, request);
+                          httpMethod, (Long) null, request);
                 }),
             throwOnStatus(
                 status -> status == SC_UNAUTHORIZED,
