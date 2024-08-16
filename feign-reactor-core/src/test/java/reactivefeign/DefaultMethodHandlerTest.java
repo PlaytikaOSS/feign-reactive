@@ -5,8 +5,8 @@ import reactivefeign.methodhandler.DefaultMethodHandler;
 import reactor.core.publisher.Mono;
 
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class DefaultMethodHandlerTest extends BaseReactorTest {
 
@@ -37,7 +37,8 @@ public class DefaultMethodHandlerTest extends BaseReactorTest {
         DefaultMethodHandler defaultMethodHandler
                 = new DefaultMethodHandler(TestInterface.class.getMethod("defaultMethod"));
 
-        TestInterface mockImplementation = spy(TestInterface.class);
+        TestInterface mockImplementation = mock(TestInterface.class);
+        when(mockImplementation.defaultMethod()).thenCallRealMethod();
 
         defaultMethodHandler.bindTo(mockImplementation);
 
