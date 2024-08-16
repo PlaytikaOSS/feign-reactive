@@ -171,7 +171,7 @@ abstract public class RealRequestBenchmarks {
             public boolean handle(Request request, Response response, Callback callback) throws Exception {
                 Content.Chunk chunk = request.read();
                 chunk.skip(Integer.MAX_VALUE);
-                if (request.getHttpURI().getPath().startsWith(PATH_WITH_PAYLOAD)) {
+                if (request.getHttpURI().getPath().equals(PATH_WITH_PAYLOAD)) {
                     response.getHeaders().add("Content-Type", "application/json");
                     response.write(true, ByteBuffer.wrap(responseJson), callback);
                 }
