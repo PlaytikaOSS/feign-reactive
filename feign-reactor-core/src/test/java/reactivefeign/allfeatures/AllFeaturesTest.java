@@ -43,6 +43,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,8 +51,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.waitAtMost;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static reactivefeign.ReactivityTest.CALLS_NUMBER;
 import static reactivefeign.ReactivityTest.timeToCompleteReactively;
 import static reactivefeign.TestUtils.toLowerCaseKeys;
@@ -332,7 +333,7 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 		AtomicInteger sentCount = new AtomicInteger();
 		AtomicInteger receivedCount = new AtomicInteger();
 
-		CompletableFuture<AllFeaturesApi.TestObject> firstReceived = CompletableFuture.completedFuture(null);
+		CompletableFuture<AllFeaturesApi.TestObject> firstReceived = new CompletableFuture<>();
 
 		Flux<AllFeaturesApi.TestObject> returned = client
 				.mirrorBodyStream(Flux.just(new AllFeaturesApi.TestObject("testMessage1"),
@@ -424,30 +425,33 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 
 	@Test
 	public void shouldMirrorStreamingBinaryBodyReactive() throws InterruptedException {
+		CountDownLatch countDownLatch = new CountDownLatch(2);
+
 		AtomicInteger sentCount = new AtomicInteger();
-		CompletableFuture<ByteBuffer> firstReceived = CompletableFuture.completedFuture(null);
+		ConcurrentLinkedQueue<byte[]> receivedAll = new ConcurrentLinkedQueue<>();
+
+		CompletableFuture<ByteBuffer> firstReceived = new CompletableFuture<>();
 
 		Flux<ByteBuffer> returned = client.mirrorStreamingBinaryBodyReactive(
-						Flux.just(fromByteArray(new byte[]{1, 2, 3}), fromByteArray(new byte[]{4, 5, 6})))
+						Flux.just(fromByteArray(new byte[]{1,2,3}), fromByteArray(new byte[]{4,5,6})))
 				.subscribeOn(testScheduler())
 				.delayUntil(testObject -> sentCount.get() == 1 ? fromFuture(firstReceived)
 						: empty())
 				.doOnNext(sent -> sentCount.incrementAndGet());
 
-		StepVerifier.create(returned)
-				.consumeNextWith(byteBuffer -> {
-					ByteBuffer expectedBuffer = ByteBuffer.allocateDirect(3)
-							.put(new byte[]{1, 2, 3})
-							.position(0);
-					assertEquals(expectedBuffer, byteBuffer);
-				})
-				.consumeNextWith(byteBuffer -> {
-					ByteBuffer expectedBuffer = ByteBuffer.allocateDirect(3)
-							.put(new byte[]{4, 5, 6})
-							.position(0);
-					assertEquals(expectedBuffer, byteBuffer);
-				})
-				.verifyComplete();
+		returned.doOnNext(received -> {
+			byte[] dataReceived = new byte[received.limit()];
+			received.get(dataReceived);
+			receivedAll.add(dataReceived);
+			assertThat(receivedAll).hasSize(sentCount.get());
+			firstReceived.complete(received);
+			countDownLatch.countDown();
+		}).subscribe();
+
+		boolean await = countDownLatch.await(5, TimeUnit.SECONDS);
+		assertTrue(await);
+
+		assertThat(receivedAll).containsExactly(new byte[]{1,2,3}, new byte[]{4,5,6});
 	}
 
 	@Test(expected = IllegalArgumentException.class)
