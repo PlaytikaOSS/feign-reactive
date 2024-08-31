@@ -115,7 +115,7 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 
 	@Test
 	public void shouldReturnEmptyPassedParameters() {
-		Map<String, String> paramMap = new HashMap<String, String>() {
+		Map<String, String> paramMap = new HashMap<>() {
 			{
 				put("paramKey", "");
 			}
@@ -134,7 +134,7 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 	@Test
 	public void shouldReturnAllPassedParametersNew() {
 
-		Map<String, String> paramMap = new HashMap<String, String>() {
+		Map<String, String> paramMap = new HashMap<>() {
 			{
 				put("paramKey", "paramValue");
 			}
@@ -209,7 +209,7 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 	@Test
 	public void shouldReturnAllPassedMapParametersNew() {
 
-		Map<String, List<String>> paramMap = new HashMap<String, List<String>>() {
+		Map<String, List<String>> paramMap = new HashMap<>() {
 			{
 				put("paramKey", asList("paramValue1", "paramValue2"));
 			}
@@ -232,7 +232,7 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 
 	@Test
 	public void shouldReturnAllPassedHeaders() {
-		Map<String, String> headersMap = new HashMap<String, String>() {
+		Map<String, String> headersMap = new HashMap<>() {
 			{
 				put("headerKey1", "headerValue1");
 				put("headerKey2", "headerValue2");
@@ -257,7 +257,7 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 
 	@Test
 	public void shouldReturnAllPassedMultiMapHeaders() {
-		Map<String, List<String>> headersMap = new HashMap<String, List<String>>() {
+		Map<String, List<String>> headersMap = new HashMap<>() {
 			{
 				put("headerKey1", List.of("headerValue1, headerValue2"));
 			}
@@ -290,7 +290,7 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 
 	@Test
 	public void shouldReturnBodyMap() {
-		Map<String, String> bodyMap = new HashMap<String, String>() {
+		Map<String, String> bodyMap = new HashMap<>() {
 			{
 				put("key1", "value1");
 				put("key2", "value2");
@@ -311,7 +311,7 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 
 	@Test
 	public void shouldReturnBodyMapReactive() {
-		Map<String, String> bodyMap = new HashMap<String, String>() {
+		Map<String, String> bodyMap = new HashMap<>() {
 			{
 				put("key1", "value1");
 				put("key2", "value2");
@@ -494,7 +494,7 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 
 	@Test
 	public void shouldEncodePathParamWithReservedChars() {
-		String PATH_PARAM = "workers?in=(\"123321\")";
+		String PATH_PARAM = "workers?in=(\"123/321\")";
 
 		StepVerifier.create(client.encodePath(PATH_PARAM)
 				.subscribeOn(testScheduler()))
