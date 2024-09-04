@@ -1,12 +1,11 @@
 package reactivefeign.retry;
 
+import feign.ExceptionPropagationPolicy;
 import org.reactivestreams.Publisher;
 import reactor.core.Exceptions;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -51,5 +50,10 @@ public class FilteredReactiveRetryPolicy implements ReactiveRetryPolicy {
                 }));
             }
         };
+    }
+
+    @Override
+    public ExceptionPropagationPolicy exceptionPropagationPolicy(){
+        return retryPolicy.exceptionPropagationPolicy();
     }
 }
