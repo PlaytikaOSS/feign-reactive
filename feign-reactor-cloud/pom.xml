@@ -6,7 +6,7 @@
         <groupId>com.playtika.reactivefeign</groupId>
         <artifactId>feign-reactor-parent</artifactId>
         <relativePath>../feign-reactor-parent</relativePath>
-        <version>4.1.2</version>
+        <version>4.2.0</version>
     </parent>
 
     <artifactId>feign-reactor-cloud</artifactId>
