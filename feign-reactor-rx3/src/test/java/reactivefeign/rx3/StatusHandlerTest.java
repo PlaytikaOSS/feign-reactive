@@ -24,7 +24,10 @@ import reactivefeign.rx3.testcase.IcecreamServiceApi;
 import java.nio.charset.Charset;
 import java.util.Collections;
 
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.get;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
 import static reactivefeign.rx3.client.statushandler.Rx3StatusHandlers.throwOnStatus;
 import static reactivefeign.utils.FeignUtils.httpMethod;
@@ -65,7 +68,7 @@ public class StatusHandlerTest {
               return new RetryableException(
                       response.status(),
                       "Should retry on next node",
-                      httpMethod, null, request);
+                      httpMethod, (Long)null, request);
             }))
         .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
