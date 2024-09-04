@@ -19,6 +19,7 @@ package reactivefeign.spring.config;
 
 import feign.Contract;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -65,7 +66,7 @@ public class ReactiveFeignClientsConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public Contract reactiveFeignContract(
-			List<AnnotatedParameterProcessor> parameterProcessors, FormattingConversionService feignConversionService) {
+			List<AnnotatedParameterProcessor> parameterProcessors, @Qualifier("feignConversionService") FormattingConversionService feignConversionService) {
 		return new SpringMvcContract(parameterProcessors, feignConversionService);
 	}
 
