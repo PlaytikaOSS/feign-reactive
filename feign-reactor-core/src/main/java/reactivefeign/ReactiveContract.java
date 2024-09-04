@@ -15,6 +15,8 @@ package reactivefeign;
 
 import feign.Contract;
 import feign.MethodMetadata;
+import kotlinx.coroutines.flow.Flow;
+import reactivefeign.utils.KtCoroutinesUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -48,6 +50,12 @@ public class ReactiveContract implements Contract {
 
     for (final MethodMetadata metadata : methodsMetadata) {
       final Type type = metadata.returnType();
+
+      if (KtCoroutinesUtils.isSuspend(metadata.method())) {
+        modifySuspendMethodMetadata(metadata);
+        continue;
+      }
+
       if (!isReactorType(type)) {
         throw new IllegalArgumentException(String.format(
             "Method %s of contract %s doesn't returns reactor.core.publisher.Mono or reactor.core.publisher.Flux",
@@ -64,7 +72,24 @@ public class ReactiveContract implements Contract {
     return methodsMetadata;
   }
 
-  private static final Set<Class> REACTOR_PUBLISHERS = new HashSet<>(asList(Mono.class, Flux.class));
+  private static void modifySuspendMethodMetadata(MethodMetadata metadata) {
+    Type kotlinMethodReturnType = KtCoroutinesUtils.suspendReturnType(metadata.method());
+    if (kotlinMethodReturnType == null) {
+      throw new IllegalArgumentException(String.format(
+              "Method %s can't have continuation argument, only kotlin method is allowed",
+              metadata.configKey()));
+    }
+    metadata.returnType(kotlinMethodReturnType);
+
+    int continuationIndex = metadata.method().getParameterCount() - 1;
+    metadata.ignoreParamater(continuationIndex);
+
+    if(metadata.bodyIndex() != null && metadata.bodyIndex().equals(continuationIndex)) {
+      metadata.bodyIndex(null);
+    }
+  }
+
+  private static final Set<Class> REACTOR_PUBLISHERS = new HashSet<>(asList(Mono.class, Flux.class, Flow.class));
 
   public static boolean isReactorType(final Type type) {
     return (type instanceof ParameterizedType)
