@@ -13,23 +13,24 @@
  */
 package reactivefeign;
 
-import org.hamcrest.Matchers;
-import org.junit.*;
-import org.junit.rules.ExpectedException;
+import org.apache.http.conn.HttpHostConnectException;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.web.client.ResourceAccessException;
+import reactivefeign.client.ReactiveFeignException;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * @author Sergii Karpenko
  */
 abstract public class ConnectionTimeoutTest extends BaseReactorTest{
-
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
 
   private ServerSocket serverSocket;
   private Socket socket;
@@ -57,19 +58,22 @@ abstract public class ConnectionTimeoutTest extends BaseReactorTest{
     }
   }
 
-  // TODO investigate why doesn't work on codecov.io but works locally
-  @Ignore
   @Test
   public void shouldFailOnConnectionTimeout() {
 
-    expectedException.expectCause(
+    assertThatThrownBy(() -> {
+      IcecreamServiceApi client = builder(300)
+              .target(IcecreamServiceApi.class, "http://localhost:" + port);
 
-        Matchers.any(ConnectException.class));
+      client.findOrder(1).subscribeOn(testScheduler()).block();
 
-    IcecreamServiceApi client = builder(300)
-                .target(IcecreamServiceApi.class, "http://localhost:" + port);
+    }).matches(this::isConnectException);
 
-    client.findOrder(1).subscribeOn(testScheduler()).block();
   }
 
+  protected boolean isConnectException(Throwable throwable){
+    return throwable instanceof ReactiveFeignException
+            && throwable.getCause() instanceof ResourceAccessException
+            && throwable.getCause().getCause() instanceof HttpHostConnectException;
+  }
 }

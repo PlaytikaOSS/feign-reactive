@@ -13,7 +13,10 @@
  */
 package reactivefeign.webclient.client5.h2c;
 
+import org.apache.hc.client5.http.HttpHostConnectException;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactivefeign.ReactiveFeign;
+import reactivefeign.client.ReactiveFeignException;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 import static reactivefeign.webclient.client5.h2c.TestUtils.builderHttp2WithConnectTimeout;
@@ -26,5 +29,12 @@ public class ConnectionTimeoutTest extends reactivefeign.ConnectionTimeoutTest {
   @Override
   protected ReactiveFeign.Builder<IcecreamServiceApi> builder(long connectTimeoutInMillis) {
     return builderHttp2WithConnectTimeout(connectTimeoutInMillis);
+  }
+
+  @Override
+  protected boolean isConnectException(Throwable throwable){
+    return throwable instanceof ReactiveFeignException
+            && throwable.getCause() instanceof WebClientRequestException
+            && throwable.getCause().getCause() instanceof HttpHostConnectException;
   }
 }
