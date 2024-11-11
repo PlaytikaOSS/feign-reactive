@@ -11,8 +11,8 @@ Use Feign with Spring WebFlux
 
 ## Overview
 
-Implementation of Feign on Spring WebClient. Brings you the best of two worlds together : 
-concise syntax of Feign to write client side API on fast, asynchronous and
+Implementation of Feign on Spring WebClient. Brings you the best of two worlds together: 
+concise syntax of Feign to write client-side API on a fast, asynchronous, and
 non-blocking HTTP client of Spring WebClient.
 
 ## Modules
