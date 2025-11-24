@@ -28,7 +28,7 @@
 
         <!-- Tests -->
         <junit.version>4.13.2</junit.version>
-        <wiremock.version>3.5.4</wiremock.version>
+        <wiremock.version>3.13.2</wiremock.version>
         <awaitility.version>4.2.0</awaitility.version>
         <blockhound.version>1.0.9.RELEASE</blockhound.version>
         <disruptor.version>3.4.4</disruptor.version>
