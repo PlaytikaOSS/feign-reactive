@@ -44,6 +44,7 @@ import reactivefeign.java11.HttpClientFeignCustomizer;
 import reactivefeign.java11.Java11ReactiveFeign;
 import reactivefeign.jetty.JettyHttpClientFactory;
 import reactivefeign.jetty.JettyReactiveFeign;
+import reactivefeign.webclient.NettyHttpClientCustomizer;
 import reactivefeign.webclient.WebClientFeignCustomizer;
 import reactivefeign.webclient.WebReactiveFeign;
 
@@ -133,10 +134,15 @@ public class ReactiveFeignClientsConfiguration {
 			@Scope("prototype")
 			public ReactiveFeignBuilder reactiveFeignBuilder(
 					WebClient.Builder builder,
-					@Autowired(required = false) WebClientFeignCustomizer webClientCustomizer) {
-				return webClientCustomizer != null
+					@Autowired(required = false) WebClientFeignCustomizer webClientCustomizer,
+					@Autowired(required = false) List<NettyHttpClientCustomizer> nettyHttpClientCustomizers) {
+				WebReactiveFeign.Builder webReactiveFeignBuilder = webClientCustomizer != null
 						? WebReactiveFeign.builder(builder, webClientCustomizer)
 						: WebReactiveFeign.builder(builder);
+				if (nettyHttpClientCustomizers != null) {
+					nettyHttpClientCustomizers.forEach(webReactiveFeignBuilder::addCustomizer);
+				}
+				return webReactiveFeignBuilder;
 			}
 		}
 
