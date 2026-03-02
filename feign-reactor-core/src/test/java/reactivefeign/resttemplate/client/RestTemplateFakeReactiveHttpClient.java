@@ -144,12 +144,12 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
 
     @Override
     public int status() {
-      return response.getStatusCodeValue();
+      return response.getStatusCode().value();
     }
 
     @Override
     public Map<String, List<String>> headers() {
-      return response.getHeaders();
+      return new java.util.HashMap<>(response.getHeaders());
     }
 
     @Override
@@ -194,7 +194,7 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
 
     @Override
     public Map<String, List<String>> headers() {
-      return ex.getResponseHeaders();
+      return ex.getResponseHeaders() != null ? new java.util.HashMap<>(ex.getResponseHeaders()) : java.util.Collections.emptyMap();
     }
 
     @Override

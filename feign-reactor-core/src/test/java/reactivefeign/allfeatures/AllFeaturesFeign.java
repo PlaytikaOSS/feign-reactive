@@ -35,7 +35,7 @@ import java.util.Map;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_OCTET_STREAM_VALUE;
-import static org.springframework.http.MediaType.APPLICATION_STREAM_JSON_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_NDJSON_VALUE;
 import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
 
 @Headers({ "Accept: application/json" })
@@ -121,14 +121,14 @@ public interface AllFeaturesFeign extends AllFeaturesApi{
 
 	@Override
 	@RequestLine("POST " + "/mirrorBodyStream")
-	@Headers({ "Content-Type: "+APPLICATION_STREAM_JSON_VALUE,
-			   "Accept: "+APPLICATION_STREAM_JSON_VALUE})
+	@Headers({ "Content-Type: "+APPLICATION_NDJSON_VALUE,
+			   "Accept: "+APPLICATION_NDJSON_VALUE})
 	Flux<TestObject> mirrorBodyStream(Publisher<TestObject> bodyStream);
 
 	@Override
 	@RequestLine("POST " + "/mirrorIntegerBodyStream")
-	@Headers({ "Content-Type: "+APPLICATION_STREAM_JSON_VALUE,
-			"Accept: "+APPLICATION_STREAM_JSON_VALUE})
+	@Headers({ "Content-Type: "+APPLICATION_NDJSON_VALUE,
+			"Accept: "+APPLICATION_NDJSON_VALUE})
 	Flux<Integer> mirrorIntegerBodyStream(Flux<Integer> body);
 
 	@Override

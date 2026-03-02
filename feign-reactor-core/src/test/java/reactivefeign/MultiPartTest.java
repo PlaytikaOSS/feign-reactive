@@ -7,10 +7,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
 import org.springframework.boot.web.reactive.server.ReactiveWebServerFactory;
 import org.springframework.context.annotation.Bean;
@@ -46,12 +44,12 @@ import static org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE;
         properties = {"spring.main.web-application-type=reactive"},
         classes = {MultiPartTest.TestController.class, MultiPartTest.TestConfiguration.class},
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
+@EnableAutoConfiguration
 abstract public class MultiPartTest extends BaseReactorTest {
 
     private MultipartClient client;
 
-    @LocalServerPort
+    @org.springframework.boot.test.web.server.LocalServerPort
     protected int port;
 
     abstract protected ReactiveFeignBuilder<MultipartClient> builder();

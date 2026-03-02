@@ -19,8 +19,6 @@ package reactivefeign.resttemplate.allfeatures;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.test.context.ActiveProfiles;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.allfeatures.AllFeaturesFeign;
@@ -34,7 +32,7 @@ import reactor.core.scheduler.Schedulers;
  *
  * Tests ReactiveFeign in conjunction with WebFlux rest controller.
  */
-@EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
+@EnableAutoConfiguration
 @ActiveProfiles("netty")
 public class AllFeaturesTest extends AllFeaturesFeignTest {
 

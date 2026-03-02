@@ -21,7 +21,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
 import org.springframework.boot.web.reactive.server.ReactiveWebServerFactory;
 import org.springframework.context.annotation.Bean;
@@ -84,7 +84,7 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 
 	protected AllFeaturesApi client;
 
-	@LocalServerPort
+	@org.springframework.boot.test.web.server.LocalServerPort
 	protected int port;
 
 	abstract protected AllFeaturesApi buildClient(String url);
