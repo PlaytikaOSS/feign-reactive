@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 
 
 public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigurator{
@@ -146,33 +147,11 @@ public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigu
 			}
 		}
 
-		Map<String, List<String>> defaultRequestHeaders = config.getDefaultRequestHeaders();
-		if (defaultRequestHeaders != null && !defaultRequestHeaders.isEmpty()) {
-			List<Pair<String, String>> allHeaders = new ArrayList<>();
-			for (Map.Entry<String, List<String>> headerPair : defaultRequestHeaders.entrySet()) {
-				String key = headerPair.getKey();
-				for (String value : headerPair.getValue()) {
-					allHeaders.add(new Pair<>(key, value));
-				}
-			}
-			if (!allHeaders.isEmpty()) {
-				resultBuilder.addRequestInterceptor(ReactiveHttpRequestInterceptors.addHeaders(allHeaders));
-			}
-		}
+		resultBuilder = addInterceptors(resultBuilder, config.getDefaultRequestHeaders(),
+				ReactiveHttpRequestInterceptors::addHeaders);
 
-		Map<String, List<String>> defaultQueryParameters = config.getDefaultQueryParameters();
-		if (defaultQueryParameters != null && !defaultQueryParameters.isEmpty()) {
-			List<Pair<String, String>> allQueries = new ArrayList<>();
-			for (Map.Entry<String, List<String>> queryPair : defaultQueryParameters.entrySet()) {
-				String key = queryPair.getKey();
-				for (String value : queryPair.getValue()) {
-					allQueries.add(new Pair<>(key, value));
-				}
-			}
-			if (!allQueries.isEmpty()) {
-				resultBuilder.addRequestInterceptor(ReactiveHttpRequestInterceptors.addQueries(allQueries));
-			}
-		}
+		resultBuilder = addInterceptors(resultBuilder, config.getDefaultQueryParameters(),
+				ReactiveHttpRequestInterceptors::addQueries);
 
 		if (config.getStatusHandler() != null) {
 			ReactiveStatusHandler statusHandler = namedContext.getOrInstantiate(config.getStatusHandler());
@@ -203,6 +182,25 @@ public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigu
 			resultBuilder = resultBuilder.contract(namedContext.getOrInstantiate(config.getContract()));
 		}
 		return resultBuilder;
+	}
+
+	private ReactiveFeignBuilder addInterceptors(
+			ReactiveFeignBuilder builder,
+			Map<String, List<String>> parameters,
+			Function<List<Pair<String, String>>, ReactiveHttpRequestInterceptor> interceptorCreator) {
+		if (parameters != null && !parameters.isEmpty()) {
+			List<Pair<String, String>> allPairs = new ArrayList<>();
+			for (Map.Entry<String, List<String>> entry : parameters.entrySet()) {
+				String key = entry.getKey();
+				for (String value : entry.getValue()) {
+					allPairs.add(new Pair<>(key, value));
+				}
+			}
+			if (!allPairs.isEmpty()) {
+				return builder.addRequestInterceptor(interceptorCreator.apply(allPairs));
+			}
+		}
+		return builder;
 	}
 
 	static ReactiveRetryPolicy configureRetryPolicyFromProperties(
