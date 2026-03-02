@@ -84,7 +84,7 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 
 	protected AllFeaturesApi client;
 
-	@org.springframework.boot.test.web.server.LocalServerPort
+	@org.springframework.boot.test.context.SpringBootTest.LocalServerPort
 	protected int port;
 
 	abstract protected AllFeaturesApi buildClient(String url);

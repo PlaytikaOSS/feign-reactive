@@ -49,7 +49,7 @@ abstract public class MultiPartTest extends BaseReactorTest {
 
     private MultipartClient client;
 
-    @org.springframework.boot.test.web.server.LocalServerPort
+    @org.springframework.boot.test.context.SpringBootTest.LocalServerPort
     protected int port;
 
     abstract protected ReactiveFeignBuilder<MultipartClient> builder();
