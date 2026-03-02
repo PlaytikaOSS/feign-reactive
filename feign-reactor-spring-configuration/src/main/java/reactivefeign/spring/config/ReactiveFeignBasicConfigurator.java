@@ -30,11 +30,11 @@ import reactivefeign.client.statushandler.ReactiveStatusHandlers;
 import reactivefeign.retry.ReactiveRetryPolicy;
 import reactivefeign.utils.Pair;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 
 public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigurator{
@@ -149,9 +149,11 @@ public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigu
 		if (config.getDefaultRequestHeaders() != null) {
 			for (Map.Entry<String, List<String>> headerPair : config.getDefaultRequestHeaders().entrySet()) {
 				// Every Map headerPair is gonna belong to it's own interceptor
-				List<Pair<String, String>> headerSubPairs = headerPair.getValue().stream()
-								.map(value -> new Pair<>(headerPair.getKey(), value))
-								.collect(Collectors.toList());
+				List<String> values = headerPair.getValue();
+				List<Pair<String, String>> headerSubPairs = new ArrayList<>(values.size());
+				for (String value : values) {
+					headerSubPairs.add(new Pair<>(headerPair.getKey(), value));
+				}
 				resultBuilder.addRequestInterceptor(ReactiveHttpRequestInterceptors.addHeaders(headerSubPairs));
 			}
 		}
@@ -159,10 +161,12 @@ public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigu
 		if (config.getDefaultQueryParameters() != null) {
 			for (Map.Entry<String, List<String>> queryPair : config.getDefaultQueryParameters().entrySet()) {
 				// Every Map queryPair is gonna belong to it's own interceptor
-                List<Pair<String, String>> querySubPairs = queryPair.getValue().stream()
-                        .map(value -> new Pair<>(queryPair.getKey(), value))
-                        .collect(Collectors.toList());
-                resultBuilder.addRequestInterceptor(ReactiveHttpRequestInterceptors.addQueries(querySubPairs));
+				List<String> values = queryPair.getValue();
+				List<Pair<String, String>> querySubPairs = new ArrayList<>(values.size());
+				for (String value : values) {
+					querySubPairs.add(new Pair<>(queryPair.getKey(), value));
+				}
+				resultBuilder.addRequestInterceptor(ReactiveHttpRequestInterceptors.addQueries(querySubPairs));
 			}
 		}
 
