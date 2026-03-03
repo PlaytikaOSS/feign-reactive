@@ -86,11 +86,6 @@ class HttpClient5HttpConnectorBuilder {
                 configBuilder = configBuilder.setRedirectsEnabled(options.isFollowRedirects());
             }
 
-//            if (options.getProxySettings() != null) {
-//                ReactiveOptions.ProxySettings proxySettings = options.getProxySettings();
-//                configBuilder = configBuilder.setProxy(new HttpHost(proxySettings.getHost(), proxySettings.getPort()));
-//            }
-
             if (options.isTryUseCompression() != null) {
                 configBuilder = configBuilder.setContentCompressionEnabled(options.isTryUseCompression());
             }
