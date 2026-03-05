@@ -15,12 +15,13 @@ package reactivefeign;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.Before;
 import org.junit.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.OrderGenerator;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
+import reactor.netty.http.HttpProtocol;
 import reactor.netty.http.server.HttpServer;
 
 import java.time.Duration;
@@ -45,24 +46,31 @@ abstract public class ReactivityTest extends BaseReactorTest {
 
   private static DisposableServer server;
 
-  @BeforeClass
-  public static void startServer() throws JsonProcessingException {
-    byte[] data = TestUtils.MAPPER.writeValueAsString(new OrderGenerator().generate(1)).getBytes();
+  @Before
+  public void startServer() throws JsonProcessingException {
+    if(server == null) {
+      byte[] data = TestUtils.MAPPER.writeValueAsString(new OrderGenerator().generate(1)).getBytes();
 
-    server = HttpServer.create()
-            .protocol(HTTP11, H2C)
-            .route(r -> r.get("/icecream/orders/1",
-                    (req, res) -> {
-                      res.header("Content-Type", "application/json");
-                      return Mono.delay(Duration.ofMillis(DELAY_IN_MILLIS))
-                              .thenEmpty(res.sendByteArray(Mono.just(data)));
-                    }))
-            .bindNow();
+      server = HttpServer.create()
+              .protocol(serverProtocols())
+              .route(r -> r.get("/icecream/orders/1",
+                      (req, res) -> {
+                        res.header("Content-Type", "application/json");
+                        return Mono.delay(Duration.ofMillis(DELAY_IN_MILLIS))
+                                .thenEmpty(res.sendByteArray(Mono.just(data)));
+                      }))
+              .bindNow();
+    }
+  }
+
+  protected HttpProtocol[] serverProtocols(){
+      return new HttpProtocol[]{HTTP11, H2C};
   }
 
   @AfterClass
   public static void stopServer(){
     server.disposeNow();
+    server = null;
   }
 
   @Test
