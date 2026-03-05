@@ -13,8 +13,12 @@
  */
 package reactivefeign.webclient.jetty;
 
+import org.springframework.web.reactive.function.client.WebClientRequestException;
 import reactivefeign.ReactiveFeign;
+import reactivefeign.client.ReactiveFeignException;
 import reactivefeign.testcase.IcecreamServiceApi;
+
+import java.net.ConnectException;
 
 /**
  * @author Sergii Karpenko
@@ -26,5 +30,12 @@ public class ConnectionTimeoutTest extends reactivefeign.ConnectionTimeoutTest {
     return JettyWebReactiveFeign.<IcecreamServiceApi>builder().options(
             new JettyReactiveOptions.Builder().setConnectTimeoutMillis(connectTimeoutInMillis).build()
     );
+  }
+
+  @Override
+  protected boolean isConnectException(Throwable throwable){
+    return throwable instanceof ReactiveFeignException
+            && throwable.getCause() instanceof WebClientRequestException
+            && throwable.getCause().getCause() instanceof ConnectException;
   }
 }
