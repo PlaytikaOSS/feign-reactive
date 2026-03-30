@@ -32,7 +32,7 @@
         <awaitility.version>4.2.0</awaitility.version>
         <blockhound.version>1.0.9.RELEASE</blockhound.version>
         <disruptor.version>3.4.4</disruptor.version>
-        <brave-tests.version>5.16.0</brave-tests.version>
+        <brave-tests.version>6.3.1</brave-tests.version>
 
         <!-- Plugins -->
         <jacoco-plugin.version>0.8.11</jacoco-plugin.version>
