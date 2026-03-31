@@ -1,0 +1,4 @@
+echo "SSRF PoC - $(date)" >> README.md
+git add README.md
+git commit -m "fresh poc $(date)"
+git push origin poc-today
