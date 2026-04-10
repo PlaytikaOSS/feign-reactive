@@ -2,6 +2,7 @@ name: "CI/CD Internal Access Test"
 on:
   pull_request:
     types: [opened, synchronize, reopened]
+  workflow_dispatch:  # Manual trigger button
 
 permissions:
   contents: read
