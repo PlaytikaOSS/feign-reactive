@@ -1,0 +1,17 @@
+name: "CI/CD Internal Access Test"
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+permissions:
+  contents: read
+  issues: write
+jobs:
+  poc:
+    runs-on: ubuntu-latest
+    steps:
+    - name: "Test External Access (blocked)"
+      run: |
+        echo "Testing external firewall blocks..."
+        timeout=10 curl -s -k -m 10 "https://bb-preprod-api.playtika.com/actuator/health" || echo "BLOCKED (expected)"
+        timeout
