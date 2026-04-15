@@ -1,0 +1,23 @@
+name: SSRF Validation (SAFE)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ssrf-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Egress check (safe)
+        run: curl -s https://example.com > /dev/null && echo "internet-ok"
+
+      - name: Simulated SSRF targets (NO REAL INTERNAL NETWORK)
+        run: |
+          echo "Simulating metadata access"
+          echo "http://169.254.169.254 -> BLOCKED (simulated)"
+          echo "http://127.0.0.1 -> BLOCKED (simulated)"
+          echo "http://10.0.0.5 -> BLOCKED (simulated)"
+
+      - name: Report
+        run: |
+          echo "::notice title=SSRF Lab::This workflow does NOT perform real internal network scanning"
