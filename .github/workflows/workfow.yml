@@ -1,58 +1,28 @@
-name: SSRF Validation Harness
+from flask import Flask, request, jsonify
+import requests
 
-on:
-  workflow_dispatch:
-  pull_request:
+app = Flask(__name__)
 
-jobs:
-  ssrf-test:
-    runs-on: ubuntu-latest
+@app.route("/fetch")
+def fetch():
+    url = request.args.get("url")
 
-    steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+    try:
+        r = requests.get(url, timeout=5)
 
-    # ---------------------------
-    # 1. EGRESS CHECK
-    # ---------------------------
-    - name: Egress Check
-      run: |
-        echo "[EGRESS] testing internet access"
-        curl -s --max-time 5 https://example.com || exit 1
+        return jsonify({
+            "server_side_fetch": True,
+            "requested_url": url,
+            "status_code": r.status_code,
+            "response_snippet": r.text[:200]
+        })
 
-    # ---------------------------
-    # 2. CLIENT-SIDE NETWORK BOUNDARY TEST
-    # ---------------------------
-    - name: Client-side internal probes
-      run: |
-        echo "[CLIENT] metadata"
-        curl -m 3 http://169.254.169.254 || echo "blocked"
+    except Exception as e:
+        return jsonify({
+            "server_side_fetch": True,
+            "requested_url": url,
+            "error": str(e)
+        })
 
-        echo "[CLIENT] private IP"
-        curl -m 3 http://10.0.0.5 || echo "blocked"
-
-        echo "[CLIENT] localhost"
-        curl -m 3 http://127.0.0.1:8080 || echo "blocked"
-
-    # ---------------------------
-    # 3. REAL SSRF TEST (SERVER-SIDE SINK REQUIRED)
-    # ---------------------------
-    - name: SSRF Sink Test (REAL)
-      id: ssrf
-      run: |
-        echo "[SSRF] testing server-side fetch sink"
-
-        RESPONSE=$(curl -s "https://ssrf-test.yourdomain.com/fetch?url=http://169.254.169.254")
-
-        echo "$RESPONSE" | jq .
-
-        # EXPECTED SIGNAL CHECK
-        echo "$RESPONSE" | jq -e '.server_side_fetch == true' >/dev/null || exit 1
-
-    # ---------------------------
-    # 4. RESULT
-    # ---------------------------
-    - name: Report
-      if: always()
-      run: |
-        echo "::notice title=SSRF Validation Complete::Review sink output for server-side reachability"
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8080)
