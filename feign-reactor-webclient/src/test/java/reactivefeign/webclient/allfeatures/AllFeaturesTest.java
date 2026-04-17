@@ -16,11 +16,11 @@
 
 package reactivefeign.webclient.allfeatures;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.reactive.ReactiveWebSecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.ReactiveUserDetailsServiceAutoConfiguration;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.allfeatures.AllFeaturesFeign;
 import reactivefeign.allfeatures.AllFeaturesFeignTest;
@@ -31,7 +31,7 @@ import reactivefeign.webclient.WebReactiveFeign;
  *
  * Tests ReactiveFeign in conjunction with WebFlux rest controller.
  */
-@EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
+@EnableAutoConfiguration(exclude = {ReactiveWebSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
 public class AllFeaturesTest extends AllFeaturesFeignTest {
 
 	@Override
@@ -40,14 +40,14 @@ public class AllFeaturesTest extends AllFeaturesFeignTest {
 	}
 
     //Netty's WebClient is not able to do this trick
-	@Ignore
+	@Disabled
 	@Test
 	@Override
 	public void shouldReturnFirstResultBeforeSecondSent() {
 	}
 
 	//WebClient is not able to do this
-	@Ignore
+	@Disabled
 	@Test
 	@Override
 	public void shouldMirrorStringStreamBody() {

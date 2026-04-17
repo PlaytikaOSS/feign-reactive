@@ -11,18 +11,17 @@
  */
 package reactivefeign;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
-import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import tools.jackson.core.JacksonException;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -57,10 +56,7 @@ abstract public class SmokeTest extends BaseReactorTest {
   private Map<Integer, IceCreamOrder> orders = generator.generateRange(10).stream()
       .collect(Collectors.toMap(IceCreamOrder::getId, o -> o));
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
-
-  @Before
+  @BeforeEach
   public void setUp() {
     String targetUrl = getTargetUrl();
     client = this.builder()
@@ -73,7 +69,7 @@ abstract public class SmokeTest extends BaseReactorTest {
   }
 
   @Test
-  public void testSimpleGet_success() throws JsonProcessingException {
+  public void testSimpleGet_success() throws JacksonException {
 
     wireMockRule.stubFor(get(urlEqualTo("/icecream/flavors"))
         .willReturn(aResponse().withStatus(200)
@@ -98,7 +94,7 @@ abstract public class SmokeTest extends BaseReactorTest {
   }
 
   @Test
-  public void shouldSuccessfullyCall() throws JsonProcessingException {
+  public void shouldSuccessfullyCall() throws JacksonException {
 
     IceCreamOrder orderExpected = orders.get(1);
     wireMockRule.stubFor(get(urlEqualTo("/icecream/orders/1"))
@@ -114,7 +110,7 @@ abstract public class SmokeTest extends BaseReactorTest {
   }
 
   @Test
-  public void testMakeOrder_success() throws JsonProcessingException {
+  public void testMakeOrder_success() throws JacksonException {
 
     IceCreamOrder order = new OrderGenerator().generate(20);
     Bill billExpected = Bill.makeBill(order);
@@ -133,7 +129,7 @@ abstract public class SmokeTest extends BaseReactorTest {
   }
 
   @Test
-  public void testPayBill_success() throws JsonProcessingException {
+  public void testPayBill_success() throws JacksonException {
 
     Bill bill = Bill.makeBill(new OrderGenerator().generate(30));
 

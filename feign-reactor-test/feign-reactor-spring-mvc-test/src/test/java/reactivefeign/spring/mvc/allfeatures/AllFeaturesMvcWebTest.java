@@ -16,8 +16,8 @@
 
 package reactivefeign.spring.mvc.allfeatures;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.webclient.WebReactiveFeign;
 
@@ -35,13 +35,14 @@ public class AllFeaturesMvcWebTest extends AllFeaturesMvcTest{
 
 	@Test
 	@Override
-	@Ignore
+	@Disabled
 	public void shouldReturnFirstResultBeforeSecondSent() {
 	}
 
 	@Test
 	@Override
-	@Ignore
+	@Disabled
 	public void shouldMirrorStringStreamBody() {
 	}
+
 }

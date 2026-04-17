@@ -224,8 +224,8 @@ public class PublisherClientMethodHandler implements MethodHandler {
                         ? (Map<String, ?>) queryMapObject
                         : queryMapEncoder.encode(queryMapObject);
                 queryMap.forEach((key, value) -> {
-                    if (value instanceof Iterable) {
-                        ((Iterable<?>) value).forEach(element -> add(queries, key, element.toString()));
+                    if (value instanceof Iterable<?> iterable) {
+                        iterable.forEach(element -> add(queries, key, element.toString()));
                     } else if (value != null) {
                         add(queries, key, value.toString());
                     }
@@ -253,8 +253,8 @@ public class PublisherClientMethodHandler implements MethodHandler {
         if (methodMetadata.headerMapIndex() != null) {
             ((Map<String, ?>) argv[methodMetadata.headerMapIndex()])
                     .forEach((key, value) -> {
-                        if (value instanceof Iterable) {
-                            ((Iterable<?>) value)
+                        if (value instanceof Iterable<?> iterable) {
+                            iterable
                                     .forEach(element -> addOrdered(headers, key, element.toString()));
                         } else {
                             addOrdered(headers, key, value.toString());
@@ -335,13 +335,13 @@ public class PublisherClientMethodHandler implements MethodHandler {
             return substitutions -> {
                 Object substitution = substitutions.placeholderToSubstitution.get(placeholder);
                 if (substitution != null) {
-                    if(substitution instanceof Iterable){
+                    if(substitution instanceof Iterable<?> iterable){
                         List<String> stringValues = new ArrayList<>();
-                        ((Iterable<?>) substitution).forEach(o -> stringValues.add(o.toString()));
+                        iterable.forEach(o -> stringValues.add(o.toString()));
                         return stringValues;
-                    } else if(substitution instanceof Object[]){
-                        List<String> stringValues = new ArrayList<>(((Object[]) substitution).length);
-                        (asList((Object[])substitution)).forEach(o -> stringValues.add(o.toString()));
+                    } else if(substitution instanceof Object[] objects){
+                        List<String> stringValues = new ArrayList<>(objects.length);
+                        (asList(objects)).forEach(o -> stringValues.add(o.toString()));
                         return stringValues;
                     }
                     else {
@@ -482,8 +482,8 @@ public class PublisherClientMethodHandler implements MethodHandler {
     }
 
     private Object expandElements(Param.Expander expander, Object value) {
-        if (value instanceof Iterable) {
-            return expandIterable(expander, (Iterable) value);
+        if (value instanceof Iterable iterable) {
+            return expandIterable(expander, iterable);
         }
         return expander.expand(value);
     }

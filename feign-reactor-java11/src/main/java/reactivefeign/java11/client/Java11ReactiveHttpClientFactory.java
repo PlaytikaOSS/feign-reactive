@@ -1,7 +1,7 @@
 package reactivefeign.java11.client;
 
-import com.fasterxml.jackson.core.async_.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.json.JsonFactory;
+import tools.jackson.databind.ObjectMapper;
 import feign.MethodMetadata;
 import feign.Target;
 import reactivefeign.client.ReactiveHttpClient;

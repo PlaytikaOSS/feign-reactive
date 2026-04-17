@@ -13,9 +13,9 @@
  */
 package reactivefeign.webclient;
 
-import com.fasterxml.jackson.core.io.JsonEOFException;
+import tools.jackson.core.exc.UnexpectedEndOfInputException;
 import feign.FeignException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.codec.DecodingException;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -40,7 +40,7 @@ public class BasicFeaturesTest extends reactivefeign.BasicFeaturesTest {
   @Override
   protected Predicate<Throwable> corruptedJsonError() {
     return throwable -> throwable instanceof DecodingException
-            && throwable.getCause() instanceof JsonEOFException;
+            && throwable.getCause() instanceof UnexpectedEndOfInputException;
   }
   
   @Test

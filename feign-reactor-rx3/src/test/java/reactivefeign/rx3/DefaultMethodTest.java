@@ -13,24 +13,25 @@
  */
 package reactivefeign.rx3;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.RequestLine;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.observers.TestObserver;
 import org.assertj.core.api.Assertions;
-import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.rx3.testcase.IcecreamServiceApi;
 import reactivefeign.rx3.testcase.domain.IceCreamOrder;
 import reactivefeign.rx3.testcase.domain.OrderGenerator;
 import reactivefeign.webclient.WebReactiveOptions;
+import tools.jackson.core.JacksonException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static reactivefeign.rx3.TestUtils.assertValue;
 import static reactivefeign.rx3.TestUtils.equalsComparingFieldByFieldRecursivelyRx;
 
@@ -43,7 +44,7 @@ public class DefaultMethodTest {
   public static WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig().dynamicPort());
 
-  @Before
+  @BeforeEach
   public void resetServers() {
     wireMockRule.resetAll();
   }
@@ -61,7 +62,7 @@ public class DefaultMethodTest {
   }
 
   @Test
-  public void shouldProcessDefaultMethodOnProxy() throws JsonProcessingException, InterruptedException {
+  public void shouldProcessDefaultMethodOnProxy() throws JacksonException, InterruptedException {
     IceCreamOrder orderGenerated = new OrderGenerator().generate(1);
     String orderStr = TestUtils.MAPPER.writeValueAsString(orderGenerated);
 
@@ -79,15 +80,17 @@ public class DefaultMethodTest {
     assertValue(testObserver, equalsComparingFieldByFieldRecursivelyRx(orderGenerated));
   }
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void shouldNotWrapException() {
-    IceCreamOrder orderGenerated = new OrderGenerator().generate(1);
+    assertThrows(RuntimeException.class, () -> {
+      IceCreamOrder orderGenerated = new OrderGenerator().generate(1);
 
-    IcecreamServiceApi client = builder()
-        .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
+      IcecreamServiceApi client = builder()
+              .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
-    client.throwsException().onErrorReturn(
-        throwable -> orderGenerated).blockingGet();
+      client.throwsException().onErrorReturn(
+              throwable -> orderGenerated).blockingGet();
+    });
   }
 
   @Test

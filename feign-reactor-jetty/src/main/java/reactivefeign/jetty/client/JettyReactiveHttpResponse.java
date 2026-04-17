@@ -1,11 +1,10 @@
 package reactivefeign.jetty.client;
 
-import com.fasterxml.jackson.core.async_.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectReader;
+import tools.jackson.core.json.JsonFactory;
+import tools.jackson.databind.ObjectReader;
 import org.eclipse.jetty.client.Response;
 import org.eclipse.jetty.http.HttpFields;
 import org.eclipse.jetty.io.Content;
-import org.eclipse.jetty.io.Retainable;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpResponse;
@@ -104,7 +103,7 @@ class JettyReactiveHttpResponse implements ReactiveHttpResponse{
 	@Override
 	public Mono<Void> releaseBody() {
 		return Flux.from(contentChunks)
-				.doOnNext(Retainable::release)
+				.doOnNext(chunk -> chunk.release())
 				.then();
 	}
 

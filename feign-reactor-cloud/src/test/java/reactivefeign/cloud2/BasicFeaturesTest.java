@@ -13,8 +13,8 @@
  */
 package reactivefeign.cloud2;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.codec.DecodingException;
 import reactivefeign.ReactiveFeignBuilder;
 
@@ -35,7 +35,7 @@ public class BasicFeaturesTest extends reactivefeign.BasicFeaturesTest {
     return throwable -> throwable instanceof DecodingException;
   }
 
-  @Ignore
+  @Disabled
   @Test
   @Override
   public void shouldExpandUrlWithBaseUriForEmptyTarget() {

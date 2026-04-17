@@ -1,15 +1,16 @@
 package reactivefeign.webclient;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+import org.jspecify.annotations.Nullable;
 import org.springframework.core.ResolvableType;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.codec.ClientCodecConfigurer;
-import org.springframework.http.codec.json.Jackson2JsonDecoder;
-import org.springframework.http.codec.json.Jackson2JsonEncoder;
+import org.springframework.http.codec.json.JacksonJsonDecoder;
+import org.springframework.http.codec.json.JacksonJsonEncoder;
 import org.springframework.http.codec.multipart.Part;
 import org.springframework.http.codec.multipart.PartHttpMessageWriter;
-import org.springframework.lang.Nullable;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveFeignBuilder;
@@ -57,8 +58,8 @@ abstract public class CoreWebBuilder<T> extends ReactiveFeign.Builder<T>{
     public ReactiveFeignBuilder<T> objectMapper(ObjectMapper objectMapper) {
         webClientBuilder.codecs(codecsConfigurer -> {
             ClientCodecConfigurer.ClientDefaultCodecs clientDefaultCodecs = codecsConfigurer.defaultCodecs();
-            clientDefaultCodecs.jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper));
-            clientDefaultCodecs.jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
+            clientDefaultCodecs.jacksonJsonDecoder(new JacksonJsonDecoder((JsonMapper) objectMapper));
+            clientDefaultCodecs.jacksonJsonEncoder(new JacksonJsonEncoder((JsonMapper) objectMapper));
         });
         return this;
     }

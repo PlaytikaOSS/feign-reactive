@@ -13,7 +13,7 @@
  */
 package reactivefeign.jetty.h2c;
 
-import com.fasterxml.jackson.core.io.JsonEOFException;
+import tools.jackson.core.exc.UnexpectedEndOfInputException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import reactivefeign.ReactiveFeign;
 
@@ -39,6 +39,6 @@ public class BasicFeaturesTest extends reactivefeign.BasicFeaturesTest {
 
   @Override
   protected Predicate<Throwable> corruptedJsonError() {
-    return throwable -> throwable instanceof JsonEOFException;
+    return throwable -> throwable instanceof UnexpectedEndOfInputException;
   }
 }

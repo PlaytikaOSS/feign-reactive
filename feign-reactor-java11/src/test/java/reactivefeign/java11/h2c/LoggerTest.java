@@ -13,12 +13,12 @@
  */
 package reactivefeign.java11.h2c;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.java11.Java11ReactiveFeign;
 import reactivefeign.java11.Java11ReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
+import tools.jackson.core.JacksonException;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -62,7 +62,7 @@ public class LoggerTest extends reactivefeign.LoggerTest<LoggerTest.IcecreamServ
                 .map(element -> {
                     try {
                         return MAPPER.writeValueAsString(element);
-                    } catch (JsonProcessingException e) {
+                    } catch (JacksonException e) {
                         throw new RuntimeException(e);
                     }
                 }).collect(Collectors.joining("\n"))+"\n";

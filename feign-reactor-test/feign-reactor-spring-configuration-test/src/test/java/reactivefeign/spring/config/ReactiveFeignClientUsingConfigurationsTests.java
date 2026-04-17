@@ -17,9 +17,8 @@
 package reactivefeign.spring.config;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,9 +27,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.GetMapping;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReadTimeoutException;
@@ -39,13 +36,11 @@ import reactor.core.publisher.Mono;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 import static reactivefeign.spring.config.WebClientCustomizerTest.MOCK_SERVER_PORT_PROPERTY;
 import static reactivefeign.spring.config.ReactiveFeignClientUsingPropertiesTests.BarRequestInterceptor;
 import static reactivefeign.spring.config.ReactiveFeignClientUsingPropertiesTests.FooRequestInterceptor;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = ReactiveFeignClientUsingConfigurationsTests.Application.class, webEnvironment = WebEnvironment.NONE)
 @DirtiesContext
 public class ReactiveFeignClientUsingConfigurationsTests {
@@ -59,7 +54,7 @@ public class ReactiveFeignClientUsingConfigurationsTests {
 	private BarClient barClient;
 
 
-	@BeforeClass
+	@BeforeAll
 	public static void setupStubs() {
 
 		mockHttpServer.stubFor(get(urlEqualTo("/foo"))
@@ -83,17 +78,19 @@ public class ReactiveFeignClientUsingConfigurationsTests {
 		assertEquals("OK", response);
 	}
 
-	@Test(expected = ReadTimeoutException.class)
+	@Test
 	public void testBar() {
-		barClient.bar().block();
-		fail("it should timeout");
-	}
+    assertThrows(ReadTimeoutException.class, () -> {
+      barClient.bar().block();
+      fail("it should timeout");
+    });
+  }
 
 	@ReactiveFeignClient(name = "foo", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}",
 							configuration = FooConfiguration.class)
 	protected interface FooClient {
 
-		@RequestMapping(method = RequestMethod.GET, value = "/foo")
+		@GetMapping("/foo")
 		Mono<String> foo();
 	}
 
@@ -101,7 +98,7 @@ public class ReactiveFeignClientUsingConfigurationsTests {
 			configuration = BarConfiguration.class)
 	protected interface BarClient {
 
-		@RequestMapping(method = RequestMethod.GET, value = "/bar")
+		@GetMapping("/bar")
 		Mono<String> bar();
 	}
 

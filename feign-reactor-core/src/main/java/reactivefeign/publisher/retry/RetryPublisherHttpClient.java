@@ -67,8 +67,7 @@ abstract public class RetryPublisherHttpClient implements PublisherHttpClient {
                 return Flux.<Object>from(retry.generateCompanion(retrySignals))
                         .onErrorResume(throwable -> Mono.just(new OutOfRetriesWrapper(throwable, request)))
                         .zipWith(Flux.range(1, retryPolicy.maxAllowedRetries() + 1), (object, index) -> {
-                            if(object instanceof OutOfRetriesWrapper){
-                                OutOfRetriesWrapper wrapper = (OutOfRetriesWrapper) object;
+                            if(object instanceof OutOfRetriesWrapper wrapper){
                                 if(index == 1){
                                     throw Exceptions.propagate(wrapper.getCause());
                                 } else {

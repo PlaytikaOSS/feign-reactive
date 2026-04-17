@@ -1,9 +1,10 @@
 package reactivefeign.java11.h1;
 
-import com.fasterxml.jackson.core.async_.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.json.JsonFactory;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import feign.Target;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactivefeign.java11.Java11ReactiveOptions;
 import reactivefeign.java11.client.Java11ReactiveHttpClientFactory;
 
@@ -25,7 +26,7 @@ public class Java11ReactiveHttpClientFactoryTest {
         when(mock.url()).thenReturn("http://test.url");
 
         Java11ReactiveHttpClientFactory reactiveHttpClient = new Java11ReactiveHttpClientFactory(
-                httpClient, new JsonFactory(), new ObjectMapper(),
+                httpClient, new JsonFactory(), JsonMapper.builder().build(),
                 ((Java11ReactiveOptions.Builder)new Java11ReactiveOptions.Builder().setUseHttp2(true)).build());
         reactiveHttpClient.target(mock);
 

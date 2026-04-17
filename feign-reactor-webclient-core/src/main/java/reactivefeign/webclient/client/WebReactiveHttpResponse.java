@@ -44,7 +44,9 @@ class WebReactiveHttpResponse<P extends Publisher<?>> implements ReactiveHttpRes
 
 	@Override
 	public Map<String, List<String>> headers() {
-		return clientResponse.headers().asHttpHeaders();
+		Map<String, List<String>> map = new java.util.LinkedHashMap<>();
+		clientResponse.headers().asHttpHeaders().forEach(map::put);
+		return map;
 	}
 
 	@Override

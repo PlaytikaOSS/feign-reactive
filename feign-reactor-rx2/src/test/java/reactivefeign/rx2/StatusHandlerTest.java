@@ -16,9 +16,9 @@ package reactivefeign.rx2;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.Request;
 import feign.RetryableException;
-import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import reactivefeign.rx2.testcase.IcecreamServiceApi;
 
 import java.nio.charset.Charset;
@@ -44,7 +44,7 @@ public class StatusHandlerTest {
     return Rx2ReactiveFeign.builder();
   }
 
-  @Before
+  @BeforeEach
   public void resetServers() {
     wireMockRule.resetAll();
   }

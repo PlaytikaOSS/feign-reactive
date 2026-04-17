@@ -17,7 +17,7 @@
 
 package reactivefeign.spring.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import feign.codec.ErrorDecoder;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;

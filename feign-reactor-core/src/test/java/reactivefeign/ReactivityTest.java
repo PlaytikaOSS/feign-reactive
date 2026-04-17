@@ -13,15 +13,15 @@
  */
 package reactivefeign;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.OrderGenerator;
 import reactor.core.publisher.Mono;
 import reactor.netty.DisposableServer;
 import reactor.netty.http.server.HttpServer;
+import tools.jackson.core.JacksonException;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -45,8 +45,8 @@ abstract public class ReactivityTest extends BaseReactorTest {
 
   private static DisposableServer server;
 
-  @BeforeClass
-  public static void startServer() throws JsonProcessingException {
+  @BeforeAll
+  public static void startServer() throws JacksonException {
     byte[] data = TestUtils.MAPPER.writeValueAsString(new OrderGenerator().generate(1)).getBytes();
 
     server = HttpServer.create()
@@ -60,13 +60,13 @@ abstract public class ReactivityTest extends BaseReactorTest {
             .bindNow();
   }
 
-  @AfterClass
+  @AfterAll
   public static void stopServer(){
     server.disposeNow();
   }
 
   @Test
-  public void shouldRunReactively() throws JsonProcessingException {
+  public void shouldRunReactively() throws JacksonException {
 
     IcecreamServiceApi client = builder()
             .target(IcecreamServiceApi.class,

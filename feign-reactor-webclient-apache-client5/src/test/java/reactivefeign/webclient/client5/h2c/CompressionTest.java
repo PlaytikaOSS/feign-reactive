@@ -14,7 +14,7 @@
 package reactivefeign.webclient.client5.h2c;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
 
@@ -24,8 +24,10 @@ import static reactivefeign.wiremock.WireMockServerConfigurations.h2cConfig;
 /**
  * @author Sergii Karpenko
  */
-//TODO Investigate why not working
-@Ignore
+// Apache HttpClient 5 async lacks built-in gzip transparent compression before 5.6
+// (ContentCompressionExec is sync-only). Spring Boot 4 BOM currently pins 5.5.2.
+// Enable once httpclient5 is on 5.6+ or add custom async interceptors.
+@Disabled
 public class CompressionTest extends reactivefeign.CompressionTest {
 
   @Override

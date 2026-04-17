@@ -16,11 +16,11 @@
 
 package reactivefeign.java11.client;
 
-import com.fasterxml.jackson.core.async_.JsonFactory;
-import com.fasterxml.jackson.core.util.ByteArrayBuilder;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.ObjectWriter;
+import tools.jackson.core.json.JsonFactory;
+import tools.jackson.core.util.ByteArrayBuilder;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectReader;
+import tools.jackson.databind.ObjectWriter;
 import feign.MethodMetadata;
 import org.reactivestreams.Publisher;
 import reactivefeign.client.ReactiveFeignException;
@@ -31,6 +31,7 @@ import reactivefeign.client.ReadTimeoutException;
 import reactivefeign.utils.SerializedFormData;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import tools.jackson.core.JacksonException;
 
 import java.io.UncheckedIOException;
 import java.lang.reflect.ParameterizedType;
@@ -255,13 +256,13 @@ public class Java11ReactiveHttpClient implements ReactiveHttpClient {
 				byteArrayBuilder.write(NEWLINE_SEPARATOR);
 			}
 			return ByteBuffer.wrap(byteArrayBuilder.toByteArray());
-		} catch (java.io.IOException e) {
-			throw new UncheckedIOException(e);
+		} catch (JacksonException e) {
+			throw new UncheckedIOException(new java.io.IOException(e));
 		}
 	}
 
 	public static Class getClass(Type type){
-		return (Class)(type instanceof ParameterizedType
-				? ((ParameterizedType) type).getRawType() : type);
+		return (Class)(type instanceof ParameterizedType pt
+				? pt.getRawType() : type);
 	}
 }

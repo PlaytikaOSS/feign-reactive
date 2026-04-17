@@ -144,12 +144,14 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
 
     @Override
     public int status() {
-      return response.getStatusCodeValue();
+      return response.getStatusCode().value();
     }
 
     @Override
     public Map<String, List<String>> headers() {
-      return response.getHeaders();
+      Map<String, List<String>> map = new java.util.LinkedHashMap<>();
+      response.getHeaders().forEach(map::put);
+      return map;
     }
 
     @Override
@@ -194,7 +196,13 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
 
     @Override
     public Map<String, List<String>> headers() {
-      return ex.getResponseHeaders();
+      org.springframework.http.HttpHeaders headers = ex.getResponseHeaders();
+      if (headers == null) {
+        return java.util.Collections.emptyMap();
+      }
+      Map<String, List<String>> map = new java.util.LinkedHashMap<>();
+      headers.forEach(map::put);
+      return map;
     }
 
     @Override

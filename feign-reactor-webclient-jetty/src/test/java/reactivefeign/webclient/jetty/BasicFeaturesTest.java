@@ -14,7 +14,7 @@
 package reactivefeign.webclient.jetty;
 
 import feign.FeignException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.core.codec.DecodingException;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;

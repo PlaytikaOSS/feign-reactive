@@ -11,7 +11,6 @@
  */
 package reactivefeign;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.Headers;
@@ -19,15 +18,15 @@ import feign.Param;
 import feign.QueryMap;
 import feign.RequestLine;
 import feign.Target;
-import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.web.client.RestClientException;
 import reactivefeign.client.ReactiveHttpResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import tools.jackson.core.JacksonException;
 
 import java.io.IOException;
 import java.net.URI;
@@ -70,10 +69,7 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
 
   protected TestClient client;
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
-
-  @Before
+  @BeforeEach
   public void setUp() {
     String targetUrl = getTargetUrl();
     client = this.<TestClient>builder()
@@ -145,7 +141,7 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
   }
 
   @Test
-  public void shouldPassResponseAsIs() throws JsonProcessingException {
+  public void shouldPassResponseAsIs() throws JacksonException {
 
     List<TestObject> testObjects = asList(new TestObject(1), new TestObject(2));
     wireMockRule.stubFor(get(urlEqualTo("/reactiveHttpResponse"))
@@ -173,7 +169,7 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
   }
 
   @Test
-  public void shouldExpandUrlWithBaseUriForEmptyTarget() throws URISyntaxException, JsonProcessingException {
+  public void shouldExpandUrlWithBaseUriForEmptyTarget() throws URISyntaxException, JacksonException {
 
     TestObject testObject = new TestObject(1);
     String json = MAPPER.writeValueAsString(testObject);

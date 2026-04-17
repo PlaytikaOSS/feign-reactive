@@ -13,10 +13,10 @@
  */
 package reactivefeign.java11.h2c;
 
-import com.fasterxml.jackson.core.io.JsonEOFException;
+import tools.jackson.core.exc.UnexpectedEndOfInputException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import reactivefeign.ReactiveFeign;
 
 import java.util.function.Predicate;
@@ -42,10 +42,10 @@ public class BasicFeaturesTest extends reactivefeign.BasicFeaturesTest {
 
   @Override
   protected Predicate<Throwable> corruptedJsonError() {
-    return throwable -> throwable instanceof JsonEOFException;
+    return throwable -> throwable instanceof UnexpectedEndOfInputException;
   }
 
-  @Ignore
+  @Disabled
   @Override
   @Test
   public void shouldExpandUrlWithBaseUriForEmptyTarget() {

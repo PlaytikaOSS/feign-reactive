@@ -66,8 +66,7 @@ public final class ReactiveInvocationHandler implements InvocationHandler {
 
   @Override
   public boolean equals(final Object other) {
-    if (other instanceof ReactiveInvocationHandler) {
-      final ReactiveInvocationHandler otherHandler = (ReactiveInvocationHandler) other;
+    if (other instanceof ReactiveInvocationHandler otherHandler) {
       return this.target.equals(otherHandler.target);
     }
     return false;

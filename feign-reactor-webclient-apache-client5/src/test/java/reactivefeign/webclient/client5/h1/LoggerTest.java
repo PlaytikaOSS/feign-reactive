@@ -13,8 +13,8 @@
  */
 package reactivefeign.webclient.client5.h1;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
 
@@ -26,8 +26,8 @@ import static reactivefeign.webclient.client5.h1.TestUtils.builderHttpWithSocket
  */
 public class LoggerTest extends reactivefeign.LoggerTest<LoggerTest.IcecreamServiceApiJettyH1> {
 
-    //TODO investigate why socket timeout doesn't work
-    @Ignore
+    // Apache HttpClient 5 responseTimeout not enforced by connector - see OptionsTest
+    @Disabled
     @Override
     @Test
     public void shouldLogTimeout() {

@@ -21,11 +21,10 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -36,9 +35,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.GetMapping;
 import reactivefeign.FallbackFactory;
 import reactivefeign.ReactiveOptions;
 import reactivefeign.client.ReadTimeoutException;
@@ -66,7 +63,6 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static reactivefeign.spring.config.cloud2.SampleConfigurationsTest.*;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = SampleConfigurationsTest.TestConfiguration.class, webEnvironment = WebEnvironment.NONE,
 		properties = {
 				"spring.cloud.discovery.client.simple.instances."+RFGN_PROPER+"[0].uri=http://localhost:${"+ MOCK_SERVER_PORT_PROPERTY+"}",
@@ -118,14 +114,13 @@ public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
 						.withFixedDelay(600)
 						.withBody("OK")));
 
-		asList(propertiesSampleClient, configsSampleClient).forEach(feignClient -> {
+		asList(propertiesSampleClient, configsSampleClient).forEach(feignClient ->
 			StepVerifier.create(feignClient.sampleMethod())
 					.expectErrorMatches(throwable ->
 							throwable instanceof RuntimeException
 							&& throwable.getCause() instanceof OutOfRetriesException
 					        && throwable.getCause().getCause() instanceof ReadTimeoutException)
-					.verify();
-		});
+					.verify());
 	}
 
 	@Test
@@ -206,7 +201,7 @@ public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
 	@ReactiveFeignClient(name = RFGN_PROPER)
 	protected interface PropertiesSampleClient extends SampleClient{
 
-		@RequestMapping(method = RequestMethod.GET, value = "/sampleUrl")
+		@GetMapping("/sampleUrl")
 		Mono<String> sampleMethod();
 	}
 
@@ -214,20 +209,20 @@ public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
 			configuration = ReactiveFeignSampleConfiguration.class)
 	protected interface ConfigsSampleClient extends SampleClient{
 
-		@RequestMapping(method = RequestMethod.GET, value = "/sampleUrl")
+		@GetMapping("/sampleUrl")
 		Mono<String> sampleMethod();
 	}
 	@ReactiveFeignClient(name = RFGN_FALLBACK,
 			fallback = ReactiveFeignFallbackConfiguration.Fallback.class,
 			configuration = ReactiveFeignFallbackConfiguration.class)
 	protected interface FallbackSampleClient extends SampleClient{
-		@RequestMapping(method = RequestMethod.GET, value = "/sampleUrl")
+		@GetMapping("/sampleUrl")
 		Mono<String> sampleMethod();
 	}
 
 	@ReactiveFeignClient(name = RFGN_ERRORDECODER, fallbackFactory = ErrorDecoderSkipFallbackFactory.class)
 	protected interface ErrorDecoderSampleClient extends SampleClient{
-		@RequestMapping(method = RequestMethod.GET, value = "/sampleUrl")
+		@GetMapping("/sampleUrl")
 		Mono<String> sampleMethod();
 	}
 
@@ -240,8 +235,8 @@ public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
         @Override
         public ErrorDecoderSampleClient apply(Throwable throwable) {
             return () -> {
-                if(throwable instanceof RuntimeException) {
-                	throw (RuntimeException)throwable;
+                if(throwable instanceof RuntimeException exception) {
+                	throw exception;
 				} else {
 					throw Exceptions.propagate(throwable);
 				}
@@ -262,7 +257,9 @@ public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
 		public ReactiveResilience4JCircuitBreakerFactory circuitBreakerFactory(){
 			ReactiveResilience4JCircuitBreakerFactory circuitBreakerFactory = new ReactiveResilience4JCircuitBreakerFactory(
 				CircuitBreakerRegistry.ofDefaults(),
-				TimeLimiterRegistry.ofDefaults()
+				TimeLimiterRegistry.ofDefaults(),
+				null,
+				new org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigurationProperties()
 			);
 			circuitBreakerFactory.configureDefault(id -> new Resilience4JConfigBuilder(id)
 					.circuitBreakerConfig(CircuitBreakerConfig.custom()
@@ -316,21 +313,21 @@ public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
 		}
 	}
 
-	@BeforeClass
+	@BeforeAll
 	public static void setupStubs() {
 		mockHttpServer.start();
 
 		System.setProperty(MOCK_SERVER_PORT_PROPERTY, Integer.toString(mockHttpServer.port()));
 	}
 
-	@Before
+	@BeforeEach
 	public void reset() throws InterruptedException {
 		//to close circuit breaker
 		Thread.sleep(SLEEP_WINDOW);
 		mockHttpServer.resetAll();
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void teardown() {
 		mockHttpServer.stop();
 	}

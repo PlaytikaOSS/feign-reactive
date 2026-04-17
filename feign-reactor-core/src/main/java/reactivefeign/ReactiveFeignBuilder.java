@@ -1,6 +1,6 @@
 package reactivefeign;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import feign.Contract;
 import feign.FeignException;
 import feign.InvocationHandlerFactory;
@@ -113,10 +113,10 @@ public interface ReactiveFeignBuilder<T> {
 
     default T target(final Class<T> apiType, final String name, final String url) {
         if(name.equals(url)){
-            throw new IllegalArgumentException(String.format("Name is equal to url: name=[%s], url=[%s]", name, url));
+            throw new IllegalArgumentException("Name is equal to url: name=[%s], url=[%s]".formatted(name, url));
         }
         if(!url.contains(name)){
-            throw new IllegalArgumentException(String.format("Name should be part of url: name=[%s], url=[%s]", name, url));
+            throw new IllegalArgumentException("Name should be part of url: name=[%s], url=[%s]".formatted(name, url));
         }
         return target(new Target.HardCodedTarget<>(apiType, name, url));
     }

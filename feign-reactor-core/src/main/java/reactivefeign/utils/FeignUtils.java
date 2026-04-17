@@ -54,8 +54,8 @@ public class FeignUtils {
 
   private static boolean isResponsePublisher(Class<?> publisher, Type typeInPublisher ){
     return publisher == Mono.class
-            && typeInPublisher instanceof ParameterizedType
-            && ((ParameterizedType) typeInPublisher).getRawType() == ReactiveHttpResponse.class;
+            && typeInPublisher instanceof ParameterizedType pt
+            && pt.getRawType() == ReactiveHttpResponse.class;
   }
 
   public static Type returnActualType(MethodMetadata methodMetadata) {
@@ -81,8 +81,8 @@ public class FeignUtils {
 
   public static Type getBodyActualType(Type bodyType) {
     return ofNullable(bodyType).map(type -> {
-      if (type instanceof ParameterizedType) {
-        Class<?> bodyClass = (Class<?>) ((ParameterizedType) type).getRawType();
+      if (type instanceof ParameterizedType parameterizedType) {
+        Class<?> bodyClass = (Class<?>) parameterizedType.getRawType();
         if (Publisher.class.isAssignableFrom(bodyClass)) {
           return resolveLastTypeParameter(bodyType, bodyClass);
         }

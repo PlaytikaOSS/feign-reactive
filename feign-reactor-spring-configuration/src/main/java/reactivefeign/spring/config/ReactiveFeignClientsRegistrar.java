@@ -137,9 +137,7 @@ class ReactiveFeignClientsRegistrar implements ImportBeanDefinitionRegistrar,
 			Set<BeanDefinition> candidateComponents = scanner
 					.findCandidateComponents(basePackage);
 			for (BeanDefinition candidateComponent : candidateComponents) {
-				if (candidateComponent instanceof AnnotatedBeanDefinition) {
-					// verify annotated class is an interface
-					AnnotatedBeanDefinition beanDefinition = (AnnotatedBeanDefinition) candidateComponent;
+				if (candidateComponent instanceof AnnotatedBeanDefinition beanDefinition) {
 					AnnotationMetadata annotationMetadata = beanDefinition.getMetadata();
 					Assert.isTrue(annotationMetadata.isInterface(),
 							"@ReactiveFeignClient can only be specified on an interface");

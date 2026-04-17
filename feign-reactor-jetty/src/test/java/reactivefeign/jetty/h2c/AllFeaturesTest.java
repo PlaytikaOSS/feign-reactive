@@ -16,11 +16,11 @@
 
 package reactivefeign.jetty.h2c;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.reactive.ReactiveWebSecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import reactivefeign.ReactiveFeign;
@@ -31,16 +31,15 @@ import reactivefeign.spring.server.config.TestServerConfigurations;
 import static reactivefeign.ReactivityTest.timeToCompleteReactively;
 import static reactivefeign.jetty.h2c.TestUtils.builderHttp2WithRequestTimeout;
 import static reactivefeign.spring.server.config.TestServerConfigurations.JETTY_H2C;
-import static reactivefeign.spring.server.config.TestServerConfigurations.UNDERTOW_H2C;
 
 /**
  * @author Sergii Karpenko
  *
  * Tests ReactiveFeign in conjunction with WebFlux rest controller.
  */
-@EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
+@EnableAutoConfiguration(exclude = {ReactiveWebSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
 @ContextConfiguration(classes={TestServerConfigurations.class})
-@ActiveProfiles(UNDERTOW_H2C)
+@ActiveProfiles(JETTY_H2C)
 public class AllFeaturesTest extends AllFeaturesFeignTest {
 
 	@Override
@@ -51,14 +50,12 @@ public class AllFeaturesTest extends AllFeaturesFeignTest {
 	@Test
 	@Override
 	public void shouldMirrorStreamingBinaryBodyReactive() throws InterruptedException {
-		if(getActiveProfiles().contains(UNDERTOW_H2C)){
-			return;
-		}
 		super.shouldMirrorStreamingBinaryBodyReactive();
 	}
 
-	//TODO Check later
-	@Ignore
+	// Jetty H2C test server rejects encoded '/' as "Ambiguous URI path separator" by default
+	// (UriCompliance.DEFAULT). Not a client bug; would require server-side UriCompliance.UNSAFE.
+	@Disabled
 	@Test
 	@Override
 	public void shouldEncodePathParamWithReservedChars() {

@@ -127,8 +127,8 @@ public class LoggerExchangeFilterFunction<P extends Publisher<?>> implements Rea
     public P body() {
       P publisher = getResponse().body();
 
-      if (publisher instanceof Mono) {
-        return (P)((Mono) publisher).doOnNext(responseBodyLogger());
+      if (publisher instanceof Mono mono) {
+        return (P)mono.doOnNext(responseBodyLogger());
       } else {
         return (P)((Flux) publisher).doOnNext(responseBodyLogger());
       }

@@ -17,11 +17,10 @@
 package reactivefeign.spring.config.cloud2;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -30,7 +29,6 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
 import reactivefeign.publisher.retry.OutOfRetriesException;
 import reactivefeign.spring.config.EnableReactiveFeignClients;
@@ -56,7 +54,6 @@ import static reactivefeign.spring.config.cloud2.LoadBalancerEnabledCircuitBreak
  * Tests ReactiveFeign built on Spring Mvc annotations.
  */
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.NONE,
 		properties = {
@@ -116,7 +113,7 @@ public class LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest {
 		Mono<ResponseEntity<Mono<String>>> result = feignClient.testMethodResponseEntity();
 
 		StepVerifier.create(result
-						.doOnNext(response -> assertThat(response.getHeaders().containsKey("header1")).isTrue())
+						.doOnNext(response -> assertThat(response.getHeaders().containsHeader("header1")).isTrue())
 						.flatMapMany(HttpEntity::getBody))
 				.expectNext(BODY_TEXT)
 				.verifyComplete();
@@ -125,7 +122,7 @@ public class LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest {
 				.isEqualTo(1);
 	}
 
-	@BeforeClass
+	@BeforeAll
 	public static void setUp() {
 		mockHttpServer1.start();
 		System.setProperty(MOCK_SERVER_1_PORT_PROPERTY, Integer.toString(mockHttpServer1.port()));
@@ -134,13 +131,13 @@ public class LoadBalancerEnabledCircuitBreakerDisabledUsingPropertiesTest {
 		System.setProperty(MOCK_SERVER_2_PORT_PROPERTY, Integer.toString(mockHttpServer2.port()));
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void tearDown() {
 		mockHttpServer1.stop();
 		mockHttpServer2.stop();
 	}
 
-	@Before
+	@BeforeEach
 	public void reset(){
 		mockHttpServer1.resetAll();
 		mockHttpServer2.resetAll();

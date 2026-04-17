@@ -13,12 +13,14 @@
  */
 package reactivefeign.java11.h1;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.java11.Java11ReactiveFeign;
 import reactivefeign.java11.Java11ReactiveOptions;
 import reactivefeign.testcase.IcecreamServiceApi;
+import tools.jackson.core.JacksonException;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Sergii Karpenko
@@ -33,8 +35,9 @@ public class CompressionTest extends reactivefeign.CompressionTest {
   }
 
   //TODO implement reactive gzip decoder
-  @Test(expected = java.lang.AssertionError.class)
-  public void testCompression() throws JsonProcessingException {
-    super.testCompression();
+  @Test
+  public void testCompression() throws JacksonException {
+    assertThrows(java.lang.AssertionError.class, () ->
+      super.testCompression());
   }
 }

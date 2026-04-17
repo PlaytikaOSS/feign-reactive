@@ -13,7 +13,9 @@
  */
 package reactivefeign.resttemplate.client;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
+
 import java.util.concurrent.TimeUnit;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
@@ -23,7 +25,7 @@ import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.util.Timeout;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveFeignBuilder;
@@ -52,8 +54,10 @@ public class RestTemplateFakeReactiveFeign {
       private boolean acceptGzip = false;
 
       {
-        ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
-        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(mapper);
+        JsonMapper mapper = JsonMapper.builder()
+                .findAndAddModules()
+                .build();
+        JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter(mapper);
         restTemplate.getMessageConverters().add(0, converter);
         restTemplate.getMessageConverters().add(new SerializedFormMessageConverter());
       }
@@ -66,7 +70,7 @@ public class RestTemplateFakeReactiveFeign {
 
       @Override
       public ReactiveFeignBuilder<T> objectMapper(ObjectMapper objectMapper) {
-        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(objectMapper);
+        JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter((JsonMapper) objectMapper);
         restTemplate.getMessageConverters().set(0, converter);
         restTemplate.getMessageConverters().add(new SerializedFormMessageConverter());
         return this;

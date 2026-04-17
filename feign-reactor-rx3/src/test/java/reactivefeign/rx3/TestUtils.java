@@ -13,11 +13,11 @@
  */
 package reactivefeign.rx3;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import io.reactivex.rxjava3.annotations.NonNull;
 import io.reactivex.rxjava3.observers.TestObserver;
+import tools.jackson.core.JacksonException;
 
 import java.util.function.Predicate;
 
@@ -31,15 +31,14 @@ class TestUtils {
   static final ObjectMapper MAPPER;
 
   static {
-    MAPPER = new ObjectMapper();
-    MAPPER.registerModule(new JavaTimeModule());
+    MAPPER = new JsonMapper();
   }
 
   public static <T> Predicate<T> equalsComparingFieldByFieldRecursively(T rhs) {
     return lhs -> {
       try {
         return MAPPER.writeValueAsString(lhs).equals(MAPPER.writeValueAsString(rhs));
-      } catch (JsonProcessingException e) {
+      } catch (JacksonException e) {
         throw new RuntimeException(e);
       }
     };
@@ -49,7 +48,7 @@ class TestUtils {
     return lhs -> {
       try {
         return MAPPER.writeValueAsString(lhs).equals(MAPPER.writeValueAsString(rhs));
-      } catch (JsonProcessingException e) {
+      } catch (JacksonException e) {
         throw new RuntimeException(e);
       }
     };

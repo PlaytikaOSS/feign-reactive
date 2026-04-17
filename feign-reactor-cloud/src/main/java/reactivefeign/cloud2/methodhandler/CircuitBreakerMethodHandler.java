@@ -2,9 +2,9 @@ package reactivefeign.cloud2.methodhandler;
 
 import feign.MethodMetadata;
 import feign.Target;
+import org.jspecify.annotations.Nullable;
 import org.reactivestreams.Publisher;
 import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
-import org.springframework.lang.Nullable;
 import reactivefeign.cloud2.ReactiveFeignCircuitBreakerFactory;
 import reactivefeign.methodhandler.MethodHandler;
 import reactor.core.Exceptions;
@@ -51,12 +51,12 @@ public class CircuitBreakerMethodHandler implements MethodHandler {
     @SuppressWarnings("unchecked")
     public Publisher<Object> invoke(final Object[] argv) throws Throwable {
         Object publisher = methodHandler.invoke(argv);
-        if(publisher instanceof Mono){
+        if(publisher instanceof Mono mono){
             if(fallbackFactory != null){
-                return reactiveCircuitBreaker.run((Mono) publisher,
+                return reactiveCircuitBreaker.run(mono,
                         t -> (Mono)fallbackFactory.apply(t, argv));
             } else {
-                return reactiveCircuitBreaker.run((Mono) publisher);
+                return reactiveCircuitBreaker.run(mono);
             }
 
         } else {

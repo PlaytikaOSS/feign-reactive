@@ -3,10 +3,10 @@ package reactivefeign.cloud2;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.Param;
 import feign.RequestLine;
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer;
 import reactivefeign.BaseReactorTest;
@@ -26,12 +26,12 @@ public class PathVariableInTargetUrlTest extends BaseReactorTest {
 
     private static ReactiveLoadBalancer.Factory<ServiceInstance> loadBalancerFactory;
 
-    @BeforeClass
+    @BeforeAll
     public static void setupServersList() {
         loadBalancerFactory = LoadBalancingReactiveHttpClientTest.loadBalancerFactory(serviceName, server1.port());
     }
 
-    @Before
+    @BeforeEach
     public void resetServers() {
         server1.resetAll();
     }

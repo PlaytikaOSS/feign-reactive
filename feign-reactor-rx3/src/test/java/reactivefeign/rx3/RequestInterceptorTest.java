@@ -13,17 +13,17 @@
  */
 package reactivefeign.rx3;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.FeignException;
 import io.reactivex.rxjava3.observers.TestObserver;
 import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.rx3.testcase.IcecreamServiceApi;
 import reactivefeign.rx3.testcase.domain.IceCreamOrder;
 import reactivefeign.rx3.testcase.domain.OrderGenerator;
 import reactivefeign.utils.Pair;
+import tools.jackson.core.JacksonException;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -46,7 +46,7 @@ public class RequestInterceptorTest {
   }
 
   @Test
-  public void shouldInterceptRequestAndSetAuthHeader() throws JsonProcessingException, InterruptedException {
+  public void shouldInterceptRequestAndSetAuthHeader() throws JacksonException, InterruptedException {
 
     String orderUrl = "/icecream/orders/1";
 

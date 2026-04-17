@@ -18,9 +18,9 @@ import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.FeignException;
 import feign.Request;
 import feign.RetryableException;
-import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactor.test.StepVerifier;
 
@@ -50,7 +50,7 @@ public abstract class StatusHandlerTest extends BaseReactorTest {
     return WireMockConfiguration.wireMockConfig();
   }
 
-  @Before
+  @BeforeEach
   public void resetServers() {
     wireMockRule.resetAll();
   }

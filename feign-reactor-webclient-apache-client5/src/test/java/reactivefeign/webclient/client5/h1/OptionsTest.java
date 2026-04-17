@@ -13,8 +13,8 @@
  */
 package reactivefeign.webclient.client5.h1;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
@@ -29,8 +29,11 @@ import static reactivefeign.webclient.client5.h1.TestUtils.builderHttpWithSocket
  */
 public class OptionsTest extends reactivefeign.OptionsTest {
 
-  //TODO investigate why socket timeout doesn't work
-  @Ignore
+  // Apache HttpClient 5 RequestConfig.setResponseTimeout() is configured in
+  // HttpClient5HttpConnectorBuilder but not enforced for WireMock's withFixedDelay —
+  // request completes successfully instead of timing out. Requires fix in HttpClient5
+  // connector wiring (likely needs connection-level timeout, not just RequestConfig).
+  @Disabled
   @Override
   @Test
   public void shouldFailOnReadTimeout() {

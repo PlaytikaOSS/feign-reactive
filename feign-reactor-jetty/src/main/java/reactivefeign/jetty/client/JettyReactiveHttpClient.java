@@ -16,11 +16,11 @@
 
 package reactivefeign.jetty.client;
 
-import com.fasterxml.jackson.core.async_.JsonFactory;
-import com.fasterxml.jackson.core.util.ByteArrayBuilder;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectReader;
-import com.fasterxml.jackson.databind.ObjectWriter;
+import tools.jackson.core.json.JsonFactory;
+import tools.jackson.core.util.ByteArrayBuilder;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectReader;
+import tools.jackson.databind.ObjectWriter;
 import feign.MethodMetadata;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.Request;
@@ -36,8 +36,8 @@ import reactivefeign.client.ReadTimeoutException;
 import reactivefeign.utils.SerializedFormData;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import tools.jackson.core.JacksonException;
 
-import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -234,8 +234,8 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
             }
             ByteBuffer buffer = ByteBuffer.wrap(byteArrayBuilder.toByteArray());
             return Content.Chunk.from(buffer, !stream);
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+        } catch (JacksonException e) {
+            throw new UncheckedIOException(new java.io.IOException(e));
         }
     }
 

@@ -17,8 +17,8 @@
 package reactivefeign.jetty.h1;
 
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.reactive.ReactiveWebSecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.test.context.ActiveProfiles;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.allfeatures.AllFeaturesFeign;
@@ -33,7 +33,7 @@ import static reactivefeign.ReactivityTest.timeToCompleteReactively;
  *
  * Tests ReactiveFeign in conjunction with WebFlux rest controller.
  */
-@EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
+@EnableAutoConfiguration(exclude = {ReactiveWebSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
 @ActiveProfiles("netty")
 public class AllFeaturesTest extends AllFeaturesFeignTest {
 
@@ -43,4 +43,5 @@ public class AllFeaturesTest extends AllFeaturesFeignTest {
 				.options(new JettyReactiveOptions.Builder()
 				.setRequestTimeoutMillis(timeToCompleteReactively()).build());
 	}
+
 }

@@ -13,15 +13,14 @@
  */
 package reactivefeign;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import feign.ExceptionPropagationPolicy;
-import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import reactivefeign.publisher.retry.OutOfRetriesException;
 import reactivefeign.retry.BasicReactiveRetryPolicy;
 import reactivefeign.testcase.IcecreamServiceApi;
@@ -29,6 +28,7 @@ import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.Mixin;
 import reactivefeign.testcase.domain.OrderGenerator;
 import reactor.test.StepVerifier;
+import tools.jackson.core.JacksonException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -63,13 +63,13 @@ public abstract class RetryingTest extends BaseReactorTest {
     return WireMockConfiguration.wireMockConfig();
   }
 
-  @Before
+  @BeforeEach
   public void resetServers() {
     wireMockRule.resetAll();
   }
 
   @Test
-  public void shouldSuccessOnRetriesMono() throws JsonProcessingException {
+  public void shouldSuccessOnRetriesMono() throws JacksonException {
 
     IceCreamOrder orderGenerated = new OrderGenerator().generate(1);
     String orderStr = TestUtils.MAPPER.writeValueAsString(orderGenerated);
@@ -95,7 +95,7 @@ public abstract class RetryingTest extends BaseReactorTest {
   }
 
   @Test
-  public void shouldSuccessOnRetriesFlux() throws JsonProcessingException {
+  public void shouldSuccessOnRetriesFlux() throws JacksonException {
 
     String mixinsStr = TestUtils.MAPPER.writeValueAsString(Mixin.values());
 
@@ -120,7 +120,7 @@ public abstract class RetryingTest extends BaseReactorTest {
   }
 
   @Test
-  public void shouldSuccessOnRetriesWoRetryAfter() throws JsonProcessingException {
+  public void shouldSuccessOnRetriesWoRetryAfter() throws JacksonException {
 
     IceCreamOrder orderGenerated = new OrderGenerator().generate(1);
     String orderStr = TestUtils.MAPPER.writeValueAsString(orderGenerated);
