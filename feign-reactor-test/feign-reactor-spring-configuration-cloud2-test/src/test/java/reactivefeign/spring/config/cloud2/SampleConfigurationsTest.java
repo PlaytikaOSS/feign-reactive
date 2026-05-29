@@ -147,7 +147,8 @@ public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
 	public void shouldNotOpenCircuitBreakerOnIgnoredException() throws InterruptedException {
 		mockHttpServer.stubFor(get(urlPathMatching("/sampleUrl"))
 				.willReturn(aResponse()
-						.withStatus(403)));
+						.withStatus(403)
+						.withBody("client error")));
 
 		List<Object> results = IntStream.range(0, VOLUME_THRESHOLD + 1).mapToObj(i -> {
 			try {
@@ -175,7 +176,8 @@ public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
 	public void shouldOpenCircuitBreakerButNotWrapException() throws InterruptedException {
 		mockHttpServer.stubFor(get(urlPathMatching("/sampleUrl"))
 				.willReturn(aResponse()
-						.withStatus(503)));
+						.withStatus(503)
+						.withBody("server error")));
 
 		List<Object> results = IntStream.range(0, VOLUME_THRESHOLD + 1).mapToObj(i -> {
 			try {
@@ -234,13 +236,9 @@ public class SampleConfigurationsTest extends BasicAutoconfigurationTest{
 
         @Override
         public ErrorDecoderSampleClient apply(Throwable throwable) {
-            return () -> {
-                if(throwable instanceof RuntimeException exception) {
-                	throw exception;
-				} else {
-					throw Exceptions.propagate(throwable);
-				}
-            };
+            return () -> Mono.error(throwable instanceof RuntimeException exception
+                    ? exception
+                    : Exceptions.propagate(throwable));
         }
     }
 

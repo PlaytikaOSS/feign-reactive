@@ -92,6 +92,11 @@
             <artifactId>log4j-slf4j2-impl</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.lmax</groupId>
+            <artifactId>disruptor</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <dependency>
             <groupId>junit</groupId>
