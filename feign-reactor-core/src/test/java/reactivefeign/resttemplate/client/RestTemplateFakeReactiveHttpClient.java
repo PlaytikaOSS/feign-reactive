@@ -37,7 +37,6 @@ import reactor.core.publisher.Mono;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.SocketTimeoutException;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -201,7 +200,7 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
     public Map<String, List<String>> headers() {
       HttpHeaders headers = ex.getResponseHeaders();
       if (headers == null) {
-        return Collections.emptyMap();
+        return Map.of();
       }
       Map<String, List<String>> map = new LinkedHashMap<>();
       headers.forEach(map::put);

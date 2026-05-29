@@ -16,6 +16,7 @@ package reactivefeign;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 import java.io.IOException;
@@ -61,7 +62,7 @@ abstract public class ConnectionTimeoutTest extends BaseReactorTest{
   // succeeds and .block() waits forever for an HTTP response that never comes (clients
   // only configure a connect timeout here, no response timeout).
   @Disabled
-  @org.junit.jupiter.api.Test
+  @Test
   public void shouldFailOnConnectionTimeout() {
 
     Throwable exception = assertThrows(Exception.class, () -> {

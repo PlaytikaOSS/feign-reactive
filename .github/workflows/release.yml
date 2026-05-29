@@ -43,7 +43,7 @@ jobs:
         with:
           distribution: 'corretto'
           java-version: '17'
-          server-id: ossrh
+          server-id: central
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -58,7 +58,7 @@ jobs:
         if: ${{ success() && (github.event_name != 'workflow_dispatch' || inputs.dryRun != true) }}
         run: |
           mvn --batch-mode --no-transfer-progress \
-            -P ossrh -DskipTests \
+            -P central -DskipTests \
             -Dgib.disable=true \
             -Dorg.slf4j.simpleLogger.defaultLogLevel=${{ inputs.logLevel || 'info' }} \
             deploy
