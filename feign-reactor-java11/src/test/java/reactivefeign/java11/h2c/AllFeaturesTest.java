@@ -52,13 +52,13 @@ public class AllFeaturesTest extends AllFeaturesFeignTest {
 		super.shouldMirrorStreamingBinaryBodyReactive();
 	}
 
-	//Java 11 HttpClient is not able to do this trick
+	// JDK HttpClient cannot observe the first streaming item before the second request item is sent
 	@Disabled
 	@Override
 	@Test
 	public void shouldReturnFirstResultBeforeSecondSent() {}
 
-	//Java 11 HttpClient is not able to do this
+	// JDK HttpClient does not support this request-body streaming scenario
 	@Disabled
 	@Test
 	@Override
