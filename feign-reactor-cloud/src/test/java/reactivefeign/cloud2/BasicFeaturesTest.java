@@ -35,7 +35,7 @@ public class BasicFeaturesTest extends reactivefeign.BasicFeaturesTest {
     return throwable -> throwable instanceof DecodingException;
   }
 
-  @Disabled
+  @Disabled("Cloud builder requires a non-empty target name for load-balancer resolution")
   @Test
   @Override
   public void shouldExpandUrlWithBaseUriForEmptyTarget() {

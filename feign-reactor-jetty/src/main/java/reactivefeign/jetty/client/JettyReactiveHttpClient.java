@@ -38,6 +38,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import tools.jackson.core.JacksonException;
 
+import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -235,7 +236,7 @@ public class JettyReactiveHttpClient implements ReactiveHttpClient {
             ByteBuffer buffer = ByteBuffer.wrap(byteArrayBuilder.toByteArray());
             return Content.Chunk.from(buffer, !stream);
         } catch (JacksonException e) {
-            throw new UncheckedIOException(new java.io.IOException(e));
+            throw new UncheckedIOException(new IOException(e));
         }
     }
 

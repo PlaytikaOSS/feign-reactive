@@ -2,12 +2,13 @@ package reactivefeign.cloud2;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
-import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import feign.RequestLine;
 import feign.RetryableException;
-import org.junit.ClassRule;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer;
@@ -42,10 +43,14 @@ public class LoadBalancingReactiveHttpClientTest extends BaseReactorTest {
     public static final String MONO_URL = "/mono";
     public static final String FLUX_URL = "/flux";
 
-    @ClassRule
-    public static WireMockClassRule server1 = new WireMockClassRule(wireMockConfig().dynamicPort());
-    @ClassRule
-    public static WireMockClassRule server2 = new WireMockClassRule(wireMockConfig().dynamicPort());
+    @RegisterExtension
+    public static WireMockExtension server1 = WireMockExtension.newInstance()
+            .options(wireMockConfig().dynamicPort())
+            .build();
+    @RegisterExtension
+    public static WireMockExtension server2 = WireMockExtension.newInstance()
+            .options(wireMockConfig().dynamicPort())
+            .build();
 
     protected static String serviceName = "LoadBalancingReactiveHttpClientTest-loadBalancingDefaultPolicyRoundRobin";
 
@@ -53,7 +58,7 @@ public class LoadBalancingReactiveHttpClientTest extends BaseReactorTest {
 
     @BeforeAll
     public static void setupServersList() {
-        loadBalancerFactory = loadBalancerFactory(serviceName, server1.port(), server2.port());
+        loadBalancerFactory = loadBalancerFactory(serviceName, server1.getPort(), server2.getPort());
     }
 
     @BeforeEach
@@ -62,7 +67,7 @@ public class LoadBalancingReactiveHttpClientTest extends BaseReactorTest {
         server2.resetAll();
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     public void shouldLoadBalanceRequests() {
         String body = "success!";
         mockSuccessMono(server1, body);
@@ -82,7 +87,7 @@ public class LoadBalancingReactiveHttpClientTest extends BaseReactorTest {
         server2.verify(1, getRequestedFor(urlEqualTo(MONO_URL)));
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     public void shouldLoadBalanceFluxRequests() {
         String body = "[1, 2]";
         mockSuccessFlux(server1, body);
@@ -101,7 +106,7 @@ public class LoadBalancingReactiveHttpClientTest extends BaseReactorTest {
         server2.verify(1, getRequestedFor(urlEqualTo(FLUX_URL)));
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     public void shouldFailAsPolicyWoRetries() {
 
       assertThrows(RetryableException.class, () -> {
@@ -116,7 +121,7 @@ public class LoadBalancingReactiveHttpClientTest extends BaseReactorTest {
       });
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     public void shouldRetryOnSameAndFail() {
 
         assertThatThrownBy(() ->
@@ -127,7 +132,7 @@ public class LoadBalancingReactiveHttpClientTest extends BaseReactorTest {
         });
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     public void shouldRetryOnSameAndNextAndFail() {
 
         assertThatThrownBy(() ->
@@ -138,7 +143,7 @@ public class LoadBalancingReactiveHttpClientTest extends BaseReactorTest {
         });
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     public void shouldRetryOnSameAndSuccess() {
 
         loadBalancingWithRetry(2, 2, 0);
@@ -165,7 +170,7 @@ public class LoadBalancingReactiveHttpClientTest extends BaseReactorTest {
         assertThat(result).isEqualTo(body);
     }
 
-    @org.junit.jupiter.api.Test
+    @Test
     public void shouldRetryOnSameAndSuccessWithWarning() {
 
         loadBalancingWithRetryWithWarning(2, 2, 0);
@@ -192,7 +197,7 @@ public class LoadBalancingReactiveHttpClientTest extends BaseReactorTest {
         assertThat(result).isEqualTo(body);
     }
 
-    static void mockSuccessMono(WireMockClassRule server, String body) {
+    static void mockSuccessMono(WireMockExtension server, String body) {
         server.stubFor(get(urlEqualTo(MONO_URL))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -200,7 +205,7 @@ public class LoadBalancingReactiveHttpClientTest extends BaseReactorTest {
                         .withBody(body)));
     }
 
-    static void mockSuccessFlux(WireMockClassRule server, String body) {
+    static void mockSuccessFlux(WireMockExtension server, String body) {
         server.stubFor(get(urlEqualTo(FLUX_URL))
                 .willReturn(aResponse()
                         .withStatus(200)

@@ -82,6 +82,34 @@ abstract public class ObjectMapperTest extends BaseReactorTest {
   }
 
   @Test
+  public void shouldAcceptConfiguredNonJsonMapperObjectMapper() throws JacksonException {
+
+    ObjectMapper customObjectMapper = new ObjectMapper().rebuild()
+            .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+            .build();
+
+    IceCreamOrder order = new OrderGenerator().generate(20);
+    Bill billExpected = Bill.makeBill(order);
+
+    wireMockRule.stubFor(post(urlEqualTo("/icecream/orders"))
+            .withRequestBody(equalTo(customObjectMapper.writeValueAsString(order)))
+            .willReturn(aResponse().withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(MAPPER.writeValueAsString(billExpected))));
+
+    IcecreamServiceApi client = builder()
+            .objectMapper(customObjectMapper)
+            .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
+
+    StepVerifier.create(client.makeOrder(order))
+            .expectNextCount(1)
+            .verifyComplete();
+
+    List<ServeEvent> proxyEvents = wireMockRule.getAllServeEvents();
+    assertThat(proxyEvents.get(0).getRequest().getBodyAsString()).contains("order_timestamp");
+  }
+
+  @Test
   public void shouldUseDefaultObjectMapper() throws JacksonException {
 
     IceCreamOrder order = new OrderGenerator().generate(20);

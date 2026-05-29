@@ -17,6 +17,7 @@ import feign.MethodMetadata;
 import org.reactivestreams.Publisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
@@ -36,6 +37,8 @@ import reactor.core.publisher.Mono;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.SocketTimeoutException;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -149,7 +152,7 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
 
     @Override
     public Map<String, List<String>> headers() {
-      Map<String, List<String>> map = new java.util.LinkedHashMap<>();
+      Map<String, List<String>> map = new LinkedHashMap<>();
       response.getHeaders().forEach(map::put);
       return map;
     }
@@ -196,11 +199,11 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
 
     @Override
     public Map<String, List<String>> headers() {
-      org.springframework.http.HttpHeaders headers = ex.getResponseHeaders();
+      HttpHeaders headers = ex.getResponseHeaders();
       if (headers == null) {
-        return java.util.Collections.emptyMap();
+        return Collections.emptyMap();
       }
-      Map<String, List<String>> map = new java.util.LinkedHashMap<>();
+      Map<String, List<String>> map = new LinkedHashMap<>();
       headers.forEach(map::put);
       return map;
     }

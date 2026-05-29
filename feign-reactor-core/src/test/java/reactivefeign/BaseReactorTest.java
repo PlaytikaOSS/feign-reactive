@@ -2,14 +2,19 @@ package reactivefeign;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.opentest4j.TestAbortedException;
 import reactor.blockhound.BlockHound;
 import reactor.blockhound.integration.BlockHoundIntegration;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
+import reactor.test.StepVerifier;
 
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.ServiceLoader;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -115,6 +120,33 @@ abstract public class BaseReactorTest {
                   }
                 })
                 .block());
+    }
+
+    @Test
+    public void shouldRunOnVirtualThreadScheduler() throws Exception {
+        ExecutorService executor = newVirtualThreadPerTaskExecutor();
+        Scheduler scheduler = Schedulers.fromExecutorService(executor);
+        try {
+            StepVerifier.create(Mono.fromCallable(this::currentThreadIsVirtual).subscribeOn(scheduler))
+                    .expectNext(true)
+                    .verifyComplete();
+        } finally {
+            scheduler.dispose();
+            executor.shutdownNow();
+        }
+    }
+
+    private ExecutorService newVirtualThreadPerTaskExecutor() throws ReflectiveOperationException {
+        try {
+            Method factory = Executors.class.getMethod("newVirtualThreadPerTaskExecutor");
+            return (ExecutorService) factory.invoke(null);
+        } catch (NoSuchMethodException e) {
+            throw new TestAbortedException("Virtual threads require Java 21+");
+        }
+    }
+
+    private boolean currentThreadIsVirtual() throws ReflectiveOperationException {
+        return (boolean) Thread.class.getMethod("isVirtual").invoke(Thread.currentThread());
     }
 
 

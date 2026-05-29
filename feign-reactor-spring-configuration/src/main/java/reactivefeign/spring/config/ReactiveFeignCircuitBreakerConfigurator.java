@@ -47,9 +47,9 @@ public class ReactiveFeignCircuitBreakerConfigurator extends AbstractReactiveFei
 		}
 
 		ReactiveCircuitBreakerFactory<Object, ConfigBuilder<Object>> circuitBreakerFactory
-                = namedContext.getOptionalFromApplicationContext(ReactiveCircuitBreakerFactory.class);
+                = namedContext.getOptional(ReactiveCircuitBreakerFactory.class);
 		if (circuitBreakerFactory == null) {
-			circuitBreakerFactory = namedContext.getOptional(ReactiveCircuitBreakerFactory.class);
+			circuitBreakerFactory = namedContext.getOptionalFromApplicationContext(ReactiveCircuitBreakerFactory.class);
 		}
 		if(circuitBreakerFactory != null){
 			Consumer<ConfigBuilder<Object>> circuitBreakerCustomizer
