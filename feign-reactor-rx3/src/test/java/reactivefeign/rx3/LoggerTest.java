@@ -24,9 +24,9 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.assertj.core.api.Condition;
-import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import reactivefeign.ReactiveFeign;
@@ -127,7 +127,7 @@ public class LoggerTest {
         .has(new Condition<>(o -> ((String) o).contains(message2), "check message2"));
   }
 
-  @Before
+  @BeforeEach
   public void before() {
     appender = Mockito.mock(Appender.class);
     when(appender.getName()).thenReturn("TestAppender");

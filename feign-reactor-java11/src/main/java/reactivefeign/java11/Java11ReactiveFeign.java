@@ -13,8 +13,9 @@
  */
 package reactivefeign.java11;
 
-import com.fasterxml.jackson.core.async_.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.json.JsonFactory;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
@@ -65,7 +66,9 @@ public final class Java11ReactiveFeign {
         protected Builder(HttpClient.Builder httpClientBuilder, JsonFactory jsonFactory) {
             this.httpClientBuilder = httpClientBuilder;
             this.jsonFactory = jsonFactory;
-            this.objectMapper = new ObjectMapper().findAndRegisterModules();
+            this.objectMapper = JsonMapper.builder()
+                    .findAndAddModules()
+                    .build();
         }
 
         @Override

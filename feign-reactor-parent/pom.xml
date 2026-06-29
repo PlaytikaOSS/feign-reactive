@@ -18,11 +18,11 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!--BOMs-->
-        <spring-cloud-bom.version>2023.0.2</spring-cloud-bom.version>
-        <spring-boot-dependencies-bom.version>3.2.7</spring-boot-dependencies-bom.version>
+        <spring-cloud-bom.version>2025.1.1</spring-cloud-bom.version>
+        <spring-boot-dependencies-bom.version>4.0.5</spring-boot-dependencies-bom.version>
 
         <!--other-->
-        <json-reactor.version>0.0.4</json-reactor.version>
+        <json-reactor.version>0.4.0</json-reactor.version>
         <rxjava.version>1.3.8</rxjava.version>
         <rxjava2.version>2.2.21</rxjava2.version>
 
@@ -30,15 +30,15 @@
         <junit.version>4.13.2</junit.version>
         <wiremock.version>3.5.4</wiremock.version>
         <awaitility.version>4.2.0</awaitility.version>
-        <blockhound.version>1.0.9.RELEASE</blockhound.version>
+        <blockhound.version>1.0.16.RELEASE</blockhound.version>
         <disruptor.version>3.4.4</disruptor.version>
         <brave-tests.version>5.16.0</brave-tests.version>
 
         <!-- Plugins -->
-        <jacoco-plugin.version>0.8.11</jacoco-plugin.version>
+        <jacoco-plugin.version>0.8.14</jacoco-plugin.version>
         <coveralls-plugin.version>4.3.0</coveralls-plugin.version>
 
-        <maven-compiler-plugin.version>3.13.0</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.15.0</maven-compiler-plugin.version>
         <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
 
         <maven.javadoc.plugin.version>3.5.0</maven.javadoc.plugin.version>
@@ -220,8 +220,7 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>${maven-compiler-plugin.version}</version>
                     <configuration>
-                        <source>${java.version}</source>
-                        <target>${java.version}</target>
+                        <release>${java.version}</release>
                     </configuration>
                 </plugin>
 
@@ -232,6 +231,10 @@
                     <version>${maven-surefire-plugin.version}</version>
                     <configuration>
                         <argLine>-XX:+AllowRedefinitionToAddDeleteMethods</argLine>
+                        <systemPropertyVariables>
+                            <junit.jupiter.extensions.autodetection.enabled>true</junit.jupiter.extensions.autodetection.enabled>
+                            <net.bytebuddy.experimental>true</net.bytebuddy.experimental>
+                        </systemPropertyVariables>
                     </configuration>
                 </plugin>
 

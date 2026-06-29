@@ -12,7 +12,7 @@ abstract public class AbstractReactiveFeignConfigurator implements ReactiveFeign
     public int compareTo(ReactiveFeignConfigurator configurator){
         int compare = Integer.compare(order, ((AbstractReactiveFeignConfigurator) configurator).order);
         if(compare == 0){
-            throw new IllegalArgumentException(String.format("Same order for different configurators: [%s], [%s]",
+            throw new IllegalArgumentException("Same order for different configurators: [%s], [%s]".formatted(
                     this, configurator));
         }
         return compare;

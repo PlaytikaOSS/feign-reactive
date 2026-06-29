@@ -13,7 +13,7 @@
  */
 package reactivefeign.jetty.h1;
 
-import com.fasterxml.jackson.core.io.JsonEOFException;
+import tools.jackson.core.exc.UnexpectedEndOfInputException;
 import reactivefeign.ReactiveFeign;
 
 import java.util.function.Predicate;
@@ -32,6 +32,6 @@ public class BasicFeaturesTest extends reactivefeign.BasicFeaturesTest {
 
   @Override
   protected Predicate<Throwable> corruptedJsonError() {
-    return throwable -> throwable instanceof JsonEOFException;
+    return throwable -> throwable instanceof UnexpectedEndOfInputException;
   }
 }

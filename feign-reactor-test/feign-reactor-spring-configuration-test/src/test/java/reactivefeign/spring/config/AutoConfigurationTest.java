@@ -17,11 +17,10 @@
 package reactivefeign.spring.config;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -29,7 +28,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -49,7 +47,6 @@ import static reactivefeign.spring.config.AutoConfigurationTest.*;
  * Tests ReactiveFeign built on Spring Mvc annotations.
  */
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = AutoConfigurationTest.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.NONE,
 		properties = {
@@ -132,18 +129,18 @@ public class AutoConfigurationTest {
 		assertThat(RequestInterceptorConfiguration.counter).isEqualTo(counter);
 	}
 
-	@BeforeClass
+	@BeforeAll
 	public static void setup() {
 		mockHttpServer.start();
 		System.setProperty(MOCK_SERVER_PORT_PROPERTY, Integer.toString(mockHttpServer.port()));
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void teardown() {
 		mockHttpServer.stop();
 	}
 
-	@Before
+	@BeforeEach
 	public void reset(){
 		mockHttpServer.resetAll();
 	}

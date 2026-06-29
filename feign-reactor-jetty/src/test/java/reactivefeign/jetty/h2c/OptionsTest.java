@@ -14,8 +14,8 @@
 package reactivefeign.jetty.h2c;
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveFeignBuilder;
 import reactivefeign.ReactiveOptions;
@@ -58,7 +58,7 @@ public class OptionsTest extends reactivefeign.OptionsTest {
     throw new IllegalArgumentException();
   }
 
-  @Ignore
+  @Disabled
   @Override
   @Test
   public void shouldUseProxy() {}

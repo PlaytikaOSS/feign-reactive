@@ -13,20 +13,21 @@
  */
 package reactivefeign;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.PropertyNamingStrategy;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.Bill;
 import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.OrderGenerator;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.PropertyNamingStrategies;
 
 import java.util.List;
 
@@ -50,11 +51,12 @@ abstract public class ObjectMapperTest extends BaseReactorTest {
   }
 
   @Test
-  public void shouldUseCustomObjectMapper() throws JsonProcessingException {
+  public void shouldUseCustomObjectMapper() throws JacksonException {
 
-    ObjectMapper customObjectMapper = new ObjectMapper()
-            .findAndRegisterModules()
-            .setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
+    ObjectMapper customObjectMapper = JsonMapper.builder()
+            .findAndAddModules()
+            .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+            .build();
 
     IceCreamOrder order = new OrderGenerator().generate(20);
     Bill billExpected = Bill.makeBill(order);
@@ -80,7 +82,35 @@ abstract public class ObjectMapperTest extends BaseReactorTest {
   }
 
   @Test
-  public void shouldUseDefaultObjectMapper() throws JsonProcessingException {
+  public void shouldAcceptConfiguredNonJsonMapperObjectMapper() throws JacksonException {
+
+    ObjectMapper customObjectMapper = new ObjectMapper().rebuild()
+            .propertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE)
+            .build();
+
+    IceCreamOrder order = new OrderGenerator().generate(20);
+    Bill billExpected = Bill.makeBill(order);
+
+    wireMockRule.stubFor(post(urlEqualTo("/icecream/orders"))
+            .withRequestBody(equalTo(customObjectMapper.writeValueAsString(order)))
+            .willReturn(aResponse().withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(MAPPER.writeValueAsString(billExpected))));
+
+    IcecreamServiceApi client = builder()
+            .objectMapper(customObjectMapper)
+            .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
+
+    StepVerifier.create(client.makeOrder(order))
+            .expectNextCount(1)
+            .verifyComplete();
+
+    List<ServeEvent> proxyEvents = wireMockRule.getAllServeEvents();
+    assertThat(proxyEvents.get(0).getRequest().getBodyAsString()).contains("order_timestamp");
+  }
+
+  @Test
+  public void shouldUseDefaultObjectMapper() throws JacksonException {
 
     IceCreamOrder order = new OrderGenerator().generate(20);
     Bill billExpected = Bill.makeBill(order);

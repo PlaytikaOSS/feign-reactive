@@ -21,11 +21,10 @@ import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,9 +32,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.GetMapping;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
 import reactivefeign.client.ReadTimeoutException;
@@ -48,13 +45,11 @@ import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 import static reactivefeign.spring.config.WebClientCustomizerTest.MOCK_SERVER_PORT_PROPERTY;
 import static reactor.netty.Metrics.ACTIVE_CONNECTIONS;
 import static reactor.netty.Metrics.CONNECTION_PROVIDER_PREFIX;
 
-@RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = ReactiveFeignClientUsingPropertiesTests.Application.class, webEnvironment = WebEnvironment.NONE)
 @TestPropertySource("classpath:reactive-feign-properties.properties")
 @DirtiesContext
@@ -82,7 +77,7 @@ public class ReactiveFeignClientUsingPropertiesTests {
 
 	private MeterRegistry meterRegistry;
 
-	@BeforeClass
+	@BeforeAll
 	public static void setupStubs() {
 
 		mockHttpServer.stubFor(get(urlEqualTo("/foo"))
@@ -119,13 +114,13 @@ public class ReactiveFeignClientUsingPropertiesTests {
 		System.setProperty(MOCK_SERVER_PORT_PROPERTY, Integer.toString(mockHttpServer.port()));
 	}
 
-	@Before
+	@BeforeEach
 	public void setUp(){
 		meterRegistry = new SimpleMeterRegistry();
 		Metrics.addRegistry(meterRegistry);
 	}
 
-	@After
+	@AfterEach
 	public void tearDown() {
 		Metrics.removeRegistry(meterRegistry);
 		meterRegistry.clear();
@@ -162,22 +157,23 @@ public class ReactiveFeignClientUsingPropertiesTests {
 		assertEquals("OK", response);
 	}
 
-	@Test(expected = ReadTimeoutException.class)
+	@Test
 	public void testBar() {
-		barClient.bar().block();
-		fail("it should timeout");
-	}
+    assertThrows(ReadTimeoutException.class, () -> {
+      barClient.bar().block();
+      fail("it should timeout");
+    });
+  }
 
 	@Test
 	public void testBarMetered() {
 
 		String response = barClient.barMetered()
-				.doOnNext(s -> {
+				.doOnNext(s ->
 					Metrics.globalRegistry.forEachMeter(meter -> {
 						Gauge activeConnections = meterRegistry.find(CONNECTION_PROVIDER_PREFIX + ACTIVE_CONNECTIONS).gauge();
 						assertEquals(1., activeConnections.value(), 0.);
-					});
-				})
+					}))
 				.block();
 
 		assertEquals("OK", response);
@@ -186,45 +182,45 @@ public class ReactiveFeignClientUsingPropertiesTests {
 	@ReactiveFeignClient(name = "foo", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}")
 	protected interface FooClient {
 
-		@RequestMapping(method = RequestMethod.GET, value = "/foo")
+		@GetMapping("/foo")
 		Mono<String> foo();
 	}
 
 	@ReactiveFeignClient(name = "bar", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}")
 	protected interface BarClient {
 
-		@RequestMapping(method = RequestMethod.GET, value = "/bar")
+		@GetMapping("/bar")
 		Mono<String> bar();
 
-		@RequestMapping(method = RequestMethod.GET, value = "/barMetered")
+		@GetMapping("/barMetered")
 		Mono<String> barMetered();
 	}
 
 	@ReactiveFeignClient(name = "header", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}")
 	protected interface SingleDefaultHeaderClient {
 
-		@RequestMapping(method = RequestMethod.GET, value = "/header")
+		@GetMapping("/header")
 		Mono<String> header();
 	}
 
 	@ReactiveFeignClient(name = "query", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}")
 	protected interface SingleDefaultQueryClient {
 
-		@RequestMapping(method = RequestMethod.GET, value = "/query")
+		@GetMapping("/query")
 		Mono<String> query();
 	}
 
 	@ReactiveFeignClient(name = "headers", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}")
 	protected interface MultipleDefaultHeaderClient {
 
-		@RequestMapping(method = RequestMethod.GET, value = "/headers")
+		@GetMapping("/headers")
 		Mono<String> headers();
 	}
 
 	@ReactiveFeignClient(name = "queries", url = "http://localhost:${" + MOCK_SERVER_PORT_PROPERTY+"}")
 	protected interface MultipleDefaultQueryClient {
 
-		@RequestMapping(method = RequestMethod.GET, value = "/queries")
+		@GetMapping("/queries")
 		Mono<String> queries();
 	}
 

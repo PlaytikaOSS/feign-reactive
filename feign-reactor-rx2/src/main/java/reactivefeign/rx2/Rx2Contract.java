@@ -55,9 +55,8 @@ public class Rx2Contract implements Contract {
     for (final MethodMetadata metadata : methodsMetadata) {
       final Type type = metadata.returnType();
       if (!isRx2Type(type)) {
-        throw new IllegalArgumentException(String.format(
-            "Method %s of contract %s doesn't returns rx2 types",
-            metadata.configKey(), targetType.getSimpleName()));
+        throw new IllegalArgumentException("Method %s of contract %s doesn't returns rx2 types".formatted(
+                metadata.configKey(), targetType.getSimpleName()));
       }
     }
 
@@ -65,8 +64,8 @@ public class Rx2Contract implements Contract {
   }
 
   private boolean isRx2Type(final Type type) {
-    return (type instanceof ParameterizedType)
-        && RX2_TYPES.contains(((ParameterizedType) type).getRawType());
+    return (type instanceof ParameterizedType pt)
+        && RX2_TYPES.contains(pt.getRawType());
   }
 
 

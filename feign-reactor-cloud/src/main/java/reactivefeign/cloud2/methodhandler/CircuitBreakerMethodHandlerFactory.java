@@ -2,7 +2,7 @@ package reactivefeign.cloud2.methodhandler;
 
 import feign.MethodMetadata;
 import feign.Target;
-import org.springframework.lang.Nullable;
+import org.jspecify.annotations.Nullable;
 import reactivefeign.cloud2.ReactiveFeignCircuitBreakerFactory;
 import reactivefeign.methodhandler.MethodHandler;
 import reactivefeign.methodhandler.MethodHandlerFactory;

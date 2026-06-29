@@ -13,12 +13,13 @@
  */
 package reactivefeign.java11.h2c;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.testcase.IcecreamServiceApi;
+import tools.jackson.core.JacksonException;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static reactivefeign.ReactivityTest.CALLS_NUMBER;
 import static reactivefeign.java11.h2c.TestUtils.builderHttp2WithAcceptCompressed;
 import static reactivefeign.wiremock.WireMockServerConfigurations.h2cConfig;
@@ -39,8 +40,9 @@ public class CompressionTest extends reactivefeign.CompressionTest {
   }
 
   //TODO implement reactive gzip decoder
-  @Test(expected = java.lang.AssertionError.class)
-  public void testCompression() throws JsonProcessingException {
-    super.testCompression();
+  @Test
+  public void testCompression() throws JacksonException {
+    assertThrows(java.lang.AssertionError.class, () ->
+      super.testCompression());
   }
 }

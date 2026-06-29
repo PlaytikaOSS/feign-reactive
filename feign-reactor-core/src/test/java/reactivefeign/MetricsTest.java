@@ -14,14 +14,13 @@
 
 package reactivefeign;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.Target;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
-import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import reactivefeign.client.ReadTimeoutException;
 import reactivefeign.client.metrics.MetricsTag;
 import reactivefeign.client.metrics.MicrometerReactiveLogger;
@@ -30,6 +29,7 @@ import reactivefeign.testcase.domain.Bill;
 import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.OrderGenerator;
 import reactor.core.publisher.Flux;
+import tools.jackson.core.JacksonException;
 
 import java.time.Clock;
 import java.util.EnumSet;
@@ -39,6 +39,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static reactivefeign.client.metrics.MetricsTag.FEIGN_CLIENT_METHOD;
 import static reactivefeign.client.metrics.MicrometerReactiveLogger.DEFAULT_TIMER_NAME;
 
@@ -64,7 +65,7 @@ abstract public class MetricsTest extends BaseReactorTest {
 
   abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder(long readTimeoutInMillis);
 
-  @Before
+  @BeforeEach
   public void setUp(){
     meterRegistry = new SimpleMeterRegistry();
   }
@@ -135,34 +136,36 @@ abstract public class MetricsTest extends BaseReactorTest {
 
   }
 
-  @Test(expected = Exception.class)
+  @Test
   public void shouldLogTimeout() {
+    assertThrows(Exception.class, () -> {
 
-    int readTimeoutInMillis = 100;
-    wireMockRule.stubFor(get(urlEqualTo("/ping"))
-            .willReturn(aResponse()
-                    .withFixedDelay(readTimeoutInMillis * 2)
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")));
+      int readTimeoutInMillis = 100;
+      wireMockRule.stubFor(get(urlEqualTo("/ping"))
+              .willReturn(aResponse()
+                      .withFixedDelay(readTimeoutInMillis * 2)
+                      .withStatus(200)
+                      .withHeader("Content-Type", "application/json")));
 
-    IcecreamServiceApi client = builder(readTimeoutInMillis)
-            .addLoggerListener(buildLoggerListener())
-            .target(IcecreamServiceApi.class,
-                    "http://" + getHost() + ":" + wireMockRule.port());
+      IcecreamServiceApi client = builder(readTimeoutInMillis)
+              .addLoggerListener(buildLoggerListener())
+              .target(IcecreamServiceApi.class,
+                      "http://" + getHost() + ":" + wireMockRule.port());
 
-    try {
-      client.ping().subscribeOn(testScheduler()).block();
-      fail("should throw ReadTimeoutException");
-    }
-    catch (Exception e) {
-      assertThat(meterRegistry.get(DEFAULT_TIMER_NAME)
-              .tags(MetricsTag.EXCEPTION.getTagName(), ReadTimeoutException.class.getSimpleName())
-              .timer().count()).isEqualTo(1L);
-      assertThat(meterRegistry.get(DEFAULT_TIMER_NAME)
-              .tags(MetricsTag.STATUS.getTagName(), "-1")
-              .timer().count()).isEqualTo(1L);
-      throw e;
-    }
+      try {
+        client.ping().subscribeOn(testScheduler()).block();
+        fail("should throw ReadTimeoutException");
+      }
+      catch (Exception e) {
+        assertThat(meterRegistry.get(DEFAULT_TIMER_NAME)
+                .tags(MetricsTag.EXCEPTION.getTagName(), ReadTimeoutException.class.getSimpleName())
+                .timer().count()).isEqualTo(1L);
+        assertThat(meterRegistry.get(DEFAULT_TIMER_NAME)
+                .tags(MetricsTag.STATUS.getTagName(), "-1")
+                .timer().count()).isEqualTo(1L);
+        throw e;
+      }
+    });
   }
 
   private MicrometerReactiveLogger buildLoggerListener() {
@@ -170,7 +173,7 @@ abstract public class MetricsTest extends BaseReactorTest {
             Clock.systemUTC(), meterRegistry, DEFAULT_TIMER_NAME, EnumSet.allOf(MetricsTag.class));
   }
 
-  protected String fluxRequestBody(List<?> list) throws JsonProcessingException {
+  protected String fluxRequestBody(List<?> list) throws JacksonException {
     return TestUtils.MAPPER.writeValueAsString(list);
   }
 

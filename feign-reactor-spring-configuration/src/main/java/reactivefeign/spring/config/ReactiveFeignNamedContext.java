@@ -50,6 +50,14 @@ public class ReactiveFeignNamedContext {
         return instances.get(beanName);
     }
 
+    public <T> T getOptionalFromApplicationContext(Class<T> type) {
+        try {
+            return applicationContext.getBean(type);
+        } catch (NoSuchBeanDefinitionException e) {
+            return null;
+        }
+    }
+
     public String getClientName() {
         return clientName;
     }

@@ -60,7 +60,7 @@ public class DefaultReactiveLogger implements ReactiveLoggerListener<DefaultReac
         if (logger.isTraceEnabled()) {
             logger.trace("[{}] REQUEST HEADERS\n{}", feignMethodTag,
                     msg(() -> request.headers().entrySet().stream()
-                            .map(entry -> String.format("%s:%s", entry.getKey(),
+                            .map(entry -> "%s:%s".formatted(entry.getKey(),
                                     entry.getValue()))
                             .collect(Collectors.joining("\n"))));
         }
@@ -109,7 +109,7 @@ public class DefaultReactiveLogger implements ReactiveLoggerListener<DefaultReac
                     msg(() -> httpResponse.headers().entrySet().stream()
                             .flatMap(entry -> entry.getValue().stream()
                                     .map(value -> new Pair<>(entry.getKey(), value)))
-                            .map(pair -> String.format("%s:%s", pair.left, pair.right))
+                            .map(pair -> "%s:%s".formatted(pair.left, pair.right))
                             .collect(Collectors.joining("\n"))));
         }
         if (logger.isDebugEnabled()) {

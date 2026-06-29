@@ -1,6 +1,6 @@
 package reactivefeign.cloud2;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import feign.RetryableException;
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
@@ -8,10 +8,10 @@ import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
 import org.awaitility.Awaitility;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JCircuitBreakerFactory;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
 import org.springframework.cloud.client.circuitbreaker.NoFallbackAvailableException;
@@ -30,7 +30,7 @@ import java.util.stream.IntStream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.apache.http.HttpStatus.SC_SERVICE_UNAVAILABLE;
+import static org.apache.hc.core5.http.HttpStatus.SC_SERVICE_UNAVAILABLE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static reactivefeign.cloud2.LoadBalancingReactiveHttpClientTest.*;
 
@@ -45,24 +45,21 @@ public class CircuitBreakerReactiveHttpClientTest extends BaseReactorTest {
     public static final String SUCCESS = "success!";
     public static final int UPDATE_INTERVAL = 5;
 
-    @Rule
-    public WireMockRule server = new WireMockRule(wireMockConfig().dynamicPort());
+    @RegisterExtension
+    public WireMockExtension server = WireMockExtension.newInstance().options(wireMockConfig().dynamicPort()).build();
 
     protected AtomicReference<String> lastCommandKey = new AtomicReference<>();
 
     private static CircuitBreakerRegistry circuitBreakerRegistry = CircuitBreakerRegistry.ofDefaults();
     private static ReactiveResilience4JCircuitBreakerFactory circuitBreakerFactory
-            = new ReactiveResilience4JCircuitBreakerFactory(
-        CircuitBreakerRegistry.ofDefaults(),
-        TimeLimiterRegistry.ofDefaults()
-    );
+            = new ReactiveResilience4JCircuitBreakerFactory(CircuitBreakerRegistry.ofDefaults(), TimeLimiterRegistry.ofDefaults(), null, new org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigurationProperties());
 
-    @BeforeClass
+    @BeforeAll
     public static void setupServersList() {
         circuitBreakerFactory.configureCircuitBreakerRegistry(circuitBreakerRegistry);
     }
 
-    @Before
+    @BeforeEach
     public void resetServers() {
         server.resetAll();
     }
@@ -78,7 +75,7 @@ public class CircuitBreakerReactiveHttpClientTest extends BaseReactorTest {
                         .withBody(body));
 
         TestMonoInterface client = cloudBuilderWithTimeoutDisabled()
-                .target(TestMonoInterface.class, "http://localhost:" + server.port());
+                .target(TestMonoInterface.class, "http://localhost:" + server.getPort());
 
         StepVerifier.create(client.getMono().subscribeOn(testScheduler()))
                 .expectErrorMatches(this::assertNoFallback)
@@ -97,7 +94,7 @@ public class CircuitBreakerReactiveHttpClientTest extends BaseReactorTest {
 
         TestMonoInterface client = cloudBuilderWithTimeoutDisabled()
                 .fallback(() -> Mono.just(FALLBACK))
-                .target(TestMonoInterface.class, "http://localhost:" + server.port());
+                .target(TestMonoInterface.class, "http://localhost:" + server.getPort());
 
         String result = client.getMono().subscribeOn(testScheduler()).block();
         assertThat(result).isEqualTo(FALLBACK);
@@ -115,7 +112,7 @@ public class CircuitBreakerReactiveHttpClientTest extends BaseReactorTest {
 
         TestMonoInterface client = cloudBuilderWithTimeoutDisabled()
                 .fallbackFactory(throwable -> () -> {throw new RuntimeException();})
-                .target(TestMonoInterface.class, "http://localhost:" + server.port());
+                .target(TestMonoInterface.class, "http://localhost:" + server.getPort());
 
         StepVerifier.create(client.getMono().subscribeOn(testScheduler()))
                 .expectErrorMatches(this::assertFailedAndFallbackFailed)
@@ -135,7 +132,7 @@ public class CircuitBreakerReactiveHttpClientTest extends BaseReactorTest {
                         .withHeader("Retry-After", "1")));
 
         TestMonoInterface client = cloudBuilderWithTimeoutDisabled()
-                .target(TestMonoInterface.class, "http://localhost:" + server.port());
+                .target(TestMonoInterface.class, "http://localhost:" + server.getPort());
 
         //check that circuit breaker get opened on volume threshold
         List<Throwable> throwablesCircuitClosed = Flux.range(0, VOLUME_THRESHOLD)
@@ -190,7 +187,7 @@ public class CircuitBreakerReactiveHttpClientTest extends BaseReactorTest {
                         .withBody("success!")));
 
         TestMonoInterface client = cloudBuilderWithTimeout(500)
-                .target(TestMonoInterface.class, "http://localhost:" + server.port());
+                .target(TestMonoInterface.class, "http://localhost:" + server.getPort());
 
         StepVerifier.create(client.getMono().subscribeOn(testScheduler()))
                 .expectErrorMatches(this::assertTimeout)

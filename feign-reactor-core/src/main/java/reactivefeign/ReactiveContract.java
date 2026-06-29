@@ -49,14 +49,12 @@ public class ReactiveContract implements Contract {
     for (final MethodMetadata metadata : methodsMetadata) {
       final Type type = metadata.returnType();
       if (!isReactorType(type)) {
-        throw new IllegalArgumentException(String.format(
-            "Method %s of contract %s doesn't returns reactor.core.publisher.Mono or reactor.core.publisher.Flux",
-            metadata.configKey(), targetType.getSimpleName()));
+        throw new IllegalArgumentException("Method %s of contract %s doesn't returns reactor.core.publisher.Mono or reactor.core.publisher.Flux".formatted(
+                metadata.configKey(), targetType.getSimpleName()));
       }
 
       if(returnActualType(metadata) == byte[].class || bodyActualType(metadata) == byte[].class){
-        throw new IllegalArgumentException(String.format(
-                "Method %s of contract %s will cause data to be copied, use ByteBuffer instead",
+        throw new IllegalArgumentException("Method %s of contract %s will cause data to be copied, use ByteBuffer instead".formatted(
                 metadata.configKey(), targetType.getSimpleName()));
       }
     }

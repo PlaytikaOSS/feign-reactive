@@ -1,7 +1,7 @@
 package reactivefeign.benchmarks;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import feign.Feign;
 import feign.Util;
 import io.netty.buffer.ByteBuf;
@@ -31,6 +31,7 @@ import reactivefeign.jetty.JettyReactiveFeign;
 import reactivefeign.jetty.JettyReactiveOptions;
 import reactivefeign.webclient.WebReactiveFeign;
 import reactor.core.publisher.Mono;
+import tools.jackson.core.JacksonException;
 
 import java.lang.reflect.ParameterizedType;
 import java.nio.ByteBuffer;
@@ -77,7 +78,7 @@ abstract public class RealRequestBenchmarks {
 
         responseJson = readJsonFromFileAsBytes("/response.json");
 
-        objectMapper = new ObjectMapper();
+        objectMapper = JsonMapper.builder().build();
         requestPayload = objectMapper.readValue(readJsonFromFile("/request.json"), HashMap.class);
 
 //        serverRx = rxNetty(SERVER_PORT);
@@ -125,7 +126,7 @@ abstract public class RealRequestBenchmarks {
                 .encoder((o, type, requestTemplate) -> {
                     try {
                         requestTemplate.body(objectMapper.writeValueAsString(o));
-                    } catch (JsonProcessingException e) {
+                    } catch (JacksonException e) {
                         throw new RuntimeException(e);
                     }
                 })

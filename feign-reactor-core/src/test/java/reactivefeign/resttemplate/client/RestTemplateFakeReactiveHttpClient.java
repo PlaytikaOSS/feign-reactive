@@ -17,6 +17,7 @@ import feign.MethodMetadata;
 import org.reactivestreams.Publisher;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
@@ -36,6 +37,7 @@ import reactor.core.publisher.Mono;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.SocketTimeoutException;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -144,12 +146,14 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
 
     @Override
     public int status() {
-      return response.getStatusCodeValue();
+      return response.getStatusCode().value();
     }
 
     @Override
     public Map<String, List<String>> headers() {
-      return response.getHeaders();
+      Map<String, List<String>> map = new LinkedHashMap<>();
+      response.getHeaders().forEach(map::put);
+      return map;
     }
 
     @Override
@@ -194,7 +198,13 @@ public class RestTemplateFakeReactiveHttpClient implements ReactiveHttpClient {
 
     @Override
     public Map<String, List<String>> headers() {
-      return ex.getResponseHeaders();
+      HttpHeaders headers = ex.getResponseHeaders();
+      if (headers == null) {
+        return Map.of();
+      }
+      Map<String, List<String>> map = new LinkedHashMap<>();
+      headers.forEach(map::put);
+      return map;
     }
 
     @Override

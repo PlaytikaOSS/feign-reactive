@@ -13,23 +13,24 @@
  */
 package reactivefeign;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.RequestLine;
 import org.assertj.core.api.Assertions;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.Mixin;
 import reactivefeign.testcase.domain.OrderGenerator;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import tools.jackson.core.JacksonException;
 
 import java.util.stream.Stream;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static reactivefeign.TestUtils.equalsComparingFieldByFieldRecursively;
 
 /**
@@ -56,7 +57,7 @@ abstract public class DefaultMethodTest extends BaseReactorTest {
   }
 
   @Test
-  public void shouldProcessDefaultMethodOnProxy() throws JsonProcessingException {
+  public void shouldProcessDefaultMethodOnProxy() throws JacksonException {
     IceCreamOrder orderGenerated = new OrderGenerator().generate(1);
     String orderStr = TestUtils.MAPPER.writeValueAsString(orderGenerated);
 
@@ -75,7 +76,7 @@ abstract public class DefaultMethodTest extends BaseReactorTest {
   }
 
   @Test
-  public void shouldProcessDefaultFluxMethodOnProxy() throws JsonProcessingException {
+  public void shouldProcessDefaultFluxMethodOnProxy() throws JacksonException {
     String mixinsStr = TestUtils.MAPPER.writeValueAsString(Mixin.values());
 
     wireMockRule.stubFor(get(urlEqualTo("/icecream/mixins"))
@@ -92,16 +93,18 @@ abstract public class DefaultMethodTest extends BaseReactorTest {
   }
 
 
-  @Test(expected = RuntimeException.class)
+  @Test
   public void shouldNotWrapException() {
-    IceCreamOrder orderGenerated = new OrderGenerator().generate(1);
+    assertThrows(RuntimeException.class, () -> {
+      IceCreamOrder orderGenerated = new OrderGenerator().generate(1);
 
-    IcecreamServiceApi client = builder()
-        .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
+      IcecreamServiceApi client = builder()
+              .target(IcecreamServiceApi.class, "http://localhost:" + wireMockRule.port());
 
-    client.throwsException().onErrorReturn(
-        throwable -> throwable.equals(IcecreamServiceApi.RUNTIME_EXCEPTION),
-        orderGenerated).block();
+      client.throwsException().onErrorReturn(
+              throwable -> throwable.equals(IcecreamServiceApi.RUNTIME_EXCEPTION),
+              orderGenerated).block();
+    });
   }
 
   @Test

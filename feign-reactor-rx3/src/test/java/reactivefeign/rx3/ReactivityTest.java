@@ -13,14 +13,14 @@
  */
 package reactivefeign.rx3;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.rx3.testcase.IcecreamServiceApi;
 import reactivefeign.rx3.testcase.domain.IceCreamOrder;
 import reactivefeign.rx3.testcase.domain.OrderGenerator;
+import tools.jackson.core.JacksonException;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -49,7 +49,7 @@ public class ReactivityTest {
   }
 
   @Test
-  public void shouldRunReactively() throws JsonProcessingException {
+  public void shouldRunReactively() throws JacksonException {
 
     IceCreamOrder orderGenerated = new OrderGenerator().generate(1);
     String orderStr = TestUtils.MAPPER.writeValueAsString(orderGenerated);

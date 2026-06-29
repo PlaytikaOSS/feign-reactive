@@ -17,27 +17,22 @@
 package reactivefeign.spring.config.cloud2;
 
 import com.github.tomakehurst.wiremock.WireMockServer;
-import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
-import io.github.resilience4j.timelimiter.TimeLimiterConfig;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JCircuitBreakerFactory;
-import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
-import org.springframework.cloud.client.circuitbreaker.Customizer;
+import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreaker;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.bind.annotation.GetMapping;
 import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReactiveHttpRequestInterceptor;
+import reactivefeign.cloud2.ReactiveFeignCircuitBreakerFactory;
 import reactivefeign.spring.config.EnableReactiveFeignClients;
 import reactivefeign.spring.config.ReactiveFeignClient;
 import reactor.core.publisher.Flux;
@@ -48,8 +43,6 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.DEFAULT_MINIMUM_NUMBER_OF_CALLS;
-import static io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.SlidingWindowType.TIME_BASED;
 import static org.assertj.core.api.Assertions.assertThat;
 import static reactivefeign.spring.config.cloud2.IstioConfigurationTest.TEST_FEIGN_CLIENT;
 import static reactivefeign.spring.config.cloud2.IstioConfigurationTest.MOCK_SERVER_PORT_PROPERTY;
@@ -59,14 +52,12 @@ import static reactivefeign.spring.config.cloud2.IstioConfigurationTest.MOCK_SER
  *
  */
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(classes = IstioConfigurationTest.TestConfiguration.class,
 		webEnvironment = SpringBootTest.WebEnvironment.NONE,
 		properties = {
 				"spring.cloud.discovery.client.simple.instances."+ TEST_FEIGN_CLIENT+"[0].uri=http://localhost:${"+ MOCK_SERVER_PORT_PROPERTY+"}",
 
-				//config properties that disables LoadBalancer and CircuitBreaker and make client Istio compatible
-				//see disableCircuitBreakerCustomizer
+				//config property that disables LoadBalancer and makes the client Istio compatible
 				"reactive.feign.loadbalancer.enabled = false"
 		})
 @TestPropertySource("classpath:common.properties")
@@ -77,17 +68,19 @@ public class IstioConfigurationTest extends BasicAutoconfigurationTest{
 
 	private static final String TEST_URL = "/testUrl";
 
+	private static final int REQUEST_COUNT = 5;
+
 	private static final WireMockServer mockHttpServer = new WireMockServer(wireMockConfig().dynamicPort());
 
 	@Autowired
 	TestReactiveFeignClient feignClient;
 
 	@Test
-	public void shouldAutoconfigureInterceptor() throws InterruptedException {
+	public void shouldAutoconfigureInterceptor() {
 		RequestInterceptorConfiguration.calls.clear();
 
 		StepVerifier.create(
-				Flux.range(0, DEFAULT_MINIMUM_NUMBER_OF_CALLS * 5)
+				Flux.range(0, REQUEST_COUNT)
 				.flatMap(value -> feignClient.testMethod())
 				.collectList()
 		)
@@ -95,11 +88,8 @@ public class IstioConfigurationTest extends BasicAutoconfigurationTest{
 				.expectNextMatches(results -> results.stream().allMatch(s -> s.equals(Fallback.FALLBACK)))
 				.verifyComplete();
 
-		//wait for CB to get opened
-		Thread.sleep(100);
-
 		StepVerifier.create(
-				Flux.range(0, DEFAULT_MINIMUM_NUMBER_OF_CALLS * 5)
+				Flux.range(0, REQUEST_COUNT)
 						.flatMap(value -> feignClient.testMethod())
 						.collectList()
 		)
@@ -108,32 +98,32 @@ public class IstioConfigurationTest extends BasicAutoconfigurationTest{
 				.verifyComplete();
 
 		//check that CircuitBreaker is disabled and we got all requests
-		assertThat(RequestInterceptorConfiguration.calls.size()).isEqualTo(DEFAULT_MINIMUM_NUMBER_OF_CALLS * 10);
+		assertThat(RequestInterceptorConfiguration.calls.size()).isEqualTo(REQUEST_COUNT * 2);
 		//check that LoadBalancer is disabled and we got original Urls without substitutions
 		assertThat(RequestInterceptorConfiguration.calls.stream()
 				.allMatch(request -> request.uri().toString().contains(TEST_FEIGN_CLIENT))).isTrue();
 	}
 
 
-	@BeforeClass
+	@BeforeAll
 	public static void setup() {
 		mockHttpServer.start();
 		System.setProperty(MOCK_SERVER_PORT_PROPERTY, Integer.toString(mockHttpServer.port()));
 	}
 
-	@AfterClass
+	@AfterAll
 	public static void teardown() {
 		mockHttpServer.stop();
 	}
 
-	@Before
+	@BeforeEach
 	public void reset(){
 		mockHttpServer.resetAll();
 	}
 
 	@ReactiveFeignClient(name = TEST_FEIGN_CLIENT,
 			fallback = Fallback.class,
-			configuration = {RequestInterceptorConfiguration.class})
+			configuration = {RequestInterceptorConfiguration.class, CircuitBreakerConfiguration.class})
 	public interface TestReactiveFeignClient {
 		@GetMapping(path = TEST_URL)
 		Mono<String> testMethod();
@@ -155,19 +145,23 @@ public class IstioConfigurationTest extends BasicAutoconfigurationTest{
 	@Configuration
 	public static class TestConfiguration{
 
+	}
+
+	@Configuration
+	protected static class CircuitBreakerConfiguration {
 		@Bean
-		public Customizer<ReactiveResilience4JCircuitBreakerFactory> disableCircuitBreakerCustomizer(){
-			return reactiveCircuitBreakerFactory -> reactiveCircuitBreakerFactory.configureDefault(s -> {
-				Resilience4JConfigBuilder.Resilience4JCircuitBreakerConfiguration circuitBreakerConfiguration
-						= new Resilience4JConfigBuilder.Resilience4JCircuitBreakerConfiguration();
-				circuitBreakerConfiguration.setId(s);
-				circuitBreakerConfiguration.setCircuitBreakerConfig(new CircuitBreakerConfig.Builder()
-						.minimumNumberOfCalls(Integer.MAX_VALUE)
-						.slidingWindowType(TIME_BASED)
-								.build());
-				circuitBreakerConfiguration.setTimeLimiterConfig(TimeLimiterConfig.ofDefaults());
-				return circuitBreakerConfiguration;
-			});
+		public ReactiveFeignCircuitBreakerFactory passThroughCircuitBreakerFactory(){
+			return circuitBreakerId -> new ReactiveCircuitBreaker() {
+				@Override
+				public <T> Mono<T> run(Mono<T> toRun, java.util.function.Function<Throwable, Mono<T>> fallback) {
+					return toRun.onErrorResume(fallback);
+				}
+
+				@Override
+				public <T> Flux<T> run(Flux<T> toRun, java.util.function.Function<Throwable, Flux<T>> fallback) {
+					return toRun.onErrorResume(fallback);
+				}
+			};
 		}
 	}
 

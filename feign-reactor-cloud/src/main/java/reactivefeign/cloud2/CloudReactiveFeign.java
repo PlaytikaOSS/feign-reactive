@@ -1,6 +1,6 @@
 package reactivefeign.cloud2;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import feign.Contract;
 import feign.MethodMetadata;
 import feign.Target;

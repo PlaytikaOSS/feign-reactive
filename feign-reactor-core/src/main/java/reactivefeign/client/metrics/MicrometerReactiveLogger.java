@@ -125,8 +125,8 @@ public class MicrometerReactiveLogger implements ReactiveLoggerListener<Micromet
         List<Tag> metricsTags = buildTags(metricsContext, tags);
         if(tags.contains(HOST)){
             //takes actual host resolved from service name
-            if(ex instanceof ReactiveFeignException){
-                metricsTags.add(Tag.of(HOST.getTagName(), ((ReactiveFeignException)ex).getRequest().uri().getHost()));
+            if(ex instanceof ReactiveFeignException exception){
+                metricsTags.add(Tag.of(HOST.getTagName(), exception.getRequest().uri().getHost()));
             } else {
                 metricsTags.add(Tag.of(HOST.getTagName(), metricsContext.request.uri().getHost()));
             }

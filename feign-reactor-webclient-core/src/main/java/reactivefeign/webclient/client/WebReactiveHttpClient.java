@@ -35,9 +35,12 @@ import reactivefeign.client.ReactiveHttpResponse;
 import reactivefeign.methodhandler.PublisherClientMethodHandler;
 import reactivefeign.utils.SerializedFormData;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
+import reactor.core.scheduler.Schedulers;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Objects;
 import java.util.function.BiFunction;
 
 import static feign.Util.resolveLastTypeParameter;
@@ -111,20 +114,51 @@ public class WebReactiveHttpClient<P extends Publisher<?>> implements ReactiveHt
 
 	@Override
 	public Mono<ReactiveHttpResponse<P>> executeRequest(ReactiveHttpRequest request) {
-		return webClient.method(HttpMethod.valueOf(request.method()))
-				.uri(request.uri())
-				.headers(httpHeaders -> setUpHeaders(request, httpHeaders))
-				.body(provideBody(request))
-				.exchange()
+		return Mono.<ReactiveHttpResponse<P>>create(sink -> {
+					// Spring 7 WebClient releases the response body once the Mono returned from
+					// exchangeToMono terminates. To allow the body to be consumed later by downstream
+					// operators (which is Feign's programming model), we keep the exchange Mono alive
+					// via a completion gate, and only complete it when the wrapped response's body
+					// publisher terminates (success, error or cancellation).
+					Sinks.One<Void> bodyGate = Sinks.one();
+					reactor.core.Disposable disposable = webClient.method(HttpMethod.valueOf(request.method()))
+							.uri(request.uri())
+							.headers(httpHeaders -> setUpHeaders(request, httpHeaders))
+							.body(provideBody(request))
+							.exchangeToMono(response -> {
+								// exchangeToMono's callback runs on the Netty I/O thread. For error
+								// responses (4xx/5xx) the downstream status handler consumes the body
+								// inline via bodyData(); doing that on the I/O thread stops Netty from
+								// pumping further TCP reads, which hangs until ReadTimeoutHandler fires
+								// when the body arrives in a later fragment (slow CI runners). Hop
+								// sink.success off the event loop for error responses so that body
+								// consumption runs on a parallel worker. 2xx responses stay inline so
+								// that downstream metric observations (reactor-netty active connections)
+								// see the same synchronous emission they did before Spring 7.
+								ReactiveHttpResponse<P> wrapped = new GatedReactiveHttpResponse<>(
+										toReactiveHttpResponse(request, response), bodyGate);
+								if (response.statusCode().isError()) {
+									Schedulers.parallel().schedule(() -> sink.success(wrapped));
+								} else {
+									sink.success(wrapped);
+								}
+								return bodyGate.asMono();
+							})
+							.subscribe(v -> {}, sink::error);
+					// If the downstream cancels before the response body is consumed, release the
+					// gate so that the WebClient exchange terminates and frees the connection.
+					// We do NOT register the exchange subscription for disposal on success; the
+					// exchange will terminate by itself when the body gate completes (which the
+					// GatedReactiveHttpResponse triggers once the body is consumed/released).
+					sink.onCancel(() -> {
+						bodyGate.tryEmitEmpty();
+						disposable.dispose();
+					});
+				})
 				.onErrorMap(ex -> {
 					Throwable errorMapped = errorMapper.apply(request, ex);
-					if(errorMapped != null){
-						return errorMapped;
-					} else {
-						return new ReactiveFeignException(ex, request);
-					}
-				})
-				.map(response -> toReactiveHttpResponse(request, response));
+                    return Objects.requireNonNullElseGet(errorMapped, () -> new ReactiveFeignException(ex, request));
+				});
 	}
 
 	protected ReactiveHttpResponse<P> toReactiveHttpResponse(ReactiveHttpRequest request, ClientResponse response) {

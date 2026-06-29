@@ -13,14 +13,14 @@
  */
 package reactivefeign;
 
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.IcecreamServiceApiBroken;
 import reactivefeign.testcase.IcecreamServiceApiBrokenByCopy;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Sergii Karpenko
@@ -28,42 +28,39 @@ import static org.hamcrest.Matchers.containsString;
 
 abstract public class ContractTest extends BaseReactorTest{
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
-
   abstract protected <T> ReactiveFeignBuilder<T> builder();
 
   @Test
   public void shouldFailOnBrokenContract() {
 
-    expectedException.expect(IllegalArgumentException.class);
-    expectedException.expectMessage(containsString("Broken Contract"));
+    Throwable exception = assertThrows(IllegalArgumentException.class, () ->
 
-    this.<IcecreamServiceApi>builder()
-        .contract(targetType -> {
-          throw new IllegalArgumentException("Broken Contract");
-        })
-        .target(IcecreamServiceApi.class, "http://localhost:8888");
+      this.<IcecreamServiceApi>builder()
+              .contract(targetType -> {
+                throw new IllegalArgumentException("Broken Contract");
+              })
+              .target(IcecreamServiceApi.class, "http://localhost:8888"));
+    assertThat(exception.getMessage(), containsString("Broken Contract"));
   }
 
   @Test
   public void shouldFailIfNotReactiveContract() {
 
-    expectedException.expect(IllegalArgumentException.class);
-    expectedException.expectMessage(containsString("IcecreamServiceApiBroken#findOrderBlocking(int)"));
+    Throwable exception = assertThrows(IllegalArgumentException.class, () ->
 
-    this.<IcecreamServiceApiBroken>builder()
-        .target(IcecreamServiceApiBroken.class, "http://localhost:8888");
+      this.<IcecreamServiceApiBroken>builder()
+              .target(IcecreamServiceApiBroken.class, "http://localhost:8888"));
+    assertThat(exception.getMessage(), containsString("IcecreamServiceApiBroken#findOrderBlocking(int)"));
   }
 
   @Test
   public void shouldFailIfMethodOperatesWithByteArray() {
 
-    expectedException.expect(IllegalArgumentException.class);
-    expectedException.expectMessage(containsString("IcecreamServiceApiBrokenByCopy#findOrderCopy(int)"));
+    Throwable exception = assertThrows(IllegalArgumentException.class, () ->
 
-    this.<IcecreamServiceApiBrokenByCopy>builder()
-            .target(IcecreamServiceApiBrokenByCopy.class, "http://localhost:8888");
+      this.<IcecreamServiceApiBrokenByCopy>builder()
+              .target(IcecreamServiceApiBrokenByCopy.class, "http://localhost:8888"));
+    assertThat(exception.getMessage(), containsString("IcecreamServiceApiBrokenByCopy#findOrderCopy(int)"));
   }
 
 }

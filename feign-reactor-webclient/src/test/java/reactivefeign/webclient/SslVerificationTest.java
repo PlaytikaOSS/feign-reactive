@@ -14,13 +14,12 @@
 
 package reactivefeign.webclient;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.TestUtils;
 import reactivefeign.testcase.IcecreamServiceApi;
@@ -29,6 +28,7 @@ import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.OrderGenerator;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
+import tools.jackson.core.JacksonException;
 
 import javax.net.ssl.SSLException;
 
@@ -68,7 +68,7 @@ public class SslVerificationTest extends reactivefeign.BaseReactorTest {
 
 
     @Test
-    public void givenDisabledSslValidation_shouldPass() throws JsonProcessingException {
+    public void givenDisabledSslValidation_shouldPass() throws JacksonException {
 
         IceCreamOrder order = new OrderGenerator().generate(20);
         Bill billExpected = Bill.makeBill(order);
@@ -88,7 +88,7 @@ public class SslVerificationTest extends reactivefeign.BaseReactorTest {
     }
 
     @Test
-    public void givenDisabledSslValidationContext_shouldPass() throws JsonProcessingException, SSLException {
+    public void givenDisabledSslValidationContext_shouldPass() throws JacksonException, SSLException {
 
         IceCreamOrder order = new OrderGenerator().generate(20);
         Bill billExpected = Bill.makeBill(order);
@@ -114,7 +114,7 @@ public class SslVerificationTest extends reactivefeign.BaseReactorTest {
     }
 
     @Test
-    public void givenEnabledSslValidation_shouldFail() throws JsonProcessingException {
+    public void givenEnabledSslValidation_shouldFail() throws JacksonException {
 
         IceCreamOrder order = new OrderGenerator().generate(20);
         Bill billExpected = Bill.makeBill(order);

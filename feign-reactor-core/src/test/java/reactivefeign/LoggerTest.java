@@ -14,7 +14,6 @@
 
 package reactivefeign;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import org.apache.logging.log4j.Level;
@@ -25,9 +24,9 @@ import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.config.LoggerConfig;
 import org.assertj.core.api.Condition;
-import org.junit.Before;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 import reactivefeign.client.ReadTimeoutException;
@@ -41,6 +40,7 @@ import reactivefeign.testcase.domain.OrderGenerator;
 import reactivefeign.utils.Pair;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import tools.jackson.core.JacksonException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -53,6 +53,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpHeaders.RETRY_AFTER;
@@ -90,7 +91,7 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
     return WireMockConfiguration.wireMockConfig();
   }
 
-  @Before
+  @BeforeEach
   public void resetServers() {
     wireMockRule.resetAll();
   }
@@ -216,7 +217,7 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
     removeAppender(appender.getName());
   }
 
-  protected String fluxRequestBody(List<?> list) throws JsonProcessingException {
+  protected String fluxRequestBody(List<?> list) throws JacksonException {
     return TestUtils.MAPPER.writeValueAsString(list);
   }
 
@@ -262,54 +263,56 @@ abstract public class LoggerTest<T extends IcecreamServiceApi> extends BaseReact
     removeAppender(appender.getName());
   }
 
-  @Test(expected = ReadTimeoutException.class)
+  @Test
   public void shouldLogTimeout() {
+    assertThrows(ReadTimeoutException.class, () -> {
 
-    Appender appender = createAppender("TestTimeoutAppender");
+      Appender appender = createAppender("TestTimeoutAppender");
 
-    Map<LoggerConfig, Level> originalLevels = setLogLevel(Level.TRACE);
+      Map<LoggerConfig, Level> originalLevels = setLogLevel(Level.TRACE);
 
-    int readTimeoutInMillis = 100;
-    wireMockRule.stubFor(get(urlEqualTo("/ping"))
-            .willReturn(aResponse()
-                    .withFixedDelay(readTimeoutInMillis * 2)
-                    .withStatus(200)
-                    .withHeader("Content-Type", "application/json")));
+      int readTimeoutInMillis = 100;
+      wireMockRule.stubFor(get(urlEqualTo("/ping"))
+              .willReturn(aResponse()
+                      .withFixedDelay(readTimeoutInMillis * 2)
+                      .withStatus(200)
+                      .withHeader("Content-Type", "application/json")));
 
-    ArgumentCaptor<LogEvent> argumentCaptor = ArgumentCaptor.forClass(LogEvent.class);
+      ArgumentCaptor<LogEvent> argumentCaptor = ArgumentCaptor.forClass(LogEvent.class);
 
-    T client = builder(readTimeoutInMillis)
-            .target(target(), "http://localhost:" + wireMockRule.port());
-    String clientName = target().getSimpleName();
+      T client = builder(readTimeoutInMillis)
+              .target(target(), "http://localhost:" + wireMockRule.port());
+      String clientName = target().getSimpleName();
 
-    Mono<Void> ping = client.ping().subscribeOn(testScheduler());
+      Mono<Void> ping = client.ping().subscribeOn(testScheduler());
 
-    assertNoEventsBeforeSubscription(appender, argumentCaptor, clientName);
+      assertNoEventsBeforeSubscription(appender, argumentCaptor, clientName);
 
-    try {
-      ping.block();
+      try {
+        ping.block();
 
-      fail("should throw ReadTimeoutException");
-    }
-    catch (ReadTimeoutException e) {
-      Mockito.verify(appender, atLeast(3)).append(argumentCaptor.capture());
+        fail("should throw ReadTimeoutException");
+      }
+      catch (ReadTimeoutException e) {
+        Mockito.verify(appender, atLeast(3)).append(argumentCaptor.capture());
 
-      List<LogEvent> logEvents = argumentCaptor.getAllValues();
-      AtomicInteger index = new AtomicInteger();
-      assertLogEvent(logEvents, index, Level.DEBUG,
-              "["+clientName+"#ping()]--->GET http://localhost");
-      assertLogEvent(logEvents, index, Level.TRACE,
-              "["+clientName+"#ping()] REQUEST HEADERS\n" +
-                      "Accept:[application/json]");
-      assertLogEvent(logEvents, index, Level.ERROR,
-              "["+clientName+"#ping()]--->GET http://localhost");
+        List<LogEvent> logEvents = argumentCaptor.getAllValues();
+        AtomicInteger index = new AtomicInteger();
+        assertLogEvent(logEvents, index, Level.DEBUG,
+                "[" + clientName + "#ping()]--->GET http://localhost");
+        assertLogEvent(logEvents, index, Level.TRACE,
+                "[" + clientName + "#ping()] REQUEST HEADERS\n" +
+                        "Accept:[application/json]");
+        assertLogEvent(logEvents, index, Level.ERROR,
+                "[" + clientName + "#ping()]--->GET http://localhost");
 
-      throw e;
-    }
-    finally {
-      rollbackLogLevels(originalLevels);
-      removeAppender(appender.getName());
-    }
+        throw e;
+      }
+      finally {
+        rollbackLogLevels(originalLevels);
+        removeAppender(appender.getName());
+      }
+    });
   }
 
   @Test

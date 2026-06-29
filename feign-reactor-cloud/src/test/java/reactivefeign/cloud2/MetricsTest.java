@@ -14,7 +14,7 @@
 package reactivefeign.cloud2;
 
 import feign.Target;
-import org.junit.BeforeClass;
+import org.junit.jupiter.api.BeforeAll;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer;
 import reactivefeign.ReactiveFeignBuilder;
@@ -30,7 +30,7 @@ public class MetricsTest extends reactivefeign.MetricsTest {
 
     private static ReactiveLoadBalancer.Factory<ServiceInstance> loadBalancerFactory;
 
-    @BeforeClass
+    @BeforeAll
     public static void setupServersList() {
         loadBalancerFactory = LoadBalancingReactiveHttpClientTest.loadBalancerFactory(serviceName, wireMockRule.port());
     }

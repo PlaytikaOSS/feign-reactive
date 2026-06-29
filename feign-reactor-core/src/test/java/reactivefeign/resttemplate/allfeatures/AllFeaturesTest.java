@@ -16,11 +16,11 @@
 
 package reactivefeign.resttemplate.allfeatures;
 
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
-import org.springframework.boot.autoconfigure.security.reactive.ReactiveUserDetailsServiceAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.web.reactive.ReactiveWebSecurityAutoConfiguration;
+import org.springframework.boot.security.autoconfigure.ReactiveUserDetailsServiceAutoConfiguration;
 import org.springframework.test.context.ActiveProfiles;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.allfeatures.AllFeaturesFeign;
@@ -34,7 +34,7 @@ import reactor.core.scheduler.Schedulers;
  *
  * Tests ReactiveFeign in conjunction with WebFlux rest controller.
  */
-@EnableAutoConfiguration(exclude = {ReactiveSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
+@EnableAutoConfiguration(exclude = {ReactiveWebSecurityAutoConfiguration.class, ReactiveUserDetailsServiceAutoConfiguration.class})
 @ActiveProfiles("netty")
 public class AllFeaturesTest extends AllFeaturesFeignTest {
 
@@ -49,32 +49,32 @@ public class AllFeaturesTest extends AllFeaturesFeignTest {
 		return RestTemplateFakeReactiveFeign.builder();
 	}
 
-	@Ignore
+	@Disabled
 	@Test
 	@Override
 	public void shouldMirrorStreamingBinaryBodyReactive(){}
 
-	@Ignore
+	@Disabled
 	@Test
 	@Override
 	public void shouldMirrorBinaryBody(){}
 
-	@Ignore
+	@Disabled
 	@Test
 	@Override
 	public void shouldRunReactively(){}
 
-	@Ignore
+	@Disabled
 	@Test
 	@Override
 	public void shouldReturnFirstResultBeforeSecondSent(){}
 
-	@Ignore
+	@Disabled
 	@Test
 	@Override
 	public void shouldMirrorStringStreamBody() {}
 
-	@Ignore
+	@Disabled
 	@Test
 	@Override
 	public void shouldMirrorIntegerStreamBody() {}

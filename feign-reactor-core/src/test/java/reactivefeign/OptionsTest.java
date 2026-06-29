@@ -13,18 +13,18 @@
  */
 package reactivefeign;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 import feign.FeignException;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactivefeign.client.ReadTimeoutException;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.IceCreamOrder;
 import reactivefeign.testcase.domain.OrderGenerator;
 import reactor.test.StepVerifier;
+import tools.jackson.core.JacksonException;
 
 import java.util.List;
 
@@ -77,7 +77,7 @@ abstract public class OptionsTest extends BaseReactorTest {
   }
 
   @Test
-  public void shouldFollowRedirects() throws JsonProcessingException {
+  public void shouldFollowRedirects() throws JacksonException {
 
     String oldOrderUrl = "/icecream/orders/redirect/1";
     String orderUrl = "/icecream/orders/1";
@@ -102,7 +102,7 @@ abstract public class OptionsTest extends BaseReactorTest {
   }
 
   @Test
-  public void shouldNotFollowRedirects() throws JsonProcessingException {
+  public void shouldNotFollowRedirects() throws JacksonException {
 
     String oldOrderUrl = "/icecream/orders/redirect/1";
     String orderUrl = "/icecream/orders/1";
@@ -122,13 +122,13 @@ abstract public class OptionsTest extends BaseReactorTest {
                     "http://localhost:" + wireMockRule.port());
 
     StepVerifier.create(client.findOrderWithRedirect(1).subscribeOn(testScheduler()))
-            .expectErrorMatches(throwable -> throwable instanceof FeignException
-                    && ((FeignException) throwable).status() == 301)
+            .expectErrorMatches(throwable -> throwable instanceof FeignException fe
+                    && fe.status() == 301)
             .verify();
   }
 
   @Test
-  public void shouldUseProxy() throws JsonProcessingException {
+  public void shouldUseProxy() throws JacksonException {
 
     String orderUrl = "/icecream/orders/1";
 

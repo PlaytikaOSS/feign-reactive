@@ -1,12 +1,12 @@
 package reactivefeign.cloud2;
 
-import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import feign.Param;
 import feign.RequestLine;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.ClassRule;
-import org.junit.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.loadbalancer.reactive.ReactiveLoadBalancer;
 import reactivefeign.BaseReactorTest;
@@ -19,19 +19,21 @@ import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMoc
 
 public class PathVariableInTargetUrlTest extends BaseReactorTest {
 
-    @ClassRule
-    public static WireMockClassRule server1 = new WireMockClassRule(wireMockConfig().dynamicPort());
+    @RegisterExtension
+    public static WireMockExtension server1 = WireMockExtension.newInstance()
+            .options(wireMockConfig().dynamicPort())
+            .build();
 
     protected static String serviceName = "PathVariableInTargetUrlTest";
 
     private static ReactiveLoadBalancer.Factory<ServiceInstance> loadBalancerFactory;
 
-    @BeforeClass
+    @BeforeAll
     public static void setupServersList() {
-        loadBalancerFactory = LoadBalancingReactiveHttpClientTest.loadBalancerFactory(serviceName, server1.port());
+        loadBalancerFactory = LoadBalancingReactiveHttpClientTest.loadBalancerFactory(serviceName, server1.getPort());
     }
 
-    @Before
+    @BeforeEach
     public void resetServers() {
         server1.resetAll();
     }
@@ -50,7 +52,7 @@ public class PathVariableInTargetUrlTest extends BaseReactorTest {
                 .verifyComplete();
     }
 
-    static void mockSuccessMono(WireMockClassRule server, String body) {
+    static void mockSuccessMono(WireMockExtension server, String body) {
         server.stubFor(get(urlPathMatching("/mono/1"))
                 .willReturn(aResponse()
                         .withStatus(200)

@@ -13,7 +13,15 @@
  */
 package reactivefeign.resttemplate.client;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.json.JsonFactory;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JacksonModule;
+import tools.jackson.databind.MapperFeature;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
+
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.HttpClientBuilder;
@@ -23,7 +31,7 @@ import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.util.Timeout;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.ReactiveFeignBuilder;
@@ -52,8 +60,10 @@ public class RestTemplateFakeReactiveFeign {
       private boolean acceptGzip = false;
 
       {
-        ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
-        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(mapper);
+        JsonMapper mapper = JsonMapper.builder()
+                .findAndAddModules()
+                .build();
+        JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter(mapper);
         restTemplate.getMessageConverters().add(0, converter);
         restTemplate.getMessageConverters().add(new SerializedFormMessageConverter());
       }
@@ -66,10 +76,41 @@ public class RestTemplateFakeReactiveFeign {
 
       @Override
       public ReactiveFeignBuilder<T> objectMapper(ObjectMapper objectMapper) {
-        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(objectMapper);
+        JacksonJsonHttpMessageConverter converter = new JacksonJsonHttpMessageConverter(toJsonMapper(objectMapper));
         restTemplate.getMessageConverters().set(0, converter);
         restTemplate.getMessageConverters().add(new SerializedFormMessageConverter());
         return this;
+      }
+
+      private JsonMapper toJsonMapper(ObjectMapper objectMapper) {
+        if (objectMapper instanceof JsonMapper jsonMapper) {
+          return jsonMapper;
+        }
+
+        JsonMapper.Builder builder = objectMapper.tokenStreamFactory() instanceof JsonFactory jsonFactory
+                ? JsonMapper.builder(jsonFactory)
+                : JsonMapper.builder();
+        for (MapperFeature feature : MapperFeature.values()) {
+            builder.configure(feature, objectMapper.isEnabled(feature));
+        }
+        for (SerializationFeature feature : SerializationFeature.values()) {
+            builder.configure(feature, objectMapper.isEnabled(feature));
+        }
+        for (DeserializationFeature feature : DeserializationFeature.values()) {
+            builder.configure(feature, objectMapper.isEnabled(feature));
+        }
+        builder.propertyNamingStrategy(objectMapper.serializationConfig().getPropertyNamingStrategy());
+        builder.enumNamingStrategy(objectMapper.serializationConfig().getEnumNamingStrategy());
+        builder.defaultDateFormat(objectMapper.serializationConfig().getDateFormat());
+        builder.defaultLocale(objectMapper.serializationConfig().getLocale());
+        builder.defaultTimeZone(objectMapper.serializationConfig().getTimeZone());
+        builder.defaultBase64Variant(objectMapper.serializationConfig().getBase64Variant());
+        builder.typeFactory(objectMapper.getTypeFactory());
+        Collection<JacksonModule> registeredModules = objectMapper.registeredModules();
+        if (!registeredModules.isEmpty()) {
+            builder.addModules(registeredModules);
+        }
+        return builder.build();
       }
 
       @Override

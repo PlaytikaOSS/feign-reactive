@@ -2,23 +2,21 @@ package reactivefeign.cloud2;
 
 
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import feign.RequestLine;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerConfig;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import io.github.resilience4j.timelimiter.TimeLimiterRegistry;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.circuitbreaker.resilience4j.ReactiveResilience4JCircuitBreakerFactory;
 import org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigBuilder;
 import org.springframework.cloud.client.circuitbreaker.NoFallbackAvailableException;
 import org.springframework.cloud.client.circuitbreaker.ReactiveCircuitBreakerFactory;
-import org.springframework.test.context.junit4.SpringRunner;
 import reactivefeign.BaseReactorTest;
 import reactivefeign.ReactiveFeignBuilder;
 import reactor.core.publisher.Mono;
@@ -32,7 +30,6 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE,
         classes = reactivefeign.cloud2.CircuitBreakerFuncTest.class)
 @EnableAutoConfiguration
@@ -42,19 +39,15 @@ public class CircuitBreakerFuncTest extends BaseReactorTest {
     private static final String TEST_URL = "/call";
     private static final String FALLBACK = "fallback";
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(
-            WireMockConfiguration.wireMockConfig()
-                    .dynamicPort());
+    @RegisterExtension
+    public WireMockExtension wireMockRule = WireMockExtension.newInstance().options(WireMockConfiguration.wireMockConfig()
+            .dynamicPort()).build();
 
     private static ReactiveCircuitBreakerFactory circuitBreakerFactory;
 
-    @BeforeClass
+    @BeforeAll
     public static void setupCircuitBreakerFactory() {
-        circuitBreakerFactory = new ReactiveResilience4JCircuitBreakerFactory(
-            CircuitBreakerRegistry.ofDefaults(),
-            TimeLimiterRegistry.ofDefaults()
-        );
+        circuitBreakerFactory = new ReactiveResilience4JCircuitBreakerFactory(CircuitBreakerRegistry.ofDefaults(), TimeLimiterRegistry.ofDefaults(), null, new org.springframework.cloud.circuitbreaker.resilience4j.Resilience4JConfigurationProperties());
     }
 
     @Test
@@ -64,7 +57,7 @@ public class CircuitBreakerFuncTest extends BaseReactorTest {
 
         TestCaller testCaller = cloudBuilderWithTimeoutDisabledAndCircuitBreakerDisabled()
                 .fallback(() -> Mono.just(FALLBACK))
-                .target(TestCaller.class, "http://localhost:" + wireMockRule.port());
+                .target(TestCaller.class, "http://localhost:" + wireMockRule.getPort());
 
         //check that circuit breaker DOESN'T open on volume threshold
         List<Object> results = IntStream.range(0, callsNo)
@@ -84,7 +77,7 @@ public class CircuitBreakerFuncTest extends BaseReactorTest {
         mockResponseServiceUnavailable();
 
         TestCaller testCaller = cloudBuilderWithTimeoutDisabledAndCircuitBreakerDisabled()
-                .target(TestCaller.class, "http://localhost:" + wireMockRule.port());
+                .target(TestCaller.class, "http://localhost:" + wireMockRule.getPort());
 
         //check that circuit breaker DOESN'T open on volume threshold
         List<Object> results = IntStream.range(0, callsNo).mapToObj(i -> {
@@ -103,11 +96,11 @@ public class CircuitBreakerFuncTest extends BaseReactorTest {
         assertCircuitBreakerClosed(lastError);
 
         // assert circuit is still closed, so all requests went to server
-        verify(exactly(callsNo), getRequestedFor(urlEqualTo(TEST_URL)));
+        wireMockRule.verify(exactly(callsNo), getRequestedFor(urlEqualTo(TEST_URL)));
     }
 
     private void mockResponseServiceUnavailable() {
-        stubFor(get(urlEqualTo(TEST_URL)).willReturn(aResponse().withStatus(503)));
+        wireMockRule.stubFor(get(urlEqualTo(TEST_URL)).willReturn(aResponse().withStatus(503)));
     }
 
     public interface TestCaller {

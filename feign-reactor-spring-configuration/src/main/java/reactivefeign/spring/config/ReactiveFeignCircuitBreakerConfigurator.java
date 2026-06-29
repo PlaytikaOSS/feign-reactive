@@ -48,13 +48,21 @@ public class ReactiveFeignCircuitBreakerConfigurator extends AbstractReactiveFei
 
 		ReactiveCircuitBreakerFactory<Object, ConfigBuilder<Object>> circuitBreakerFactory
                 = namedContext.getOptional(ReactiveCircuitBreakerFactory.class);
+		if (circuitBreakerFactory == null) {
+			circuitBreakerFactory = namedContext.getOptionalFromApplicationContext(ReactiveCircuitBreakerFactory.class);
+		}
 		if(circuitBreakerFactory != null){
 			Consumer<ConfigBuilder<Object>> circuitBreakerCustomizer
 					= namedContext.getOptional(ReactiveFeignCircuitBreakerCustomizer.class);
+			if (circuitBreakerCustomizer == null) {
+				circuitBreakerCustomizer = namedContext.getOptionalFromApplicationContext(ReactiveFeignCircuitBreakerCustomizer.class);
+			}
 			if(circuitBreakerCustomizer != null){
+				ReactiveCircuitBreakerFactory<Object, ConfigBuilder<Object>> finalCircuitBreakerFactory = circuitBreakerFactory;
+				Consumer<ConfigBuilder<Object>> finalCircuitBreakerCustomizer = circuitBreakerCustomizer;
 				feignCircuitBreakerFactory = circuitBreakerId -> {
-					circuitBreakerFactory.configure(circuitBreakerCustomizer, circuitBreakerId);
-					return circuitBreakerFactory.create(circuitBreakerId);
+					finalCircuitBreakerFactory.configure(finalCircuitBreakerCustomizer, circuitBreakerId);
+					return finalCircuitBreakerFactory.create(circuitBreakerId);
 				};
 			} else {
 				feignCircuitBreakerFactory = circuitBreakerFactory::create;

@@ -16,19 +16,17 @@
 
 package reactivefeign.allfeatures;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
-import org.springframework.boot.web.reactive.server.ReactiveWebServerFactory;
+import org.springframework.boot.reactor.netty.NettyReactiveWebServerFactory;
+import org.springframework.boot.web.server.reactive.ReactiveWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
-import org.springframework.test.context.junit4.SpringRunner;
 import reactivefeign.BaseReactorTest;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -51,8 +49,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.waitAtMost;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static reactivefeign.ReactivityTest.CALLS_NUMBER;
 import static reactivefeign.ReactivityTest.timeToCompleteReactively;
 import static reactivefeign.TestUtils.toLowerCaseKeys;
@@ -68,7 +65,6 @@ import static reactor.core.publisher.Mono.just;
  * Tests ReactiveFeign in conjunction with WebFlux rest controller.
  */
 
-@RunWith(SpringRunner.class)
 @SpringBootTest(
 		properties = {"spring.main.web-application-type=reactive"},
 		classes = {AllFeaturesController.class, AllFeaturesTest.TestConfiguration.class },
@@ -93,7 +89,7 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 		return buildClient("http://localhost:" + port);
 	}
 
-	@Before
+	@BeforeEach
 	public void setUp() {
 		client = buildClient();
 	}
@@ -454,11 +450,12 @@ abstract public class AllFeaturesTest extends BaseReactorTest {
 		assertThat(receivedAll).containsExactly(new byte[]{1,2,3}, new byte[]{4,5,6});
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void shouldFailIfNoSubstitutionForPath(){
-		client.urlNotSubstituted()
-				.subscribeOn(testScheduler()).block();
-	}
+	@Test
+	public void shouldFailIfNoSubstitutionForPath() {
+    assertThrows(IllegalArgumentException.class, () ->
+      client.urlNotSubstituted()
+              .subscribeOn(testScheduler()).block());
+  }
 
 
 	@Test

@@ -1,6 +1,6 @@
 package reactivefeign.resttemplate;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactivefeign.resttemplate.client.RestTemplateReactiveOptions;
 
 import static org.assertj.core.api.Assertions.assertThat;

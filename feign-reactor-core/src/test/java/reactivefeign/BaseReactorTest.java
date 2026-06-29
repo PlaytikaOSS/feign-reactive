@@ -1,15 +1,22 @@
 package reactivefeign;
 
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.opentest4j.TestAbortedException;
 import reactor.blockhound.BlockHound;
 import reactor.blockhound.integration.BlockHoundIntegration;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
+import reactor.test.StepVerifier;
 
+import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.ServiceLoader;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 abstract public class BaseReactorTest {
 
@@ -17,7 +24,7 @@ abstract public class BaseReactorTest {
 
     public static final double BLOCKHOUND_DEGRADATION = 1.2;
 
-    @BeforeClass
+    @BeforeAll
     public static void installBlockHound() {
         if (INSTALL_BLOCKHOUND) {
             BlockHound.Builder builder = BlockHound.builder();
@@ -31,6 +38,14 @@ abstract public class BaseReactorTest {
             //java.io.RandomAccessFile.readBytes
             builder.allowBlockingCallsInside("org.springframework.http.MediaTypeFactory", "parseMimeTypes");
 
+            //Jackson 3: DeserializerCache / SerializerCache use ReentrantLock around first-time
+            //deserializer/serializer resolution. After warm-up these paths are hit only very rarely
+            //and are not truly blocking, but BlockHound flags the park on the ReentrantLock.
+            builder.allowBlockingCallsInside("tools.jackson.databind.deser.DeserializerCache", "_createAndCacheValueDeserializer");
+            builder.allowBlockingCallsInside("tools.jackson.databind.deser.DeserializerCache", "findValueDeserializer");
+            builder.allowBlockingCallsInside("tools.jackson.databind.ser.SerializerCache", "addAndResolveNonTypedSerializer");
+            builder.allowBlockingCallsInside("tools.jackson.databind.ser.SerializerCache", "addAndResolveTypedSerializer");
+
             //reactor //missed in ReactorBlockHoundIntegration
             builder.allowBlockingCallsInside("java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue", "peek");
             builder.allowBlockingCallsInside("java.util.concurrent.ScheduledThreadPoolExecutor$DelayedWorkQueue", "remove");
@@ -39,6 +54,15 @@ abstract public class BaseReactorTest {
             builder.allowBlockingCallsInside("io.netty.resolver.DefaultHostsFileEntriesResolver", "parseEntries");
             builder.allowBlockingCallsInside("io.netty.util.concurrent.GlobalEventExecutor", "addTask");
             builder.allowBlockingCallsInside("io.netty.util.concurrent.GlobalEventExecutor", "takeTask");
+            //Netty 4.2 AdaptivePoolingAllocator uses StampedLock for its magazine fast-path;
+            //parks only under contention during buffer alloc/free, which BlockHound flags.
+            builder.allowBlockingCallsInside("io.netty.buffer.AdaptivePoolingAllocator$Magazine", "free");
+            builder.allowBlockingCallsInside("io.netty.buffer.AdaptivePoolingAllocator$MagazineGroup", "tryExpandMagazines");
+
+            //Resilience4j sliding-window metrics use a synchronized block to record each
+            //call result; under concurrent load this parks on the monitor which BlockHound
+            //flags as blocking.
+            builder.allowBlockingCallsInside("io.github.resilience4j.core.metrics.FixedSizeSlidingWindowMetrics", "record");
 
             //jetty
             builder.allowBlockingCallsInside("org.eclipse.jetty.client.AbstractConnectionPool", "acquire");
@@ -71,6 +95,9 @@ abstract public class BaseReactorTest {
             //Apache http client5
             builder.allowBlockingCallsInside("org.apache.hc.core5.pool.StrictConnPool", "lease");
             builder.allowBlockingCallsInside("org.apache.hc.core5.reactor.IOSessionImpl", "setEvent");
+            builder.allowBlockingCallsInside("org.apache.hc.core5.reactor.AbstractIOSessionPool", "getSessionInternal");
+            builder.allowBlockingCallsInside("org.apache.hc.core5.reactor.AbstractIOSessionPool", "getSession");
+            builder.allowBlockingCallsInside("org.apache.hc.core5.reactor.AbstractIOSessionPool", "enqueue");
 
             builder.install();
         }
@@ -81,17 +108,45 @@ abstract public class BaseReactorTest {
         return Schedulers.parallel();
     }
 
-    @Test(expected = RuntimeException.class)
+    @Test
     public void shouldFailAsBlocking() {
+      assertThrows(RuntimeException.class, () ->
         Mono.delay(Duration.ofSeconds(1))
                 .doOnNext(it -> {
-                    try {
-                        Thread.sleep(10);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
+                  try {
+                    Thread.sleep(10);
+                  } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                  }
                 })
-                .block();
+                .block());
+    }
+
+    @Test
+    public void shouldRunOnVirtualThreadScheduler() throws Exception {
+        ExecutorService executor = newVirtualThreadPerTaskExecutor();
+        Scheduler scheduler = Schedulers.fromExecutorService(executor);
+        try {
+            StepVerifier.create(Mono.fromCallable(this::currentThreadIsVirtual).subscribeOn(scheduler))
+                    .expectNext(true)
+                    .verifyComplete();
+        } finally {
+            scheduler.dispose();
+            executor.shutdownNow();
+        }
+    }
+
+    private ExecutorService newVirtualThreadPerTaskExecutor() throws ReflectiveOperationException {
+        try {
+            Method factory = Executors.class.getMethod("newVirtualThreadPerTaskExecutor");
+            return (ExecutorService) factory.invoke(null);
+        } catch (NoSuchMethodException e) {
+            throw new TestAbortedException("Virtual threads require Java 21+");
+        }
+    }
+
+    private boolean currentThreadIsVirtual() throws ReflectiveOperationException {
+        return (boolean) Thread.class.getMethod("isVirtual").invoke(Thread.currentThread());
     }
 
 

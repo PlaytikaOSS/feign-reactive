@@ -37,8 +37,8 @@ public class IceCreamOrder {
 
   IceCreamOrder(int id, final Instant orderTimestamp) {
     this.id = id;
-    this.balls = new HashMap<>();
-    this.mixins = new HashSet<>();
+    this.balls = new EnumMap<>(Flavor.class);
+    this.mixins = EnumSet.noneOf(Mixin.class);
     this.orderTimestamp = orderTimestamp;
   }
 

@@ -13,8 +13,9 @@
  */
 package reactivefeign.jetty;
 
-import com.fasterxml.jackson.core.async_.JsonFactory;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.json.JsonFactory;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.HttpProxy;
 import org.eclipse.jetty.http2.client.HTTP2Client;
@@ -74,7 +75,9 @@ public final class JettyReactiveFeign {
 
         protected Builder(JettyHttpClientFactory httpClientFactory, JsonFactory jsonFactory) {
             this.jsonFactory = jsonFactory;
-            this.objectMapper = new ObjectMapper().findAndRegisterModules();
+            this.objectMapper = JsonMapper.builder()
+                    .findAndAddModules()
+                    .build();
             setHttpClient(httpClientFactory);
         }
 

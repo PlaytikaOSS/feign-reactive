@@ -13,11 +13,10 @@
  */
 package reactivefeign;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactivefeign.client.ReactiveHttpRequestInterceptors;
 import reactivefeign.testcase.IcecreamServiceApi;
 import reactivefeign.testcase.domain.IceCreamOrder;
@@ -26,6 +25,7 @@ import reactivefeign.utils.Pair;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 import reactor.util.context.Context;
+import tools.jackson.core.JacksonException;
 
 import java.util.HashMap;
 
@@ -59,7 +59,7 @@ abstract public class RequestInterceptorTest extends BaseReactorTest {
   }
 
   @Test
-  public void shouldInterceptRequestAndSetAuthHeader() throws JsonProcessingException {
+  public void shouldInterceptRequestAndSetAuthHeader() throws JacksonException {
 
     String orderUrl = "/icecream/orders/1";
 
@@ -83,7 +83,7 @@ abstract public class RequestInterceptorTest extends BaseReactorTest {
   }
 
   @Test
-  public void shouldInterceptRequestAndSetAuthHeaderFromSubscriberContext() throws JsonProcessingException {
+  public void shouldInterceptRequestAndSetAuthHeaderFromSubscriberContext() throws JacksonException {
 
     String orderUrl = "/icecream/orders/1";
 
@@ -101,13 +101,11 @@ abstract public class RequestInterceptorTest extends BaseReactorTest {
     String authHeader = "Authorization";
 
     IcecreamServiceApi clientWithAuth = target(builder()
-        .addRequestInterceptor(request -> {
-          return Mono.deferContextual(ctx -> {
+        .addRequestInterceptor(request -> Mono.deferContextual(ctx -> {
             addOrdered(request.headers(), authHeader, ctx.get(authHeader));
             request.headers().remove(UPPER_HEADER_TO_REMOVE.toLowerCase());
             return Mono.just(request);
-          });
-        }));
+          })));
 
     IcecreamServiceApi clientWithAuth2 = target(builder()
             .addRequestInterceptor(request -> Mono

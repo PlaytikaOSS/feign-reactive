@@ -52,20 +52,20 @@ jobs:
           cache: 'maven'
 
       - name: Update version
-        if: ${{ success() }}
-        run: ./mvnw --batch-mode --no-transfer-progress versions:set -DnewVersion=${{github.event.release.tag_name}} versions:commit
+        if: ${{ success() && github.event_name == 'release' }}
+        run: mvn --batch-mode --no-transfer-progress versions:set -DnewVersion=${{ github.event.release.tag_name }} versions:commit
 
       - name: Publish to the Maven Central Repository
         if: ${{ success() }}
         run: ./mvnw --batch-mode --no-transfer-progress -Dgib.disable=true -P central -DskipTests deploy
         env:
-          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+          MAVEN_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Commit & Push changes
-        if: ${{ success() }}
-        uses: actions-js/push@master
+        if: ${{ success() && github.event_name == 'release' }}
+        uses: actions-js/push@5a7cbd780d82c0c937b5977586e641b2fd94acc5 # v1.5
         with:
           github_token: ${{ steps.app-token.outputs.token }}
           message: 'Release ${{github.event.release.tag_name}}'

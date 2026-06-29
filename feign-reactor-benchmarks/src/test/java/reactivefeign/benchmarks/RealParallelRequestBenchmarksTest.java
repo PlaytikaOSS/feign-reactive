@@ -1,24 +1,24 @@
 package reactivefeign.benchmarks;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.ExecutionException;
 
-@Ignore
+@Disabled
 public class RealParallelRequestBenchmarksTest extends RealRequestBenchmarks{
 
     private ParallelRequestBenchmarks benchmarks;
 
-    @Before
+    @BeforeEach
     public void before() throws Exception {
         benchmarks = new ParallelRequestBenchmarks();
         benchmarks.setup();
     }
 
-    @After
+    @AfterEach
     public void after() throws Exception {
         benchmarks.tearDown();
     }

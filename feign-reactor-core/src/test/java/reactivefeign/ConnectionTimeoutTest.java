@@ -13,23 +13,23 @@
  */
 package reactivefeign;
 
-import org.hamcrest.Matchers;
-import org.junit.*;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import reactivefeign.testcase.IcecreamServiceApi;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
  * @author Sergii Karpenko
  */
 abstract public class ConnectionTimeoutTest extends BaseReactorTest{
-
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
 
   private ServerSocket serverSocket;
   private Socket socket;
@@ -37,7 +37,7 @@ abstract public class ConnectionTimeoutTest extends BaseReactorTest{
 
   abstract protected ReactiveFeignBuilder<IcecreamServiceApi> builder(long connectTimeoutInMillis);
 
-  @Before
+  @BeforeEach
   public void before() throws IOException {
     // server socket with single element backlog queue (1) and dynamicaly allocated
     // port (0)
@@ -49,7 +49,7 @@ abstract public class ConnectionTimeoutTest extends BaseReactorTest{
     socket.connect(serverSocket.getLocalSocketAddress());
   }
 
-  @After
+  @AfterEach
   public void after() throws IOException {
     // some cleanup
     if (serverSocket != null && !serverSocket.isClosed()) {
@@ -57,19 +57,38 @@ abstract public class ConnectionTimeoutTest extends BaseReactorTest{
     }
   }
 
-  // TODO investigate why doesn't work on codecov.io but works locally
-  @Ignore
+  // Works on macOS (kernel drops SYNs beyond backlog so connect times out) but hangs on
+  // Linux CI: kernel accepts connections beyond ServerSocket(0, 1) backlog, so connect
+  // succeeds and .block() waits forever for an HTTP response that never comes (clients
+  // only configure a connect timeout here, no response timeout).
+  @Disabled
   @Test
   public void shouldFailOnConnectionTimeout() {
 
-    expectedException.expectCause(
+    Throwable exception = assertThrows(Exception.class, () -> {
 
-        Matchers.any(ConnectException.class));
+      IcecreamServiceApi client = builder(300)
+              .target(IcecreamServiceApi.class, "http://localhost:" + port);
 
-    IcecreamServiceApi client = builder(300)
-                .target(IcecreamServiceApi.class, "http://localhost:" + port);
+      client.findOrder(1).subscribeOn(testScheduler()).block();
+    });
 
-    client.findOrder(1).subscribeOn(testScheduler()).block();
+    // each backend wraps the connect timeout differently (Apache, Netty, Jetty, Java11 HttpClient,
+    // WebClient), so assert the cause chain contains some form of IOException — the common
+    // supertype of all real connect/socket timeout exceptions
+    assertThat(causeChainContainsIOException(exception))
+            .as("expected IOException in cause chain but got: %s", exception)
+            .isTrue();
+  }
+
+  private static boolean causeChainContainsIOException(Throwable t) {
+    while (t != null) {
+      if (t instanceof IOException) {
+        return true;
+      }
+      t = t.getCause();
+    }
+    return false;
   }
 
 }

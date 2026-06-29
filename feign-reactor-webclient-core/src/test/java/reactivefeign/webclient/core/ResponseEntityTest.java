@@ -5,7 +5,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import feign.RequestLine;
 import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.ResponseEntity;
 import reactivefeign.ReactiveFeignBuilder;
@@ -20,6 +20,7 @@ import java.util.Map;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 abstract public class ResponseEntityTest {
 
@@ -43,7 +44,7 @@ abstract public class ResponseEntityTest {
         Mono<ResponseEntity<Flux<Integer>>> result = client.call();
 
         StepVerifier.create(result
-                        .doOnNext(response -> assertThat(toLowerCaseKeys(response.getHeaders())
+                        .doOnNext(response -> assertThat(toLowerCaseKeys(toMap(response.getHeaders()))
                                 .containsKey("content-type")).isTrue())
                         .flatMapMany(HttpEntity::getBody))
                 .expectNextSequence(asList(1, 2))
@@ -66,17 +67,18 @@ abstract public class ResponseEntityTest {
         Mono<ResponseEntity<Mono<byte[]>>> resultRaw = client.callRaw();
 
         StepVerifier.create(resultRaw
-                        .doOnNext(response -> assertThat(toLowerCaseKeys(response.getHeaders())
+                        .doOnNext(response -> assertThat(toLowerCaseKeys(toMap(response.getHeaders()))
                                 .containsKey("content-type")).isTrue())
                         .flatMapMany(HttpEntity::getBody))
                 .expectNextMatches(bytes -> Arrays.equals("[1, 2]".getBytes(), bytes))
                 .verifyComplete();
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void shouldFailIfNonReactiveParameterInResponseEntity() {
+      assertThrows(IllegalArgumentException.class, () ->
         this.<WrongCaller>builder()
-                .target(WrongCaller.class, "http://localhost:" + wireMockRule.port());
+                .target(WrongCaller.class, "http://localhost:" + wireMockRule.port()));
     }
 
     public interface TestCaller {
@@ -96,5 +98,11 @@ abstract public class ResponseEntityTest {
         Map<String, V> mapNormalized = new HashMap<>(map.size());
         map.forEach((s, o) -> mapNormalized.put(s.toLowerCase(), o));
         return mapNormalized;
+    }
+
+    static Map<String, List<String>> toMap(org.springframework.http.HttpHeaders headers) {
+        Map<String, List<String>> map = new HashMap<>();
+        headers.forEach(map::put);
+        return map;
     }
 }

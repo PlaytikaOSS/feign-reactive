@@ -1,35 +1,42 @@
 package reactivefeign;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import reactivefeign.methodhandler.DefaultMethodHandler;
 import reactor.core.publisher.Mono;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class DefaultMethodHandlerTest extends BaseReactorTest {
 
-    @Test(expected = AbstractMethodError.class)
+    @Test
     public void shouldThrowErrorOnNotDefaultMethod() throws NoSuchMethodException {
+      assertThrows(AbstractMethodError.class, () -> {
         new DefaultMethodHandler(TestInterface.class.getMethod("notDefaultMethod"));
+      });
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void shouldFailIfNotBoundToProxy() throws Throwable {
+      assertThrows(IllegalStateException.class, () -> {
         DefaultMethodHandler defaultMethodHandler
                 = new DefaultMethodHandler(TestInterface.class.getMethod("defaultMethod"));
         defaultMethodHandler.invoke(new Object[0]);
+      });
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void shouldFailOnRebind() throws Throwable {
+      assertThrows(IllegalStateException.class, () -> {
         DefaultMethodHandler defaultMethodHandler
                 = new DefaultMethodHandler(TestInterface.class.getMethod("defaultMethod"));
 
         TestInterface mockImplementation = mock(TestInterface.class);
         defaultMethodHandler.bindTo(mockImplementation);
         defaultMethodHandler.bindTo(mockImplementation);
+      });
     }
 
     @Test

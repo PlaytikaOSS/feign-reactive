@@ -13,15 +13,12 @@
  */
 package reactivefeign.rx3;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.github.tomakehurst.wiremock.junit.WireMockClassRule;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.observers.TestObserver;
-import org.junit.Before;
 import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import reactivefeign.ReactiveFeign;
 import reactivefeign.rx3.testcase.IcecreamServiceApi;
 import reactivefeign.rx3.testcase.domain.Bill;
@@ -29,6 +26,7 @@ import reactivefeign.rx3.testcase.domain.Flavor;
 import reactivefeign.rx3.testcase.domain.IceCreamOrder;
 import reactivefeign.rx3.testcase.domain.Mixin;
 import reactivefeign.rx3.testcase.domain.OrderGenerator;
+import tools.jackson.core.JacksonException;
 
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -49,7 +47,7 @@ public class SmokeTest {
   public static WireMockClassRule wireMockRule = new WireMockClassRule(
       wireMockConfig().dynamicPort());
 
-  @Before
+  @BeforeEach
   public void resetServers() {
     wireMockRule.resetAll();
   }
@@ -64,10 +62,7 @@ public class SmokeTest {
   private Map<Integer, IceCreamOrder> orders = generator.generateRange(10).stream()
       .collect(Collectors.toMap(IceCreamOrder::getId, o -> o));
 
-  @Rule
-  public ExpectedException expectedException = ExpectedException.none();
-
-  @Before
+  @BeforeEach
   public void setUp() {
     String targetUrl = "http://localhost:" + wireMockRule.port();
     client = builder()
@@ -76,7 +71,7 @@ public class SmokeTest {
   }
 
   @Test
-  public void testSimpleGet_success() throws JsonProcessingException, InterruptedException {
+  public void testSimpleGet_success() throws JacksonException, InterruptedException {
 
     wireMockRule.stubFor(get(urlEqualTo("/icecream/flavors"))
         .willReturn(aResponse().withStatus(200)
@@ -98,7 +93,7 @@ public class SmokeTest {
     }
 
   @Test
-  public void testFindOrder_success() throws JsonProcessingException, InterruptedException {
+  public void testFindOrder_success() throws JacksonException, InterruptedException {
     IceCreamOrder orderExpected = orders.get(1);
     wireMockRule.stubFor(get(urlEqualTo("/icecream/orders/1"))
         .willReturn(aResponse().withStatus(200)
@@ -116,7 +111,7 @@ public class SmokeTest {
   }
 
   @Test
-  public void testMakeOrder_success() throws JsonProcessingException {
+  public void testMakeOrder_success() throws JacksonException {
 
     IceCreamOrder order = new OrderGenerator().generate(20);
     Bill billExpected = Bill.makeBill(order);
@@ -133,7 +128,7 @@ public class SmokeTest {
   }
 
   @Test
-  public void testPayBill_success() throws JsonProcessingException {
+  public void testPayBill_success() throws JacksonException {
 
     Bill bill = Bill.makeBill(new OrderGenerator().generate(30));
 
