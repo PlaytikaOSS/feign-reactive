@@ -6,20 +6,21 @@ on:
   workflow_dispatch:
     inputs:
       dryRun:
-        description: "Dry-Run (skip deploy and push-back)"
+        description: "Dry-Run"
         default: false
         required: false
         type: boolean
       logLevel:
         description: "Log-Level"
         required: false
-        default: 'info'
+        default: 'debug'
         type: choice
         options:
           - info
           - warn
           - debug
           - error
+          - fatal
 
 jobs:
   publish:
@@ -27,22 +28,22 @@ jobs:
     steps:
       - name: Generate GitHub App Token
         id: app-token
-        uses: actions/create-github-app-token@v1
+        uses: actions/create-github-app-token@v3
         with:
           app-id: ${{ secrets.AUTOMATION_APP_ID }}
           private-key: ${{ secrets.AUTOMATION_APP_PRIVATE_KEY }}
-
+    
       - name: Checkout
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.release.target_commitish }}
+          ref: ${{github.event.release.target_commitish}}
           token: ${{ steps.app-token.outputs.token }}
 
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
           distribution: 'corretto'
-          java-version: '17'
+          java-version: '21'
           server-id: central
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
@@ -55,13 +56,8 @@ jobs:
         run: mvn --batch-mode --no-transfer-progress versions:set -DnewVersion=${{ github.event.release.tag_name }} versions:commit
 
       - name: Publish to the Maven Central Repository
-        if: ${{ success() && (github.event_name != 'workflow_dispatch' || inputs.dryRun != true) }}
-        run: |
-          mvn --batch-mode --no-transfer-progress \
-            -P central -DskipTests \
-            -Dgib.disable=true \
-            -Dorg.slf4j.simpleLogger.defaultLogLevel=${{ inputs.logLevel || 'info' }} \
-            deploy
+        if: ${{ success() }}
+        run: ./mvnw --batch-mode --no-transfer-progress -Dgib.disable=true -P central -DskipTests deploy
         env:
           MAVEN_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
@@ -72,5 +68,5 @@ jobs:
         uses: actions-js/push@5a7cbd780d82c0c937b5977586e641b2fd94acc5 # v1.5
         with:
           github_token: ${{ steps.app-token.outputs.token }}
-          message: 'Release ${{ github.event.release.tag_name }}'
+          message: 'Release ${{github.event.release.tag_name}}'
           branch: ${{ github.event.release.target_commitish }}
