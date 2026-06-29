@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>feign-reactor-java11</artifactId>
+    <name>feign-reactor-java11</name>
 
     <dependencies>
         <dependency>

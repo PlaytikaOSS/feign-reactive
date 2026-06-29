@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>feign-reactor-benchmarks</artifactId>
+    <name>feign-reactor-benchmarks</name>
 
     <properties>
         <java.version>11</java.version>

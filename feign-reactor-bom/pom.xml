@@ -12,6 +12,7 @@
 
     <packaging>pom</packaging>
     <artifactId>feign-reactor-bom</artifactId>
+    <name>feign-reactor-bom</name>
 
     <dependencyManagement>
         <dependencies>

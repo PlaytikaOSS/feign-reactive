@@ -9,6 +9,7 @@
     </parent>
 
     <artifactId>feign-reactor-server-configurations</artifactId>
+    <name>feign-reactor-server-configurations</name>
 
     <dependencies>
         <dependency>

@@ -9,6 +9,7 @@
     </parent>
 
     <artifactId>feign-reactor-spring-mvc-test</artifactId>
+    <name>feign-reactor-spring-mvc-test</name>
 
     <dependencies>
         <!-- Tests -->

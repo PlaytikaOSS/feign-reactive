@@ -9,6 +9,7 @@
     </parent>
 
     <artifactId>feign-reactor-spring-configuration-cloud2-test</artifactId>
+    <name>feign-reactor-spring-configuration-cloud2-test</name>
 
     <dependencies>
 

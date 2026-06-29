@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>feign-reactor-jetty</artifactId>
+    <name>feign-reactor-jetty</name>
 
     <dependencies>
         <dependency>
