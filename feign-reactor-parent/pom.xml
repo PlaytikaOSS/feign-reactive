@@ -43,13 +43,6 @@
 
         <maven.javadoc.plugin.version>3.5.0</maven.javadoc.plugin.version>
         <maven.source.plugin.version>3.3.0</maven.source.plugin.version>
-
-
-        <!-- GPG -->
-        <gpg.keyname>3EEF24C7</gpg.keyname>
-        <gpg.defaultKeyring>false</gpg.defaultKeyring>
-        <gpg.useagent>true</gpg.useagent>
-        <gpg.lockMode>never</gpg.lockMode>
     </properties>
 
     <dependencyManagement>
