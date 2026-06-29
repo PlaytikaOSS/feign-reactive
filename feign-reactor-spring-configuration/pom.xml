@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>feign-reactor-spring-configuration</artifactId>
+    <name>feign-reactor-spring-configuration</name>
 
     <dependencies>
 

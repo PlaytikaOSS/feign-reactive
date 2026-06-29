@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>feign-reactor-webclient-jetty</artifactId>
+    <name>feign-reactor-webclient-jetty</name>
     <description>WebClient with JettyClientHttpConnector</description>
 
     <dependencies>

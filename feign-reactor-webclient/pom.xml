@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>feign-reactor-webclient</artifactId>
+    <name>feign-reactor-webclient</name>
     <description>WebClient with ReactorClientHttpConnector (Netty) </description>
 
     <dependencies>

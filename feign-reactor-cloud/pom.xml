@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>feign-reactor-cloud</artifactId>
+    <name>feign-reactor-cloud</name>
     <description>Adds support of Spring Cloud Loadbalancer instead of Ribbon and Resilience4j instead of Hystrix</description>
 
     <dependencies>

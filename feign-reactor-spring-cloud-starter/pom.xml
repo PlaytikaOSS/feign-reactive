@@ -13,6 +13,7 @@
 
     <packaging>pom</packaging>
     <artifactId>feign-reactor-spring-cloud-starter</artifactId>
+    <name>feign-reactor-spring-cloud-starter</name>
 
     <dependencies>
         <dependency>

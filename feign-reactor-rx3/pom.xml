@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>feign-reactor-rx3</artifactId>
+    <name>feign-reactor-rx3</name>
 
     <dependencies>
 

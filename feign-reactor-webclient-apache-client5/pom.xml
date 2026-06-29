@@ -10,6 +10,7 @@
     </parent>
 
     <artifactId>feign-reactor-webclient-apache-client5</artifactId>
+    <name>feign-reactor-webclient-apache-client5</name>
     <description>WebClient with Apache Http Client 5 HttpComponentsClientHttpConnector</description>
 
     <dependencies>
