@@ -22,6 +22,8 @@ import reactivefeign.client.ReactiveHttpRequest;
 import reactivefeign.client.ReadTimeoutException;
 import reactor.netty.http.client.HttpClient;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
@@ -52,6 +54,7 @@ public class WebReactiveFeign {
 
         private HttpClient httpClient;
         private WebReactiveOptions options = WebReactiveOptions.DEFAULT_OPTIONS;
+        private final List<NettyHttpClientCustomizer> nettyHttpClientCustomizers = new ArrayList<>();
 
         protected Builder(WebClient.Builder webClientBuilder) {
             super(webClientBuilder);
@@ -66,6 +69,11 @@ public class WebReactiveFeign {
             return this;
         }
 
+        public Builder<T> addCustomizer(NettyHttpClientCustomizer customizer){
+            this.nettyHttpClientCustomizers.add(customizer);
+            return this;
+        }
+
         @Override
         public Builder<T> options(ReactiveOptions options) {
             this.options = (WebReactiveOptions) options;
@@ -74,7 +82,7 @@ public class WebReactiveFeign {
 
         @Override
         protected ClientHttpConnector clientConnector() {
-            return buildNettyClientHttpConnector(httpClient, options);
+            return buildNettyClientHttpConnector(httpClient, options, nettyHttpClientCustomizers);
         }
 
         @Override

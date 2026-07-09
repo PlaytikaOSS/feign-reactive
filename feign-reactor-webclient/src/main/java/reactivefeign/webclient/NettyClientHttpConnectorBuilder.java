@@ -18,6 +18,7 @@ import reactor.netty.transport.ProxyProvider;
 
 import javax.net.ssl.SSLException;
 import java.time.Duration;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -32,7 +33,8 @@ class NettyClientHttpConnectorBuilder {
     private NettyClientHttpConnectorBuilder() {
     }
 
-    public static ClientHttpConnector buildNettyClientHttpConnector(HttpClient httpClient, WebReactiveOptions webOptions) {
+    public static ClientHttpConnector buildNettyClientHttpConnector(
+            HttpClient httpClient, WebReactiveOptions webOptions, List<NettyHttpClientCustomizer> customizers) {
 
         if (httpClient == null) {
 
@@ -127,6 +129,12 @@ class NettyClientHttpConnectorBuilder {
                 httpClient = httpClient.secure(sslProviderBuilder -> sslProviderBuilder.sslContext(sslContext));
             } catch (SSLException e) {
                 LOG.warn("Error creating SSLContext. The WebClient will verify all new HTTPS calls", e);
+            }
+        }
+
+        if (customizers != null) {
+            for (NettyHttpClientCustomizer customizer : customizers) {
+                httpClient = customizer.apply(httpClient);
             }
         }
 
