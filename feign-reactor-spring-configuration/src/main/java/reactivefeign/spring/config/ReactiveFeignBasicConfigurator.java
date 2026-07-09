@@ -30,11 +30,12 @@ import reactivefeign.client.statushandler.ReactiveStatusHandlers;
 import reactivefeign.retry.ReactiveRetryPolicy;
 import reactivefeign.utils.Pair;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 
 
 public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigurator{
@@ -146,25 +147,11 @@ public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigu
 			}
 		}
 
-		if (config.getDefaultRequestHeaders() != null) {
-			for (Map.Entry<String, List<String>> headerPair : config.getDefaultRequestHeaders().entrySet()) {
-				// Every Map headerPair is gonna belong to it's own interceptor
-				List<Pair<String, String>> headerSubPairs = headerPair.getValue().stream()
-								.map(value -> new Pair<>(headerPair.getKey(), value))
-								.collect(Collectors.toList());
-				resultBuilder.addRequestInterceptor(ReactiveHttpRequestInterceptors.addHeaders(headerSubPairs));
-			}
-		}
+		resultBuilder = addInterceptors(resultBuilder, config.getDefaultRequestHeaders(),
+				ReactiveHttpRequestInterceptors::addHeaders);
 
-		if (config.getDefaultQueryParameters() != null) {
-			for (Map.Entry<String, List<String>> queryPair : config.getDefaultQueryParameters().entrySet()) {
-				// Every Map queryPair is gonna belong to it's own interceptor
-                List<Pair<String, String>> querySubPairs = queryPair.getValue().stream()
-                        .map(value -> new Pair<>(queryPair.getKey(), value))
-                        .collect(Collectors.toList());
-                resultBuilder.addRequestInterceptor(ReactiveHttpRequestInterceptors.addQueries(querySubPairs));
-			}
-		}
+		resultBuilder = addInterceptors(resultBuilder, config.getDefaultQueryParameters(),
+				ReactiveHttpRequestInterceptors::addQueries);
 
 		if (config.getStatusHandler() != null) {
 			ReactiveStatusHandler statusHandler = namedContext.getOrInstantiate(config.getStatusHandler());
@@ -195,6 +182,25 @@ public class ReactiveFeignBasicConfigurator extends AbstractReactiveFeignConfigu
 			resultBuilder = resultBuilder.contract(namedContext.getOrInstantiate(config.getContract()));
 		}
 		return resultBuilder;
+	}
+
+	private ReactiveFeignBuilder addInterceptors(
+			ReactiveFeignBuilder builder,
+			Map<String, List<String>> parameters,
+			Function<List<Pair<String, String>>, ReactiveHttpRequestInterceptor> interceptorCreator) {
+		if (parameters != null && !parameters.isEmpty()) {
+			List<Pair<String, String>> allPairs = new ArrayList<>();
+			for (Map.Entry<String, List<String>> entry : parameters.entrySet()) {
+				String key = entry.getKey();
+				for (String value : entry.getValue()) {
+					allPairs.add(new Pair<>(key, value));
+				}
+			}
+			if (!allPairs.isEmpty()) {
+				return builder.addRequestInterceptor(interceptorCreator.apply(allPairs));
+			}
+		}
+		return builder;
 	}
 
 	static ReactiveRetryPolicy configureRetryPolicyFromProperties(
