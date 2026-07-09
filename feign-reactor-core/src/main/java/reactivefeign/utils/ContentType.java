@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 public class ContentType {
 
     private static final Pattern charsetPattern = Pattern
-            .compile("(?i)\\bcharset=\\s*\"?([^\\s;\"/]*)/?>");
+            .compile("(?i)\\bcharset=\\s*\"?([^\\s;\"/>]*)");
 
 
     private final String mediaType;
