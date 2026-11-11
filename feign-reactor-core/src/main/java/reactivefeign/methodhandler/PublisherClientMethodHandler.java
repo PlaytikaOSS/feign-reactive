@@ -102,7 +102,8 @@ public class PublisherClientMethodHandler implements MethodHandler {
                 "methodMetadata must be not null");
         this.publisherClient = checkNotNull(publisherClient, "client must be not null");
         RequestTemplate requestTemplate = methodMetadata.template();
-        this.pathExpander = buildUrlExpandFunction(requestTemplate, target);
+        this.pathExpander = buildUrlExpandFunction(requestTemplate, target,
+                methodMetadata.urlIndex() != null);
         this.headerExpanders = buildExpanders(requestTemplate.headers());
 
         this.queriesAll = new HashMap<>(requestTemplate.queries());
@@ -121,7 +122,8 @@ public class PublisherClientMethodHandler implements MethodHandler {
         //static template (POST & PUT)
         if(pathExpander instanceof StaticExpander
                 && queriesAll.isEmpty()
-                && methodMetadata.queryMapIndex() == null){
+                && methodMetadata.queryMapIndex() == null
+                && methodMetadata.urlIndex() == null){
             staticUri = URI.create(target.url() + cutTail(requestTemplate.url(), "/"));
         } else {
             staticUri = null;
@@ -358,11 +360,11 @@ public class PublisherClientMethodHandler implements MethodHandler {
     }
 
     private static Function<Substitutions, String> buildUrlExpandFunction(
-            RequestTemplate requestTemplate, Target<?> target) {
+            RequestTemplate requestTemplate, Target<?> target, boolean hasUrlParameter) {
         String requestUrl = getRequestUrl(requestTemplate);
 
-        if(target instanceof Target.EmptyTarget){
-            return expandUrlForEmptyTarget(buildExpandFunction(requestUrl));
+        if(hasUrlParameter || target instanceof Target.EmptyTarget){
+            return expandUrlWithRuntimeUri(buildExpandFunction(requestUrl));
         } else {
             String targetUrl = cutTail(target.url(), "/");
             return buildExpandFunction(targetUrl+requestUrl);
@@ -378,7 +380,7 @@ public class PublisherClientMethodHandler implements MethodHandler {
         return requestUrl;
     }
 
-    private static Function<Substitutions, String> expandUrlForEmptyTarget(
+    private static Function<Substitutions, String> expandUrlWithRuntimeUri(
             Function<Substitutions, String> expandFunction){
         return substitutions -> substitutions.url.toString() + expandFunction.apply(substitutions);
     }
