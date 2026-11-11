@@ -189,6 +189,46 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
   }
 
   @Test
+  public void shouldExpandStaticUrlWithRuntimeUriForHardCodedTarget() throws JacksonException {
+
+    TestObject testObject = new TestObject(1);
+    String json = MAPPER.writeValueAsString(testObject);
+    wireMockRule.stubFor(post(urlEqualTo("/runtime/expand"))
+            .withRequestBody(equalTo(json))
+            .willReturn(aResponse().withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(json)));
+
+    RuntimeUriClient testClient = this.<RuntimeUriClient>builder()
+            .target(RuntimeUriClient.class, getTargetUrl() + "/hardcoded");
+
+    StepVerifier.create(testClient.expandUrl(URI.create(getTargetUrl() + "/runtime"), testObject)
+                    .subscribeOn(testScheduler()))
+            .expectNext(testObject)
+            .verifyComplete();
+  }
+
+  @Test
+  public void shouldExpandDynamicUrlWithRuntimeUriForHardCodedTarget() throws JacksonException {
+
+    TestObject testObject = new TestObject(1);
+    String json = MAPPER.writeValueAsString(testObject);
+    wireMockRule.stubFor(post(urlEqualTo("/runtime/expand/1"))
+            .withRequestBody(equalTo(json))
+            .willReturn(aResponse().withStatus(200)
+                    .withHeader("Content-Type", "application/json")
+                    .withBody(json)));
+
+    RuntimeUriClient testClient = this.<RuntimeUriClient>builder()
+            .target(RuntimeUriClient.class, getTargetUrl() + "/hardcoded");
+
+    StepVerifier.create(testClient.expandUrl(URI.create(getTargetUrl() + "/runtime"), 1, testObject)
+                    .subscribeOn(testScheduler()))
+            .expectNext(testObject)
+            .verifyComplete();
+  }
+
+  @Test
   public void shouldExpandQueryMapToQueryParameters() {
 
     String queryParameter = "queryParameter";
@@ -295,6 +335,14 @@ abstract public class BasicFeaturesTest extends BaseReactorTest {
   public interface EmptyTargetClient {
     @RequestLine("POST /expand")
     Mono<TestObject> expandUrl(URI baseUrl, TestObject data);
+  }
+
+  public interface RuntimeUriClient {
+    @RequestLine("POST /expand")
+    Mono<TestObject> expandUrl(URI baseUrl, TestObject data);
+
+    @RequestLine("POST /expand/{id}")
+    Mono<TestObject> expandUrl(URI baseUrl, @Param("id") int id, TestObject data);
   }
 
   public static class TestObject {
